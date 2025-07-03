@@ -229,7 +229,7 @@ class MultiAgentController(BaseController):
                     agent_config.enable_prefix_caching,
                     agent_config.enforce_eager,
                     max_len,
-                    pg,
+                    pg if agent_config.colocate_all_models else None,
                     agent_config.vllm_gpu_memory_utilization,
                     agent_config.vllm_enable_sleep
                 )
