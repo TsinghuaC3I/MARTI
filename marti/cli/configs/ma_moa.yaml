@@ -4,6 +4,7 @@ defaults:
   - _self_
 
 agent_workflow: "mixture-of-agents"
+async_workflow: false
 
 workflow_args:
   num_rounds: 2

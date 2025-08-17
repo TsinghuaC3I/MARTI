@@ -7,8 +7,8 @@ WANDB_KEY=${2}
 ROOT_DIR=$(pwd)
 
 DATE=$(date +%m%d)
-ADVANTAGE="reinforce"
-SHORT_NAME="Qwen2.5-3B"
+ADVANTAGE="group_norm"
+SHORT_NAME="Qwen2.5-3B-Instruct"
 TASK="MATH"
 ALGO="moa-3x1-unshared"
 PRETRAIN="${MODEL_DIR}/${SHORT_NAME}"

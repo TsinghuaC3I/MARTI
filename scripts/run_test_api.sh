@@ -35,7 +35,7 @@ else
 fi
 
 ROOT_DIR=$(pwd)
-PROMPT_FILE="examples/test_api_prompts.json"
+PROMPT_FILE="data/test_api_prompts.json"
 INPUT_KEY="problem"
 OUTPUT_KEY="model_output"
 TEMPERATURE=0.6

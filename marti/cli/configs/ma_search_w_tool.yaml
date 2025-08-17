@@ -7,8 +7,6 @@ agent_workflow: "chain-of-agents"
 async_workflow: false
 workflow_func_path: null
 processor_func_path: null
-default_agent:
-  eos_token: "<|im_end|>"
 
 workflow_args:
   num_rounds: 1
@@ -22,21 +20,21 @@ agents:
   - agent_prompt_engineer:
       role: agent_prompt_engineer
       is_api_model: false
-      chat_template: "Task: Normalize the user question into a single, explicit instruction for an information-seeking plan.\nRules:\n- Keep essential intent; remove chit-chat.\n- Disambiguate pronouns and vague terms if possible.\n- Include needed constraints (domain, format) if implied.\nOutput: ONLY the cleaned prompt text. No quotes, no extra words.\nQuestion: {question}"
+      chat_template: "You are a great prompt engineer, please write a clear prompt for the given question to the planner. Question: {question}"
   - agent_planner:
       role: agent_planner
       is_api_model: true
       model_name: "gpt-4o"
-      chat_template: "Task: Produce an execution plan to answer the prompt.\nRequired Output Order:\n1. <plan> numbered minimal steps (each atomic).\n2. Zero or more <retrieval id=\"Ri\"> single search query </retrieval> blocks (ONLY if external info required).\n3. For every retrieval block, one <use ref=\"Ri\"> brief purpose + which plan step(s) it supports </use>.\nRules:\n- Do NOT invent <retrieval> if current general knowledge likely suffices.\n- Each query targets ONE focused fact set.\n- No extra prose outside the specified tags.\nPrompt: {prompt}"
+      chat_template: "Task: Produce an execution plan to answer the prompt. You need to refactor the problem into atomic steps for the generator. If external knowledge is needed, wrap what to retrieve in <retrieval></retrieval> and intended usage in <target></target>. Question: {question}, Prompt: {prompt}"
   - agent_retriever:
       role: agent_retriever
       is_api_model: false
-      chat_template: "Role: Retrieval executor & refiner.\nInput: A plan plus optional <retrieval id=...> and <use> notes.\nGoal: Satisfy all external info needs with minimal precise searches.\nTool Call FORMAT (strict JSON inside tag):\n<tool_call>{\n  \"name\": \"search\",\n  \"arguments\": {\n    \"query_list\": [\"ONE FOCUSED QUERY STRING\"]\n  }\n}</tool_call>\nProtocol:\n1. Think silently in <think></think> before each decision.\n2. Emit one or more tool calls (can refine previous queries in new calls).\n3. After tool responses (<tool_response>...</tool_response>) arrive, decide next action.\n4. When no further searches are needed, output ONLY <ready/>.\nRules:\n- Each query_list has exactly ONE string.\n- Be specific (entities, timeframe, format).\n- No extra prose outside permitted tags.\nPlan: {plan}"
+      chat_template: "You are a retrieval-oriented answer generator. For any needed external info inside <retrieval></retrieval> in the plan, design focused queries. Emit EACH query in a <tool_call>{\\n  \"name\": \"search\",\\n  \"arguments\": {\\n    \"query_list\": [\"ONE FOCUSED QUERY STRING\"]\\n  }\\n}</tool_call>. Tool responses will appear between <tool_response> and </tool_response>. You don't need to answer the question, you only need to design the query. Question: {question} Plan: {plan}"
       search_execution: true
   - agent_generator:
       role: agent_generator
       is_api_model: false
-      chat_template: "Task: Produce the final answer.\nSteps:\n1. Internal reasoning in <think> referencing plan steps and any retrieved facts by id if present.\n2. Output ONLY the user-facing result in <answer>.\nRules:\n- No tool calls here.\n- Do not restate the plan.\n- If insufficient data, state that inside <answer> and specify missing pieces concisely.\nInput Question: {question}"
+      chat_template: "You are a great writer who is good at organizing different information. Based on the retrieved content and their corresponding use in <target> and </target>, generate the response to the question. Question: {question} Plan: {plan} Retrieved Information: {information}"
 
 tools_config:
   max_turns: 2

@@ -23,7 +23,7 @@ Download libs
 Run inference
 
 python3 -m marti.cli.commands.test_new --config-name ma_chain \
-  default_agent.pretrain="/data/Qwen2.5-3B" \
+  default_agent.pretrain="/data/Qwen2.5-3B-Instruct" \
   default_agent.vllm_num_engines=1 \
   default_agent.prompt_max_len=7000 \
   default_agent.generate_max_len=1000 \
@@ -55,7 +55,7 @@ For Search Engine Environment
 
 To launch the retriever Engine
 save_path=/the/path/to/save
-python scripts/download.py --save_path $save_path
+python data_preprocessing/download.py --save_path $save_path
 cat $save_path/part_* > $save_path/e5_Flat.index
 gzip -d $save_path/wiki-18.jsonl.gz
 
@@ -68,3 +68,23 @@ git config --global user.email "yutongzhang20080108@outlook.com"
 git config --global user.name "Aaron Zhang"
 
 bash scripts/run_train_grpo_search.sh ${MODEL_DIR} ${WANDB_KEY}
+
+
+Check whether api calling is working
+
+export OPENAI_API_KEY=
+
+curl https://api.openai.com/v1/chat/completions \
+  -H "Authorization: Bearer $OPENAI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-4o-mini",
+    "messages": [
+      {"role": "system", "content": "You are a concise assistant."},
+      {"role": "user", "content": "What is Python"}
+    ],
+    "temperature": 0.7
+  }'
+
+To run api_test
+bash scripts/run_test_api.sh ${OPENAI_API_KEY}
