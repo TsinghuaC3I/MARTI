@@ -27,9 +27,10 @@ def train(cfg: DictConfig):
         "sampling_params": SamplingParams(temperature=cfg.temperature, max_tokens=cfg.generate_max_len),
         "is_reasoning_model": False
     }
-    
     world = MultiAgentDebate(
-        agent_list=[agent, agent, agent]
+        agent_list=[agent, agent, agent],
+        template_id=cfg['workflow_args']['template_id'],
+        sampling_params=SamplingParams(temperature=cfg.temperature, max_tokens=cfg.generate_max_len)
     )
     world.run([d[cfg.input_key] for d in data])
 

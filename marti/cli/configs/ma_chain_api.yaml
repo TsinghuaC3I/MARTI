@@ -7,7 +7,7 @@ agent_workflow: "chain-of-agents"
 
 workflow_args:
   num_rounds: 3
-  template_id: 4
+  template_id: 1
 
 api_model_name: "gpt-4o"
 api_key: null
