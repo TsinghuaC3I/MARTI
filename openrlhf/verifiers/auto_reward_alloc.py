@@ -1,7 +1,7 @@
 import numpy as np
 from collections import Counter
 from copy import deepcopy
-from marti.verifiers.qwen.qwen_eval import qwen_reward_fn, qwen_reward_fn_format, extract_answer, majority_vote
+from openrlhf.verifiers.qwen.qwen_eval import qwen_reward_fn, qwen_reward_fn_format, extract_answer, majority_vote
 
 # def jaccard_sim(ans1, ans2):
 #     set1, set2 = set(ans1), set(ans2)

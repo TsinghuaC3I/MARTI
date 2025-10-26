@@ -10,9 +10,9 @@ import srsly
 import numpy as np
 import pandas as pd
 
-from marti.verifiers.deepscaler.globals import THOUGHT_DELIMITER_START, THOUGHT_DELIMITER_END, OAI_RM_MODEL
-from marti.verifiers.deepscaler.reward_types import RewardConfig, RewardFn, RewardInput, RewardOutput, RewardType
-from marti.verifiers.deepscaler.math_utils.utils import extract_answer, grade_answer_sympy, grade_answer_mathd
+from openrlhf.verifiers.deepscaler.globals import THOUGHT_DELIMITER_START, THOUGHT_DELIMITER_END, OAI_RM_MODEL
+from openrlhf.verifiers.deepscaler.reward_types import RewardConfig, RewardFn, RewardInput, RewardOutput, RewardType
+from openrlhf.verifiers.deepscaler.math_utils.utils import extract_answer, grade_answer_sympy, grade_answer_mathd
 
 
 class RewardMathFn(RewardFn):

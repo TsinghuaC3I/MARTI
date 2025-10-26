@@ -702,19 +702,21 @@ class RemoteExperienceMaker(ABC):
         rewards = torch.empty_like(raw_rewards)
         rewards[indices] = raw_rewards  # sorted
 
-        rewards = rewards.reshape(-1, args.n_samples_per_prompt)
+        # TODO 统一节点数的命名
+        n_samples_per_group = args.workflow_args.get('max_num_nodes') if args.workflow_args.get('max_num_nodes') is not None else args.n_samples_per_prompt
+        rewards = rewards.reshape(-1, n_samples_per_group)
 
         # log group reward std
-        if args.n_samples_per_prompt > 1:
+        if n_samples_per_group > 1:
             group_reward_stds = (
-                rewards.std(-1, keepdim=True).repeat(1, args.n_samples_per_prompt).reshape(-1)[indices].split(exp_len)
+                rewards.std(-1, keepdim=True).repeat(1, n_samples_per_group).reshape(-1)[indices].split(exp_len)
             )
             for experience, group_reward_std in zip(experiences, group_reward_stds):
                 experience.info["group_reward_std"] = group_reward_std
 
         # reward shaping
         if args.advantage_estimator == "rloo":
-            baseline = (rewards.sum(-1, keepdim=True) - rewards) / (args.n_samples_per_prompt - 1)
+            baseline = (rewards.sum(-1, keepdim=True) - rewards) / (n_samples_per_group - 1)
             rewards = rewards - baseline
         elif args.advantage_estimator in ["reinforce_baseline", "dr_grpo"]:
             # REINFORCE++-baseline and Dr. GRPO removed the `/std` in GRPO as `/ std` is not needed in RL variance reduction theory.

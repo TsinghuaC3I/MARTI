@@ -68,7 +68,7 @@ def call_verify(problem, generation, debug, timeout=SINGLE_CASE_EXEC_TIMEOUT):
         " ".join(
             [
                 venv_python,
-                "marti/verifiers/areal/function/testing_util.py",
+                "openrlhf/verifiers/areal/function/testing_util.py",
                 "--tmp_id",
                 tmp_id,
             ]

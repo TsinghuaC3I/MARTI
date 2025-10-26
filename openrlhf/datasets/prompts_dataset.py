@@ -1,3 +1,5 @@
+import json
+
 from torch.utils.data import Dataset
 from tqdm import tqdm
 
@@ -51,15 +53,19 @@ class PromptDataset(Dataset):
         self.prompts = []
         self.labels = []
         self.datasources = []
+        self.metadata = []
         for data in tqdm(dataset, desc="Preprocessing data", disable=not self.strategy.is_rank_0()):
             prompt, label = preprocess_data(data, input_template, input_key, label_key, apply_chat_template)
             self.prompts.append(prompt)
             self.labels.append(label)
             self.datasources.append(data.get("datasource", "default"))
+            metadata_key = self.strategy.args.metadata_key
+            # 存储完整的metadata，包括所有额外信息
+            self.metadata.append(json.dumps(data.get(metadata_key, {})))
 
     def __len__(self):
         length = len(self.prompts)
         return length
 
     def __getitem__(self, idx):
-        return self.datasources[idx], self.prompts[idx], self.labels[idx]
+        return self.datasources[idx], self.prompts[idx], self.labels[idx], self.metadata[idx]

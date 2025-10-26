@@ -231,11 +231,13 @@ class BasePPOTrainer(ABC):
             # First collect all prompts and labels
             all_prompts = []
             all_labels = []
+            all_metadatas = []
             prompt_to_datasource = {}  # Dictionary to store mapping between prompts and their data sources
 
-            for datasources, prompts, labels in eval_dataloader:
+            for datasources, prompts, labels, metadatas in eval_dataloader:
                 all_prompts.extend(prompts)
                 all_labels.extend(labels)
+                all_metadatas.extend(metadatas)
                 # Create mapping for each prompt to its corresponding data source
                 for prompt, datasource in zip(prompts, datasources):
                     prompt_to_datasource[prompt] = datasource
@@ -245,7 +247,7 @@ class BasePPOTrainer(ABC):
             generate_kwargs["temperature"] = temperature
             generate_kwargs["n_samples_per_prompt"] = n_samples_per_prompt
             samples_list = self.samples_generator.generate_samples(
-                all_prompts, all_labels, remote_reward_model=self.remote_reward_model, **generate_kwargs
+                all_prompts, all_labels, all_metadatas, remote_reward_model=self.remote_reward_model, is_eval=False, **generate_kwargs
             )
 
             # duplicate prompts and labels for each sample
@@ -257,7 +259,8 @@ class BasePPOTrainer(ABC):
             for samples in samples_list:
                 rewards_list.append(samples.rewards)
             # Reshape rewards to (num_prompts, n_samples_per_prompt)
-            rewards = torch.tensor(rewards_list).reshape(-1, n_samples_per_prompt)
+            # TODO 添加workflow 每个prompt的节点数量
+            rewards = torch.tensor(rewards_list).reshape(-1, n_samples_per_prompt * self.args.num_xxxx)
 
             # Collect local statistics for each data source
             global_metrics = {}  # {datasource: {"pass{n_samples_per_prompt}": 0, "pass1": 0, "count": 0}}
@@ -464,7 +467,7 @@ class PPOTrainer(BasePPOTrainer):
 
             filtered_samples = []
             number_of_samples = 0
-            for _, rand_prompts, labels in self.prompts_dataloader:
+            for _, rand_prompts, labels, metadata in self.prompts_dataloader:
                 remote_reward_model = self.remote_reward_model if self.args.dynamic_filtering else None
                 rollout_samples = self.samples_generator.generate_samples(
                     rand_prompts, labels, remote_reward_model=remote_reward_model, **self.generate_kwargs

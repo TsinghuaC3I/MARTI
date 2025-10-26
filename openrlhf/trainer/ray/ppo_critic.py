@@ -162,8 +162,13 @@ class CriticPPOTrainer(ABC):
 
 @ray.remote(num_gpus=1)
 class CriticModelActor(BaseModelActor):
-    def init_model_from_pretrained(self, strategy: DeepspeedStrategy, pretrain, max_steps):
+    def init_model_from_pretrained(self, strategy: DeepspeedStrategy, pretrain, max_steps, critic_ckpt_path=None):
         args = strategy.args
+
+        if critic_ckpt_path is not None:
+            self.critic_ckpt_path = critic_ckpt_path
+        else:
+            self.critic_ckpt_path = args.ckpt_path
 
         self._setup_distributed(strategy)
         critic = get_llm_for_sequence_regression(
@@ -218,8 +223,8 @@ class CriticModelActor(BaseModelActor):
         )
 
         # load checkpoint
-        if args.load_checkpoint and os.path.exists(os.path.join(args.ckpt_path, "_actor")):
-            ckpt_path = os.path.join(args.ckpt_path, "_critic")
+        if args.load_checkpoint and os.path.exists(os.path.join(self.critic_ckpt_path, "_actor")):
+            ckpt_path = os.path.join(self.critic_ckpt_path, "_critic")
             strategy.print(f"Loading the checkpoint: {ckpt_path}")
             strategy.load_ckpt(self.critic, ckpt_path)
 
@@ -285,7 +290,7 @@ class CriticModelActor(BaseModelActor):
     def save_checkpoint(self, tag):
         args = self.strategy.args
         self.strategy.save_ckpt(
-            self.critic, os.path.join(args.ckpt_path, "_critic"), tag, args.max_ckpt_num, args.max_ckpt_mem
+            self.critic, os.path.join(self.critic_ckpt_path, "_critic"), tag, args.max_ckpt_num, args.max_ckpt_mem
         )
 
     def reload_states(self):

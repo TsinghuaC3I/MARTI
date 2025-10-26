@@ -1,6 +1,6 @@
 from func_timeout import func_timeout, FunctionTimedOut
-from marti.verifiers.qwen.qwen_math_parser import extract_answer
-from marti.verifiers.qwen.math_grade import grade_answer
+from openrlhf.verifiers.qwen.qwen_math_parser import extract_answer
+from openrlhf.verifiers.qwen.math_grade import grade_answer
 
 def qwen_reward_fn_timeout(
     generated_text: str,

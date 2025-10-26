@@ -3,7 +3,7 @@ import os
 import socket
 from abc import ABC
 from typing import Dict, List, Optional, Union
-
+import uuid
 import deepspeed
 import ray
 import torch
@@ -19,7 +19,7 @@ from openrlhf.trainer.ppo_utils.experience_maker import Experience
 from openrlhf.utils import get_tokenizer
 from openrlhf.utils.deepspeed import DeepspeedStrategy
 from openrlhf.utils.deepspeed.deepspeed_utils import offload_deepspeed_states, reload_deepspeed_states
-from openrlhf.utils.distributed_util import stateless_init_process_group, torch_dist_barrier_and_cuda_sync
+from openrlhf.utils.distributed_util import stateless_init_process_group, torch_dist_barrier_and_cuda_sync, init_process_group
 from openrlhf.utils.logging_utils import init_logger
 
 from ..ppo_utils import NaiveReplayBuffer
@@ -120,9 +120,14 @@ class ActorPPOTrainer(ABC):
                 self.strategy.args.vllm_tensor_parallel_size,
             )
             world_size = vllm_num_engines * vllm_tensor_parallel_size + 1
-
             use_ray = getattr(self.strategy.args, "vllm_sync_with_ray", False)
-            group_name = "openrlhf"
+            # Use unique group name for each actor instance to avoid conflicts in multi-agent scenarios
+            group_name = f"openrlhf_{uuid.uuid4().hex[:8]}"
+            logger.warning(
+                f"Initializing Actor-vLLM process group: group_name={group_name}, "
+                f"world_size={world_size}, vllm_num_engines={vllm_num_engines}, "
+                f"vllm_tensor_parallel_size={vllm_tensor_parallel_size}, use_ray={use_ray}"
+            )
             refs = [
                 engine.init_process_group.remote(
                     master_address,
@@ -141,8 +146,12 @@ class ActorPPOTrainer(ABC):
                 collective.init_collective_group(world_size=world_size, rank=0, backend=backend, group_name=group_name)
                 self._model_update_group = group_name
             else:
-                self._model_update_group = stateless_init_process_group(
-                    master_address, master_port, 0, world_size, torch.cuda.current_device()
+                self._model_update_group = init_process_group(
+                    backend=backend,
+                    init_method=f"tcp://{master_address}:{master_port}",
+                    world_size=world_size,
+                    rank=0,
+                    group_name=group_name,
                 )
 
             ray.get(refs)
@@ -294,10 +303,114 @@ class ActorPPOTrainer(ABC):
         # merge logs from info field
         for k, v in experience.info.items():
             if isinstance(v, list):
-                status[k] = torch.tensor(v, dtype=torch.float).mean().item()
+                try:
+                    status[k] = torch.tensor(v, dtype=torch.float).mean().item()
+                except:
+                    logger.warning(f"cannot write str value: key {k} with value {v}")
             elif isinstance(v, torch.Tensor):
                 status[k] = v.float().mean().item()
         return status
+
+    # def _broadcast_to_vllm(self):
+    #     if self.args.vllm_enable_sleep:
+    #         from openrlhf.trainer.vllm_engine import batch_vllm_engine_call
+    #         batch_vllm_engine_call(self.vllm_engines, "wake_up")
+        
+    #     use_prefix_cache = getattr(self.args, "enable_prefix_caching", False)
+    #     cache_reset_refs = []
+        # if use_prefix_cache and torch.distributed.get_rank() == 0:
+        #     # clear prefix cache
+        #     for engine in self.vllm_engines:
+        #         cache_reset_refs.append(engine.reset_prefix_cache.remote())
+
+        # # avoid OOM
+        # torch.cuda.empty_cache()
+        # model = self.actor.model.module
+        # count, num_params = 0, len(list(model.named_parameters()))
+
+        # def _broadcast_param(param, count, num_params):
+        #     use_ray = getattr(self.args, "vllm_sync_with_ray", False)
+        #     # Fire all vllm engines for broadcast
+        #     if torch.distributed.get_rank() == 0:
+        #         shape = param.shape if self.args.zero_stage != 3 else param.ds_shape
+        #         refs = [
+        #             engine.update_weight.remote(name, dtype=param.dtype, shape=shape, empty_cache=count == num_params)
+        #             for engine in self.vllm_engines
+        #         ]
+
+        #         if use_ray:
+        #             import ray.util.collective as collective
+
+        #             collective.broadcast(param.data, 0, group_name=self._model_update_group)
+        #         else:
+        #             torch.distributed.broadcast(param.data, 0, group=self._model_update_group)
+        #         ray.get(refs)
+
+        # def _handle_cuda_ipc(param, count, num_params):
+        #     from torch.multiprocessing.reductions import reduce_tensor
+
+        #     weight = param.data.clone()
+        #     ipc_handle = reduce_tensor(weight)
+
+        #     ipc_handle = {get_physical_gpu_id(): ipc_handle}
+        #     ipc_handle_list = [None] * torch.distributed.get_world_size()
+        #     torch.distributed.all_gather_object(ipc_handle_list, ipc_handle)
+
+        #     if torch.distributed.get_rank() == 0:
+        #         ipc_handles = {}
+        #         for d in ipc_handle_list:
+        #             ipc_handles.update(d)
+
+        #         shape = param.shape if self.strategy.args.zero_stage != 3 else param.ds_shape
+        #         refs = [
+        #             engine.update_weight_cuda_ipc.remote(
+        #                 name,
+        #                 dtype=param.dtype,
+        #                 shape=shape,
+        #                 ipc_handles=ipc_handles,
+        #                 empty_cache=count == num_params,
+        #             )
+        #             for engine in self.vllm_engines
+        #         ]
+        #         ray.get(refs)
+        #     torch_dist_barrier_and_cuda_sync()
+
+        # for name, param in model.named_parameters():
+        #     count += 1  # empty_cache at last param
+
+        #     # For ZeRO-3, allgather sharded parameter and broadcast to all vllm engines by rank 0
+        #     # if self.args.ds_tensor_parallel_size > 1:
+        #     #     with deepspeed.module_inject.layers.GatherReplacedLayerParams([param], model, enabled=True):
+        #     #         _broadcast_param(param, count, num_params)
+        #     # else:
+        #     if not self.use_cuda_ipc:
+        #         with deepspeed.zero.GatheredParameters([param], enabled=self.args.zero_stage == 3):
+        #             _broadcast_param(param, count, num_params)
+        #     else:
+        #         with deepspeed.zero.GatheredParameters([param], enabled=self.strategy.args.zero_stage == 3):
+        #             _handle_cuda_ipc(param, count, num_params)
+
+        #     # Fire all vllm engines for broadcast
+        #     # if torch.distributed.get_rank() == 0:
+        #     #     shape = param.shape if self.args.zero_stage != 3 else param.ds_shape
+        #     #     refs = [
+        #     #         engine.update_weight.remote(name, dtype=param.dtype, shape=shape, empty_cache=count == num_params)
+        #     #         for engine in self.vllm_engines
+        #     #     ]
+
+        #     # # For ZeRO-3, allgather sharded parameter and broadcast to all vllm engines by rank 0
+        #     # with deepspeed.zero.GatheredParameters([param], enabled=self.args.zero_stage == 3):
+        #     #     if torch.distributed.get_rank() == 0:
+        #     #         torch.distributed.broadcast(param.data, 0, group=self._model_update_group)
+        #     #         ray.get(refs)
+
+        # if cache_reset_refs:
+        #     ray.get(cache_reset_refs)
+        # torch.cuda.empty_cache()
+        # torch_dist_barrier_and_cuda_sync()
+
+        # if self.args.vllm_enable_sleep:
+        #     batch_vllm_engine_call(self.vllm_engines, "sleep")
 
     def _broadcast_to_vllm(self):
         use_prefix_cache = getattr(self.strategy.args, "enable_prefix_caching", False)
@@ -387,12 +500,17 @@ class ActorPPOTrainer(ABC):
 
 @ray.remote(num_gpus=1)
 class PolicyModelActor(BaseModelActor):
-    def init_model_from_pretrained(self, strategy: DeepspeedStrategy, pretrain, max_steps=None, vllm_engines=None):
+    def init_model_from_pretrained(self, strategy: DeepspeedStrategy, pretrain, max_steps=None, vllm_engines=None, actor_ckpt_path=None):
         args = strategy.args
         self.save_hf_ckpt = args.save_hf_ckpt
         self.disable_ds_ckpt = args.disable_ds_ckpt
         self.vllm_engines = vllm_engines
         self.max_steps = max_steps
+
+        if actor_ckpt_path is not None:
+            self.actor_ckpt_path = actor_ckpt_path
+        else:
+            self.actor_ckpt_path = args.ckpt_path
 
         if getattr(args, "vllm_num_engines", 0) > 0:
             # To prevent hanging during NCCL synchronization of weights between DeepSpeed and vLLM.
@@ -467,7 +585,7 @@ class PolicyModelActor(BaseModelActor):
 
         # load checkpoint
         self.checkpoint_states = {}
-        ckpt_path = os.path.join(args.ckpt_path, "_actor")
+        ckpt_path = os.path.join(self.actor_ckpt_path, "_actor")
         if args.load_checkpoint and os.path.exists(ckpt_path):
             strategy.print(f"Loading the checkpoint: {ckpt_path}")
             _, states = strategy.load_ckpt(self.actor.model, ckpt_path)
@@ -552,14 +670,14 @@ class PolicyModelActor(BaseModelActor):
         args = self.strategy.args
         self.strategy.save_ckpt(
             self.actor.model,
-            os.path.join(args.ckpt_path, "_actor"),
+            os.path.join(self.actor_ckpt_path, "_actor"),
             tag,
             args.max_ckpt_num,
             args.max_ckpt_mem,
             client_states,
         )
         if self.save_hf_ckpt:
-            save_path = os.path.join(args.ckpt_path, f"{tag}_hf")
+            save_path = os.path.join(self.actor_ckpt_path, f"{tag}_hf")
             self.strategy.save_model(
                 self.ema_model if args.enable_ema else self.actor,
                 self.tokenizer,

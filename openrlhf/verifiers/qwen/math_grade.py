@@ -8,7 +8,7 @@ import sympy
 from pylatexenc import latex2text
 from sympy.parsing import sympy_parser
 
-from marti.verifiers.qwen.math_normalize import normalize_answer
+from openrlhf.verifiers.qwen.math_normalize import normalize_answer
 
 
 # sympy might hang -- we don't care about trying to be lenient in these cases

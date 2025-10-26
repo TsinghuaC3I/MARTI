@@ -1,9 +1,9 @@
 import concurrent.futures
 from typing import List
 from collections import Counter
-from marti.verifiers.qwen.qwen_math_parser import extract_answer
-from marti.verifiers.qwen.math_grade import grade_answer
-from marti.verifiers.qwen.grader import math_equal as qwen_math_equal
+from openrlhf.verifiers.qwen.qwen_math_parser import extract_answer
+from openrlhf.verifiers.qwen.math_grade import grade_answer
+from openrlhf.verifiers.qwen.grader import math_equal as qwen_math_equal
 
 def qwen_reward_fn_format(generated_text, golden_answer, task="math"):
     model_answer = extract_answer(generated_text, task)

@@ -9,6 +9,8 @@ from torch import distributed as dist
 from openrlhf.trainer.ppo_utils.experience_maker import Experience
 from openrlhf.utils.seqlen_balancing import get_minimum_num_micro_batch_size, get_seqlen_balanced_partitions
 from openrlhf.utils.utils import zero_pad_sequences
+from openrlhf.utils.logging_utils import init_logger
+logger = init_logger(__name__)
 
 
 @dataclass
@@ -56,10 +58,10 @@ def split_experience_batch(experience: Experience) -> List[BufferItem]:
                     raise ValueError(f"Size of {key} ({len(value)}) does not match batch_size ({batch_size})")
 
     items = []
+    #logger.warning(f"experience.info: {experience.info}")
     for i in range(batch_size):
         # Process main attributes
         item = {key: (getattr(experience, key)[i] if getattr(experience, key) is not None else None) for key in keys}
-
         # Process info dictionary
         item["info"] = {}
         for k, v in experience.info.items():
@@ -67,6 +69,15 @@ def split_experience_batch(experience: Experience) -> List[BufferItem]:
                 if len(v) != batch_size:
                     raise ValueError(f"Size of info[{k}] ({len(v)}) does not match batch_size ({batch_size})")
                 item["info"][k] = v[i]
+            #agent_role是字符串，会报错，添加以下特殊处理
+            elif isinstance(v, str):
+                # If it's a string, use the entire string for all samples
+                item["info"][k] = v
+            #reward是int 或者float  ，会报错，添加以下特殊处理
+            elif isinstance(v, int):
+                item["info"][k] = v
+            elif isinstance(v, float):
+                item["info"][k] = v
             else:
                 raise TypeError(f"Unsupported type for info[{k}]: {type(v)}")
 

@@ -6,7 +6,7 @@ import ray
 from openrlhf.utils.agent import AgentExecutorBase
 
 from .vllm_engine import BaseLLMRayActor
-
+from vllm.inputs import TokensPrompt
 
 @ray.remote
 class LLMRayActorAsync(BaseLLMRayActor):
@@ -100,6 +100,17 @@ class LLMRayActorAsync(BaseLLMRayActor):
 
         # Run the async code using the class's event loop
         await asyncio.gather(*tasks)
+
+    async def generate_async(self, prompt_ids, sampling_params):
+        from vllm.utils import random_uuid
+
+        prompts = TokensPrompt(prompt_token_ids=prompt_ids)
+        request_id = random_uuid()
+        results_generator = self.llm.generate(prompts, sampling_params, request_id)
+        final_output = None
+        async for request_output in results_generator:
+            final_output = request_output
+        return final_output
 
     async def get_responses(self):
         """
