@@ -120,10 +120,7 @@ async def generate_fn_async(
         + action_tokens
     )
 
-    # TODO 如何提取rollout_logprob
-    # Calculate rollout log probs
-    #logger.warning(f"the request_output is: {request_output}")
-    #logger.warning(f"the sampling_params is: {sampling_params}")
+    # get rollout logprobs for enable_vllm_is_correct
     if sampling_params.logprobs is not None:
         # action tokens logprobs
         for i, logprob in enumerate(request_output.outputs[0].logprobs):
@@ -203,15 +200,7 @@ def generate_fn(
         sampling_params=sampling_params,
     ))
 
-    # generation = answer[0].outputs[0].text
     generation = answer.outputs[0].text
-
-    # cost = 0.0
-    # Update cost info
-    # total_cost += cost
-    # if model_name not in cost_by_model:
-    #     cost_by_model[model_name] = 0.0
-    # cost_by_model[model_name] += cost
 
     result = GenerationResult(
         request=GenerationRequest(messages=messages), generation=generation, rollout_log_probs=rollout_log_probs,
@@ -236,16 +225,6 @@ def generate_fn(
         score = sum([eval_result.get_score() for eval_result in eval_results]) / len(
             eval_results
         )
-
-    # Calculate execution time for this node
-    # execution_time = time.time() - start_time
-    # node_times.append(execution_time)
-
-    # Update time by model
-    # if model_name not in time_by_model:
-        # time_by_model[model_name] = 0.0
-    # time_by_model[model_name] += execution_time
-
     return NodeState(
         generation_result=result, eval_results=eval_results
     ), score

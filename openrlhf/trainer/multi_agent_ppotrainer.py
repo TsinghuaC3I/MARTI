@@ -29,15 +29,9 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
     """
     def __init__(
         self,
-        pretrain: str,     # shijie TODO 修改为多个pretrain path list？  List[str]
+        pretrain: str,
         strategy: DeepspeedStrategy,
-        # actor_model_group: RayActorGroup,
-        # critic_model_group: RayActorGroup,
-        # reward_model_group: RayActorGroup,
-        # reference_model_group: RayActorGroup,
-        # vllm_engines=None,
-        # 修改为多个actor_model_group, critic_model_group, reward_model_group, reference_model_group, vllm_engines；参考marti multiagent-controller的实现 agent_list
-        agent_list,  # : List[Agent]  # TODO 需要check shijie根据marti的build初始化建立的agent_list是否正确
+        agent_list,
         prompt_max_len: int = 120,
         dataloader_pin_memory: bool = True,
         prompt_split: str = "train",
@@ -45,7 +39,7 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
         **generate_kwargs,
     ) -> None:
         super().__init__(
-            pretrain,  # TODO pretrain的作用为在BasePPOTrainer init时, 初始化了self.tokenizer
+            pretrain,
             strategy,
             None,
             None,
@@ -71,6 +65,7 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
 
         self.agent_list = agent_list
         self.num_agents = len(self.agent_list)
+        self.pass_rate = [None for _ in range(self.num_agents)]
 
         # 初始化tokenizer list
         self.tokenizer_list = []
@@ -94,12 +89,11 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
             self.agent_list,
             self.kl_ctl,
             self.strategy,
-            self.tokenizer_list,
+            # self.tokenizer_list,
             remote_reward_model=self.remote_reward_model,
         )
 
-        # TODO check是否需要传入apply chat template
-        assert self.args.apply_chat_template == False, "apply_chat_template为True时, 会使用self.tokenizer(第一个agent)对数据进行apply_chat_template"
+        assert self.args.apply_chat_template == False, "apply_chat_template should be false for multi agent"
         self.prepare_datasets()
         self._init_wandb()
 
@@ -126,10 +120,24 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
                 self._broadcast_to_vllm(agent)
             else:
                 checkpoint_states = {"global_step": 0, "episode": 0, "data_loader_state_dict": {}}
-
+        if args.eval_before_training:
+            print(f"[MultiAgent_PPOTrainer evaluate]: {args.eval_before_training}, {checkpoint_states['global_step']}")
+            self.save_logs_and_checkpoints(args, checkpoint_states['global_step'], None)
+        if args.eval_only:
+            return
         # Restore step and start_epoch
         steps = checkpoint_states["global_step"] + 1
         episode = checkpoint_states["episode"]
+
+        # agent_steps_list init
+        self.agent_steps_list = []
+        for agent_idx in range(self.num_agents):
+            agent_step_key = f"agent_{agent_idx}_step"
+            if agent_step_key in checkpoint_states:
+                self.agent_steps_list.append(checkpoint_states[agent_step_key] + 1)
+            else:
+                self.agent_steps_list.append(checkpoint_states.get("global_step", 0) + 1)
+
         data_loader_state_dict = checkpoint_states["data_loader_state_dict"]
         if data_loader_state_dict:
             self.prompts_dataloader.load_state_dict(data_loader_state_dict)
@@ -145,92 +153,94 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
                 initial=steps,
             )
 
-            filtered_samples = []
-            number_of_samples = 0
+            filtered_samples_per_agent = [[] for _ in range(self.num_agents)]
+            number_of_samples = [0] * self.num_agents
             for _, rand_prompts, labels, metadata in self.prompts_dataloader:
                 remote_reward_model = self.remote_reward_model if self.args.dynamic_filtering else None
-                # 得到 list of experience
-                #这里出来是GPU个数的列表，其中每个元素是对应GPU上的多智能体的sample list，sample list中每个元素是每个agent的sample
-                # update-lpf：这里得到的rollout_samples应该是List(Experience)
+                # get List(Experience)
+                logger.info("[MultiAgent_PPOTrainer] Begin ROLLOUT")
                 rollout_samples = self.samples_generator.generate_samples(
-                    rand_prompts, labels, metadata, remote_reward_model=remote_reward_model, **self.generate_kwargs  # Check lfy 多余的remote_reward_model=remote_reward_model,--lpf，保留用于远程reward 部署的接口remote_reward_model，默认设置为None
+                    rand_prompts, labels, metadata, remote_reward_model=remote_reward_model, **self.generate_kwargs
                 )
                 pbar.update()
 
-                # TODO 完善多智能体dynamic filter 逻辑
-                # dynamic filtering
-                pass_rate = None
-                if self.args.dynamic_filtering:
-                    number_of_samples += len(rollout_samples)
-                    # Group individual samples into batches of n_samples size
-                    for i in range(0, len(rollout_samples), self.args.n_samples_per_prompt):
-                        batch_samples = rollout_samples[i : i + self.args.n_samples_per_prompt]
-                        if len(batch_samples) < self.args.n_samples_per_prompt:
+                logger.info("[MultiAgent_PPOTrainer] ROLLOUT FINISHED! Begin making experiences")
+                # TODO only support micro rollout batch size =1 to process different agent experiences for extra experiences of different agent
+                experiences = self.experience_maker.make_experience_batch(rollout_samples)
+
+                # TODO update dynamic batch for multi agent
+                # balance experiences across dp
+                # if args.use_dynamic_batch:
+                #     experiences = balance_experiences(experiences, args)
+
+                # get List(List(Experience) of agent)
+                experiences = self.experience_maker.get_agent_experiences(experiences)
+
+                # dynamic filtering for multi agent
+                self.pass_rate = [None for _ in range(self.num_agents)]
+                if getattr(self.args, "dynamic_filtering_for_agents", False):
+                    number_of_samples = [x + len(experiences[agent_idx]) for agent_idx, x in enumerate(number_of_samples)]
+                    for agent_idx, experiences_agent in enumerate(experiences):
+                        filtered_samples_per_agent[agent_idx].extend(experiences_agent)
+
+                        # check whether agentxx has enough samples 
+                        if len(filtered_samples_per_agent[agent_idx]) / self.args.n_samples_per_prompt < self.args.rollout_batch_size:
+                            logger.info(
+                                f"[Agent {agent_idx}] filtered_samples {len(filtered_samples_per_agent[agent_idx]) / self.args.n_samples_per_prompt:.2f} "
+                                f"< rollout_batch_size {self.args.rollout_batch_size}, continue sampling"
+                            )
                             continue
 
-                        # Calculate average reward for this batch of samples
-                        avg_reward = sum(sample.scores[0].item() for sample in batch_samples) / len(batch_samples)
-
-                        # Check if average reward is within the specified range
-                        min_reward, max_reward = self.args.dynamic_filtering_reward_range
-                        if min_reward + 1e-6 < avg_reward < max_reward - 1e-6:
-                            filtered_samples.extend(batch_samples)
-
-                    # Continue sampling if filtered samples are insufficient
-                    if len(filtered_samples) / self.args.n_samples_per_prompt < self.args.rollout_batch_size:
+                        # update pass_rate of multi agent 
+                        self.pass_rate[agent_idx] = len(filtered_samples_per_agent[agent_idx]) / number_of_samples[agent_idx] * 100
                         logger.info(
-                            f"filtered_samples {len(filtered_samples) / self.args.n_samples_per_prompt} < rollout_batch_size {self.args.rollout_batch_size}, continue sampling"
+                            f"[Agent {agent_idx}] Dynamic filtering pass rate: {self.pass_rate}% "
+                            f"({len(filtered_samples_per_agent[agent_idx])}/{number_of_samples[agent_idx]})"
                         )
+
+                    if all(x is None for x in self.pass_rate):
                         continue
 
-                    pass_rate = len(filtered_samples) / number_of_samples * 100
-                    logger.info(
-                        f"Dynamic filtering pass rate: {pass_rate:.2f}% ({len(filtered_samples)}/{number_of_samples})"
-                    )
-                    rollout_samples = filtered_samples[: self.args.rollout_batch_size * self.args.n_samples_per_prompt]
-                    filtered_samples = []
-                    number_of_samples = 0
-                # TODO lpf：增加多智能体下对micro rollout batch size的判断，必须为1
-                print("lpf 收集rollout 完毕 开始make experience")
-                experiences = self.experience_maker.make_experience_batch(rollout_samples)# 只支持micro batch size =1；方便处理由不同agent构成的组进行
-
-                # TODO lpf：check多智能体如何支持dynamic batch，不好适配的话先搁置
-                # balance experiences across dp
-                if args.use_dynamic_batch:
-                    experiences = balance_experiences(experiences, args)
-
-                # 将experiences处理成list of agent experiences，分发数据到不同agent
-                # lpf: get List(List(Experience) of agent)，将不同agent的List(Experience) 通过append 分发到对应的缓存
-                experiences = self.experience_maker.get_agent_experiences(experiences)
+                    experiences = [
+                        (
+                            filtered_samples_per_agent[agent_idx][: self.args.rollout_batch_size * self.args.n_samples_per_prompt]
+                            if is_pass
+                            else None
+                        )
+                        for agent_idx, is_pass in enumerate(self.pass_rate)
+                    ]                   
+                    for agent_idx, is_pass in enumerate(self.pass_rate):
+                        if is_pass:
+                            filtered_samples_per_agent[agent_idx] = []
+                            number_of_samples[agent_idx] = 0
                 refs = []
                 for idx in range(self.num_agents):
-                    refs.extend(
-                        self.agent_list[idx].actor_model_group.async_run_method_batch(method_name="append", experience=experiences[idx])
-                    )
-                    if self.agent_list[idx].critic_model_group is not None:
+                    if experiences[idx] is not None:
                         refs.extend(
-                            self.agent_list[idx].critic_model_group.async_run_method_batch(method_name="append", experience=experiences[idx])
+                            self.agent_list[idx].actor_model_group.async_run_method_batch(method_name="append", experience=experiences[idx])
                         )
+                        if self.agent_list[idx].critic_model_group is not None:
+                            refs.extend(
+                                self.agent_list[idx].critic_model_group.async_run_method_batch(method_name="append", experience=experiences[idx])
+                            )
                 ray.get(refs)
 
-
-                # TODO: 使用agent_list并行进行训练
-                agents_status = self.ppo_train(steps)  # 返回的status格式为: {"agent_0": status, ...}
+                # Training begining
+                logger.info("[MultiAgent_PPOTrainer] make_experience FINISHED! Begin Training")
+                agents_status = self.ppo_train(steps)  # format: {"agent_0": status, ...}
 
                 for agent_key, status in agents_status.items():
-                    agent_idx = int(agent_key.split("_")[1])  # 从 "agent_0" → 0
-                    if "kl" in status:
-                        self.kl_ctl.update(status["kl"], args.rollout_batch_size * args.n_samples_per_prompt)
+                    if experiences[idx] is not None:
+                        agent_idx = int(agent_key.split("_")[1])  # 从 "agent_0" → 0
+                        if "kl" in status:
+                            self.kl_ctl.update(status["kl"], args.rollout_batch_size * args.n_samples_per_prompt)
 
-                    # Add generated samples to status dictionary
-                    if self.args.dynamic_filtering:
-                        status["dynamic_filtering_pass_rate"] = pass_rate
-                    logger.info(f"✨ Global step {steps}: {status}")
-                    sample0 = self.tokenizer_list[agent_idx].batch_decode(
-                        experiences[agent_idx][0].sequences[0].unsqueeze(0), skip_special_tokens=True
-                    )
-                    # status["generated_samples"] = [sample0[0], experiences[agent_idx][0].info["reward"][0]]
-                    status["generated_samples"] = [sample0[0], experiences[agent_idx][0].info["reward"]]
+                        logger.warning(f"✨ Global step {steps}: {status}")
+                        sample0 = self.tokenizer_list[agent_idx].batch_decode(
+                            experiences[agent_idx][0].sequences[0].unsqueeze(0), skip_special_tokens=True
+                        )
+                        # status["generated_samples"] = [sample0[0], experiences[agent_idx][0].info["reward"][0]]
+                        status["generated_samples"] = [sample0[0], experiences[agent_idx][0].info["reward"]]
 
                 # logs/checkpoints
                 client_states = {
@@ -238,9 +248,14 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
                     "episode": episode,
                     "data_loader_state_dict": self.prompts_dataloader.state_dict(),
                 }
+                for agent_idx in range(self.num_agents):
+                    client_states[f"agent_{agent_idx}_step"] = self.agent_steps_list[agent_idx]
                 self.save_logs_and_checkpoints(args, steps, pbar, agents_status, client_states)
 
                 steps = steps + 1
+                for agent_idx in range(self.num_agents):
+                    if self.pass_rate[agent_idx] is not None:
+                        self.agent_steps_list[agent_idx] += 1
 
         if self._wandb is not None:
             self._wandb.finish()
@@ -250,10 +265,11 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
     def ppo_train(self, global_steps):
         all_status = {}
 
-        # triger remote critic model training
         reload_critic_refs, critic_refs, critic_agents, offload_critic_refs = [], [], [], []
         num_critic_refs = 0
         for agent_idx, agent in enumerate(self.agent_list):
+            if self.pass_rate[agent_idx] is None:
+                continue
             if agent.critic_model_group is not None:
                 if self.strategy.args.deepspeed_enable_sleep:
                     reload_critic_refs.extend(agent.critic_model_group.async_run_method(method_name="reload_states"))
@@ -278,7 +294,12 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
         reload_actor_refs, actor_refs, actor_agents, offload_actor_refs = [], [], [], []
         num_actor_refs = 0
         for agent_idx, agent in enumerate(self.agent_list):
-            if global_steps > self.freezing_actor_steps:
+            if self.pass_rate[agent_idx] is None:
+                continue
+            #if global_steps > self.freezing_actor_steps:
+            if self.agent_steps_list[agent_idx] > self.freezing_actor_steps:
+                logger.info(f"[MultiAgent_PPOTrainer] Begin actor{agent_idx} fit")
+                
                 if self.strategy.args.deepspeed_enable_sleep:
                     reload_actor_refs.extend(agent.actor_model_group.async_run_method(method_name="reload_states"))
                 actor_refs.extend(
@@ -300,8 +321,11 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
             ray.get(offload_actor_refs)
 
         # 4. broadcast weights to vllm engines
-        if global_steps > self.freezing_actor_steps:
-            for agent in self.agent_list:
+        #if global_steps > self.freezing_actor_steps:
+        if self.agent_steps_list[agent_idx] > self.freezing_actor_steps:
+            for agent_idx, agent in enumerate(self.agent_list):
+                if self.pass_rate[agent_idx] is None:
+                    continue
                 if getattr(agent, "vllm_engines", None):
                     self._broadcast_to_vllm(agent)
 
@@ -329,7 +353,6 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
         # wandb/tensorboard setting
         self._wandb = None
         self._tensorboard = None
-        # 原来是单表，这里改成每个 agent 一张表
         self.generated_samples_table_map = {}
 
         if self.strategy.args.use_wandb:
@@ -352,7 +375,6 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
             wandb.define_metric("train/*", step_metric="train/global_step", step_sync=True)
             wandb.define_metric("eval/epoch")
             wandb.define_metric("eval/*", step_metric="eval/epoch", step_sync=True)
-            # 不再创建单一表；各 agent 的表在第一次写入时再初始化
             # self.generated_samples_table = wandb.Table(columns=["global_step", "text", "reward"])
 
         # Initialize TensorBoard writer if wandb is not available
@@ -374,11 +396,126 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
         start_time = time.time()
         logger.info(f"⏰ Evaluation start time: {time.strftime('%Y-%m-%d %H:%M:%S')}")
 
-        # vLLM wakeup when vllm_enable_sleep
-        # if self.strategy.args.vllm_enable_sleep:
-        #     from openrlhf.trainer.ray.vllm_engine import batch_vllm_engine_call
-        #     for agent in self.agent_list:
-        #         batch_vllm_engine_call(agent.vllm_engines, "wake_up")
+        with torch.no_grad():
+            # First collect all prompts and labels
+            all_prompts = []
+            all_labels = []
+            all_metadatas = []
+            prompt_to_datasource = {}  # Dictionary to store mapping between prompts and their data sources
+
+            for datasources, prompts, labels, metadatas in eval_dataloader:
+                all_prompts.extend(prompts)
+                all_labels.extend(labels)
+                all_metadatas.extend(metadatas)
+                # Create mapping for each prompt to its corresponding data source
+                for prompt, datasource in zip(prompts, datasources):
+                    prompt_to_datasource[prompt] = datasource
+
+            # Generate samples and calculate rewards
+            generate_kwargs = self.generate_kwargs.copy()
+            generate_kwargs["temperature"] = temperature
+            generate_kwargs["n_samples_per_prompt"] = n_samples_per_prompt
+
+            # get sample_list of different agents; len(sample_list) = num agents
+            samples_list = self.samples_generator.generate_samples(
+                all_prompts, all_labels, all_metadatas, remote_reward_model=self.remote_reward_model, is_eval=True, **generate_kwargs
+            )
+
+            # set num_nodes_per_prompt for multi agent mcts
+            num_nodes_per_prompt = self.strategy.args.workflow_args.get("eval_max_num_nodes", 1)
+
+            is_agent_list = isinstance(samples_list[0], list)
+
+            if not is_agent_list:
+                samples_list = [samples_list]  # -> [[samples_list]]
+
+            # logs init
+            agent_logs = {}
+            aggregated_metrics = {}
+
+            for agent_idx, agent_samples in enumerate(samples_list):
+                # select sample from different mcts process
+                if len(agent_samples) > len(all_prompts):
+                    agent_samples = agent_samples[::num_nodes_per_prompt]
+
+                # extra prompt/label/reward
+                agent_prompts = sum([s.prompts for s in agent_samples], [])
+                agent_labels = sum([s.labels for s in agent_samples], [])
+
+                rewards_list = [s.rewards for s in agent_samples]  # shape: [num_samples, ...]
+                rewards = torch.tensor(rewards_list).reshape(-1, n_samples_per_prompt, 2)
+
+                # compute metrics
+                agent_metrics = {}
+                num_prompts = len(agent_prompts) // n_samples_per_prompt
+
+                for i in range(num_prompts):
+                    original_prompt = agent_prompts[i * n_samples_per_prompt]
+                    datasource = prompt_to_datasource[original_prompt]
+
+                    if datasource not in agent_metrics:
+                        agent_metrics[datasource] = {
+                            f"pass{n_samples_per_prompt}": 0,
+                            "pass1": 0,
+                            "count": 0,
+                        }
+
+                    chunk_rewards = rewards[i]
+
+                    # pass@k 与 pass@1
+                    if n_samples_per_prompt > 1:
+                        agent_metrics[datasource][f"pass{n_samples_per_prompt}"] += chunk_rewards[:, 1].max().float().item()
+                    agent_metrics[datasource]["pass1"] += chunk_rewards[:, 0].mean().float().item()
+                    agent_metrics[datasource]["count"] += 1
+
+                # aggregated_metrics
+                logs = {}
+                for datasource, metrics in agent_metrics.items():
+                    if n_samples_per_prompt > 1:
+                        logs[f"eval_agent{agent_idx}_{datasource}_pass{n_samples_per_prompt}"] = (
+                            metrics[f"pass{n_samples_per_prompt}"] / metrics["count"]
+                        )
+                    logs[f"eval_agent{agent_idx}_{datasource}_pass1"] = (
+                        metrics["pass1"] / metrics["count"]
+                    )
+
+                    if datasource not in aggregated_metrics:
+                        aggregated_metrics[datasource] = {"passk_sum": 0, "pass1_sum": 0, "count": 0}
+                    if n_samples_per_prompt > 1:
+                        aggregated_metrics[datasource]["passk_sum"] += metrics[f"pass{n_samples_per_prompt}"]
+                    aggregated_metrics[datasource]["pass1_sum"] += metrics["pass1"]
+                    aggregated_metrics[datasource]["count"] += metrics["count"]
+
+                agent_logs[agent_idx] = logs
+
+            # compute avg metrics
+            for datasource, metrics in aggregated_metrics.items():
+                if metrics["count"] > 0:
+                    agent_logs.setdefault("all_avg_" + datasource, {})[f"eval_allagent_{datasource}_pass1"] = metrics["pass1_sum"] / metrics["count"]
+                    if n_samples_per_prompt > 1:
+                        agent_logs.setdefault("all_avg_" + datasource, {})[f"eval_allagent_{datasource}_pass{n_samples_per_prompt}"] = metrics["passk_sum"] / metrics["count"]
+
+            if self._wandb is not None:
+                logs = {"eval/%s" % k: v for logs_per_agent in agent_logs.values() for k, v in logs_per_agent.items()}
+                logs["global_step"] = global_step
+                self._wandb.log(logs)
+            elif self._tensorboard is not None:
+                for logs_per_agent in agent_logs.values():
+                    for k, v in logs_per_agent.items():
+                        self._tensorboard.add_scalar(f"eval/{k}", v, global_step)
+
+        logger.info(f"✨ Evaluation completed, global_step {global_step}, eval_metrics: {logs}")
+
+    def evaluate_system(self, eval_dataloader, global_step, temperature=0.6, n_samples_per_prompt=1):
+        """Evaluate model performance on eval dataset.
+
+        Args:
+            eval_dataloader: DataLoader containing evaluation prompts, labels and data sources
+            global_step: Current training step for logging
+            n_samples_per_prompt: Number of samples to generate per prompt for pass@k calculation
+        """
+        start_time = time.time()
+        logger.info(f"⏰ Evaluation start time: {time.strftime('%Y-%m-%d %H:%M:%S')}")
 
         with torch.no_grad():
             # First collect all prompts and labels
@@ -399,12 +536,16 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
             generate_kwargs = self.generate_kwargs.copy()
             generate_kwargs["temperature"] = temperature
             generate_kwargs["n_samples_per_prompt"] = n_samples_per_prompt
+
+            # get sample_list of different agents; len(sample_list) = num agents
             samples_list = self.samples_generator.generate_samples(
                 all_prompts, all_labels, all_metadatas, remote_reward_model=self.remote_reward_model, is_eval=True, **generate_kwargs
             )
 
-            # Only for mcts system evaluate
-            samples_list = samples_list[::8]
+            # select sample from different mcts process
+            num_nodes_per_prompt = self.strategy.args.workflow_args.get("eval_max_num_nodes", 1)
+            if len(samples_list) > len(all_prompts):
+                samples_list = samples_list[::num_nodes_per_prompt]
 
             # duplicate prompts and labels for each sample
             all_prompts = sum([s.prompts for s in samples_list], [])
@@ -413,9 +554,8 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
             # Get rewards from samples, such as agent rewards or remote reward models
             rewards_list = []
             for samples in samples_list:
-                rewards_list.append(samples.rewards)# 接受mcts系统的pass@ 1和pass@ k
-            # Reshape rewards to (num_prompts, n_samples_per_prompt)
-            # TODO 添加mncts workflow 每个prompt的节点数量
+                rewards_list.append(samples.rewards)
+
             # Only for mcts system evaluate
             rewards = torch.tensor(rewards_list).reshape(-1, n_samples_per_prompt, 2)
             # rewards = torch.tensor(rewards_list).reshape(-1, n_samples_per_prompt)
@@ -458,16 +598,11 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
                 for k, v in logs.items():
                     self._tensorboard.add_scalar(f"eval/{k}", v, global_step)
 
-        # if self.strategy.args.vllm_enable_sleep:
-        #     for agent in self.agent_list:
-        #         batch_vllm_engine_call(agent.vllm_engines, "sleep")
-
         end_time = time.time()
         duration = end_time - start_time
         time_str = str(timedelta(seconds=duration)).split(".")[0]
         logger.info(f"✨ Evaluation completed in {time_str}, global_step {global_step}, eval_metrics: {logs}")
 
-    # TODO 需要修改agent的ckpt和logs的保存策略
     def save_logs_and_checkpoints(self, args, global_step, step_bar, agents_status={}, client_states={}):
         if global_step % args.logging_steps == 0:
             # wandb
@@ -495,7 +630,8 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
                     }
                     self._wandb.log(logs)
             # TensorBoard
-            elif self._tensorboard is not None:
+            if self._tensorboard is not None:
+                logger.warning(f"agents_status: {agents_status}")
                 for agent_key, logs_dict in agents_status.items():
                     for k, v in logs_dict.items():
                         if k == "generated_samples":
@@ -505,16 +641,17 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
                             self._tensorboard.add_text(f"train/{agent_key}/generated_samples", formatted_text, global_step)
                         else:
                             self._tensorboard.add_scalar(f"train/{agent_key}/{k}", v, global_step)
+                            agent_idx = int(agent_key.split("_")[1])
+                            self._tensorboard.add_scalar(f"agent_{agent_idx}_step/train/{k}", v, self.agent_steps_list[agent_idx])
 
         # TODO: Add evaluation mechanism for PPO
         if global_step % args.eval_steps == 0 and self.eval_dataloader and len(self.eval_dataloader) > 0:
             self.evaluate(self.eval_dataloader, global_step, args.eval_temperature, args.eval_n_samples_per_prompt)
-        # 保存所有agent的ckpt
+
         # save ckpt
         # TODO: save best model on dev, use loss/perplexity/others on whole dev dataset as metric
         if global_step % args.save_steps == 0:
             tag = f"global_step{global_step}"
-            # 逐 agent 启动保存（先发起，后统一 ray.get）
             refs = []
             for agent_idx, agent in enumerate(getattr(self, "agent_list", [])):
                 refs.extend(agent.actor_model_group.async_run_method(

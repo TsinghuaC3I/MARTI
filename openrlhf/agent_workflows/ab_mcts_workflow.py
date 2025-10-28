@@ -212,7 +212,6 @@ async def workflow(
         }
         node_records.append(node_record)
 
-    # 返回统一格式的数据结构
     return {
         "prompt": prompt,
         "label": label,

@@ -66,8 +66,7 @@ class MultiAgent_RemoteExperienceMaker(RemoteExperienceMaker):
         agent_list,
         kl_controller,
         strategy=None,
-        # tokenizer=None,
-        tokenizer_list=None,# 需要对应不同agent 的tokenizer
+        # tokenizer_list=None,
         remote_reward_model=None,
         **kwargs,
     ):
@@ -82,10 +81,9 @@ class MultiAgent_RemoteExperienceMaker(RemoteExperienceMaker):
         # remote_rm_url indicates that the remote reward model is agent enviroment, remote http server or custom reward func
         self.remote_rm_url = self.args.remote_rm_url
         self.remote_reward_model = remote_reward_model
-        self.tokenizer_list = tokenizer_list
+        # self.tokenizer_list = tokenizer_list
         self.groups = None
         
-        # 初始化可能需要的模型组（用于共享的 critic 和 reward model）
         self.critic_model_group = kwargs.get('critic_model_group', None)
         self.reward_model_group = kwargs.get('reward_model_group', None)
 
@@ -95,31 +93,10 @@ class MultiAgent_RemoteExperienceMaker(RemoteExperienceMaker):
 
         samples_list = []
         if self.args.use_dynamic_batch:
-            assert False, f"当前不支持动态batch"
-        # TODO 检查多智能体是否支持use_dynamic_batch，大概率不支持
-            # total_lengths = [int(s.info["total_length"].item()) for s in rollout_samples]
-            # effective_actor_num = (
-            #     self.args.actor_num_nodes
-            #     * self.args.actor_num_gpus_per_node
-            #     // self.args.ring_attn_size
-            #     // self.args.ds_tensor_parallel_size
-            # )
-            # minimum_batch_num = get_minimum_num_micro_batch_size(
-            #     total_lengths,
-            #     self.args.rollout_max_tokens_per_gpu,
-            #     self.args.ring_attn_size,
-            #     self.args.ds_tensor_parallel_size,
-            # )
-            # minimum_batch_num = minimum_batch_num // effective_actor_num * effective_actor_num
-            # num_batch = max(minimum_batch_num, effective_actor_num)
-            # batch_indexes = get_seqlen_balanced_partitions(total_lengths, num_batch, False)
-            # for micro_index in batch_indexes:
-            #     micro_batch = [rollout_samples[idx] for idx in micro_index]
-            #     concat_samples = Experience.concat_experiences(micro_batch, self.tokenizer.pad_token_id)
-            #     samples_list.append(concat_samples)
+            assert False, f"mcst don't support use_dynamic_batch"
         else:
             batch_size = self.args.micro_rollout_batch_size
-            assert self.args.micro_rollout_batch_size == 1, f"目前无法处理不为1的情况，可能涉及不同agent exprience的concat，会报错"
+            assert self.args.micro_rollout_batch_size == 1, f"micro_rollout_batch_size must be 1."
             for i in range(0, len(rollout_samples), batch_size):
                 concat_samples = rollout_samples[i : i + batch_size]
                 samples_list.extend(concat_samples)
@@ -139,13 +116,10 @@ class MultiAgent_RemoteExperienceMaker(RemoteExperienceMaker):
         args = self.strategy.args
         device = "cpu"
 
-        # ---- 提取样本和 agent_id（**新增**） ----
-        # sequences_list / masks 按 samples_list 顺序存放（与原逻辑一致）
         sequences_list = [s.sequences for s in samples_list]
         attention_mask_list = [s.attention_mask for s in samples_list]
         action_mask_list = [s.action_mask for s in samples_list]
 
-        # 尝试读取 agent id：支持 "agent_id" 或 "agent_index"，否则默认 0
         agent_ids = []
         for s in samples_list:
             if "agent_id" in s.info:
@@ -155,7 +129,6 @@ class MultiAgent_RemoteExperienceMaker(RemoteExperienceMaker):
             else:
                 agent_ids.append(0)
 
-        # 确保 rewards 已经填好（跟原逻辑一致）
         # The rewards are already filled in the samples_list, such as the agent's environment rewards
         if samples_list[0].rewards is not None:
             pass
@@ -180,58 +153,46 @@ class MultiAgent_RemoteExperienceMaker(RemoteExperienceMaker):
                 pad_sequence=[True] * len(samples_list),
             )
 
-        # ---- 分组：按 agent_id 收集对应样本的索引与 inputs （**新增**） ----
         # groups: agent_id -> list of indices in samples_list
         groups = {}
         for idx, aid in enumerate(agent_ids):
             groups.setdefault(aid, []).append(idx)
         self.groups = groups
-        # 为每个 agent 分别发起 actor/initial 的 batch 请求，保存 refs（**新增**）
         actor_action_log_probs_ref_per_agent = {}
         base_action_log_probs_ref_per_agent = {}
-        # 如果 critic 是 shared 的，按原逻辑统一调用（否则可按 agent 同样分组）
-        # 这里保持 critic/shared reward 的原始调用（仅 actor/initial 按 agent 分组）
-        # 先构造 per-agent 输入并调用异步接口
-        for aid, indices in groups.items():
-            # 获取对应 agent 的 model groups
+      
+        # all agent forward all samples
+        for aid in groups.keys():
             try:
                 actor_group, initial_group = self.agent_list[aid].actor_model_group, self.agent_list[aid].ref_model_group
             except Exception as e:
                 raise ValueError(f"agent id {aid} not found in self.agent_list") from e
 
-            # 提取该 agent 对应的输入子集（按原 samples_list 的顺序）
-            sub_sequences = [sequences_list[i] for i in indices]
-            sub_action_mask = [action_mask_list[i] for i in indices]
-            sub_attention_mask = [attention_mask_list[i] for i in indices]
-
-            # 调用 actor 的 batch forward（异步）
             actor_action_log_probs_ref_per_agent[aid] = actor_group.async_run_method_batch(
                 method_name="forward",
-                sequences=sub_sequences,
-                action_mask=sub_action_mask,
-                attention_mask=sub_attention_mask,
+                sequences=sequences_list,
+                action_mask=action_mask_list,
+                attention_mask=attention_mask_list,
             )
 
             # Sync to avoid GPU OOM when colocate models
             if args.colocate_all_models or args.colocate_actor_ref: 
-                ray.get(actor_action_log_probs_ref_per_agent[aid])  # TODO check
+                ray.get(actor_action_log_probs_ref_per_agent[aid])
                 ray.get(actor_group.async_run_method(method_name="empty_cache"))
 
-            # 调用该 agent 的 initial model（若存在）
             if initial_group is not None:
                 base_action_log_probs_ref_per_agent[aid] = initial_group.async_run_method_batch(
                     method_name="forward",
-                    sequences=sub_sequences,
-                    action_mask=sub_action_mask,
-                    attention_mask=sub_attention_mask,
+                    sequences=sequences_list,
+                    action_mask=action_mask_list,
+                    attention_mask=attention_mask_list,
                 )
                 if args.colocate_all_models or args.colocate_actor_ref:
-                    ray.get(base_action_log_probs_ref_per_agent[aid])  # TODO check
+                    ray.get(base_action_log_probs_ref_per_agent[aid])
                     ray.get(initial_group.async_run_method(method_name="empty_cache"))
             else:
-                base_action_log_probs_ref_per_agent[aid] = ray.put([[None]] * len(indices))
+                base_action_log_probs_ref_per_agent[aid] = ray.put([[None]] * len(samples_list))
 
-        # ---- critic （shared） 调用（保留原逻辑） ----
         # Batch call critic model
         if self.agent_list[0].critic_model_group is not None:
             if args.colocate_critic_reward and not self.remote_rm_url:
@@ -250,55 +211,46 @@ class MultiAgent_RemoteExperienceMaker(RemoteExperienceMaker):
         else:
             value_ref = ray.put([[None]] * (len(samples_list) * args.ring_attn_size * args.ds_tensor_parallel_size))
 
-        # ---- 处理 colocation / sync：等待 per-agent actor/initial refs 完成 ----
-        # 同原逻辑，考虑 duplicate_factor。先等待所有 actor/initial refs 完成
         duplicate_factor = args.ring_attn_size * args.ds_tensor_parallel_size
 
-        # 收集所有 actor refs value 到单个列表（按 samples_list 顺序还原）
-        # 1) 取得每个 agent 的返回并展开（注意 remote actor 返回的是按其内部顺序的 list）
-        # ray.get 会返回 per-agent 的 list-of-lists（可能因为 ring/TP 重复），下面按 duplicate_factor 取样
-        # 等待 critic
         ray.get(value_ref)
         value_list = sum(ray.get(value_ref)[::duplicate_factor], [])
 
-        # 取得每个 agent 的 actor & base 返回，按 indices 放回到 action_log_probs_list / base_action_log_probs_list
-        # 初始化占位
         action_log_probs_list = [None] * len(samples_list)
         base_action_log_probs_list = [None] * len(samples_list)
 
-        # 遍历每个 agent：取结果并放回原始位置
-        for aid, indices in groups.items():
-            actor_raw = ray.get(actor_action_log_probs_ref_per_agent[aid])  # TODO check
-            actor_expanded = sum(actor_raw[::duplicate_factor], [])  # 扁平化并去重复制
-            if len(actor_expanded) != len(indices):
-                # 容错：如果长度不匹配，抛出明确错误信息
+        # get correct log probs for different agents
+        actor_outputs_per_agent = {}
+        base_outputs_per_agent = {}
+        
+        for aid in groups.keys():
+            actor_raw = ray.get(actor_action_log_probs_ref_per_agent[aid])
+            actor_expanded = sum(actor_raw[::duplicate_factor], [])
+            if len(actor_expanded) != len(samples_list):
                 raise RuntimeError(
-                    f"Actor returned {len(actor_expanded)} outputs for agent {aid}, expected {len(indices)}"
+                    f"Actor returned {len(actor_expanded)} outputs for agent {aid}, expected {len(samples_list)}"
                 )
+            actor_outputs_per_agent[aid] = actor_expanded
 
-            base_raw = ray.get(base_action_log_probs_ref_per_agent[aid])  # TODO check
+            base_raw = ray.get(base_action_log_probs_ref_per_agent[aid])
             base_expanded = sum(base_raw[::duplicate_factor], [])
-            if len(base_expanded) != len(indices):
-                # 如果 initial_group 为 None，会通过 ray.put 的 [[None]] 来保证长度一致
-                # 但仍做检查
+            if len(base_expanded) != len(samples_list):
                 raise RuntimeError(
-                    f"Initial model returned {len(base_expanded)} outputs for agent {aid}, expected {len(indices)}"
+                    f"Initial model returned {len(base_expanded)} outputs for agent {aid}, expected {len(samples_list)}"
                 )
+            base_outputs_per_agent[aid] = base_expanded
+        
+        for sample_idx, aid in enumerate(agent_ids):
+            action_log_probs_list[sample_idx] = actor_outputs_per_agent[aid][sample_idx]
+            base_action_log_probs_list[sample_idx] = base_outputs_per_agent[aid][sample_idx]
 
-            # 把该 agent 的结果按 indices 放回到全局列表（保持 samples_list 顺序）
-            for pos_in_group, sample_idx in enumerate(indices):
-                action_log_probs_list[sample_idx] = actor_expanded[pos_in_group]
-                base_action_log_probs_list[sample_idx] = base_expanded[pos_in_group]
-
-        # 最后检查没有 None（确保每个 sample 都有对应输出）
         assert None not in action_log_probs_list, "Some action logprobs missing after per-agent calls"
         assert None not in base_action_log_probs_list, "Some base action logprobs missing after per-agent calls"
         #logger.warning(f"sample_list_111: {samples_list}")
-        # ---- rewards 处理：保持原逻辑 ----
         if samples_list[0].rewards is not None:
             pass
         elif self.remote_rm_url:
-            # Get rewards info from remote model （如果你的 reward 也按 agent 分配，这里也需要改）
+            # Get rewards info from remote model
             rewards_info = ray.get(r_refs)
             update_samples_with_rewards(rewards_info, samples_list)
         else:
@@ -307,12 +259,10 @@ class MultiAgent_RemoteExperienceMaker(RemoteExperienceMaker):
                 samples.rewards = rewards_list[i]
                 samples.info["reward"] = rewards_list[i]
 
-        # ---- 原有一致性断言（保持） ----
         assert (
             len(samples_list) == len(action_log_probs_list) == len(base_action_log_probs_list) == len(value_list)
         ), f"len(samples_list): {len(samples_list)}, len(action_log_probs_list): {len(action_log_probs_list)}, len(base_action_log_probs_list): {len(base_action_log_probs_list)}, len(value_list): {len(value_list)}"
 
-        # ---- 按 sample 更新 experience（与原逻辑一致） ----
         for i, (samples, action_log_probs, base_action_log_probs, value) in enumerate(
             zip(samples_list, action_log_probs_list, base_action_log_probs_list, value_list)
         ):
@@ -345,21 +295,19 @@ class MultiAgent_RemoteExperienceMaker(RemoteExperienceMaker):
 
     def get_agent_experiences(self, samples_list: List[Experience]) -> List[List[Experience]]:
         """
-        根据 self.groups 信息提取每个 agent 对应的 Experience 列表。
+        use self.groups to extra Experience list of agents
 
         Args:
-            samples_list (List[Experience]): 所有样本组成的列表
+            samples_list (List[Experience]): all samples 
         Returns:
-            List[List[Experience]]: 每个 agent 对应的样本子列表，顺序与 agent_id 排序一致
+            List[List[Experience]]: list of different agent experience_list
         """
         if not hasattr(self, "groups") or self.groups is None:
-            raise ValueError("self.groups 未初始化，请在 make_experience 调用后使用该函数。")
+            raise ValueError("self.groups has not been inited!!")
 
         agent_experience_list = []
-        # 让 agent_id 按升序排列，以保持顺序稳定（可选）
         for aid in sorted(self.groups.keys()):
             indices = self.groups[aid]
-            # 提取对应样本
             agent_samples = [samples_list[i] for i in indices]
             agent_experience_list.append(agent_samples)
 

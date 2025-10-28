@@ -9,8 +9,8 @@ cd /mnt/shared-storage-user/marti/OpenRLHF
 
 # 基础配置
 MODEL_DIR="/mnt/shared-storage-user/marti/models"
-#使用areal 14B
-SHORT_NAME=${1:-"areal-boba-2-14B"}
+#使用qwen3 8B
+SHORT_NAME=${1:-"deepcoder-14B-preview"}
 PRETRAIN="${MODEL_DIR}/${SHORT_NAME}"
 PROMPT_MAX_LEN=4096
 GENERATE_MAX_LEN=32768
@@ -27,7 +27,7 @@ PROMPT_DATA="json@/mnt/shared-storage-user/marti/lipengfei/MARTI_DEV/data/${TASK
 #改成8
 MCTS_NODES=8
 NUM_TASKS=128  # 异步任务并发数量，替代原来的 tools_config.num_workers
-EXP=all_tricks
+EXP=all_tricks_deepcoder
 
 WORKFLOW_SAVE_PATH="${ROOT_DIR}/outputs/workflow/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}"
 
@@ -148,7 +148,7 @@ python3 -m openrlhf.cli.multi_agent_train_ppo_ray \
     --prompt_split "train" \
     --eval_dataset ${PROMPT_DATA} \
     --eval_split "test" \
-    --eval_temperature 1.0 \
+    --eval_temperature 0.6 \
     --eval_n_samples_per_prompt 1 \
     --input_key="prompt" \
     --label_key="label" \

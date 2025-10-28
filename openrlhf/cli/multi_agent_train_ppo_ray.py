@@ -23,12 +23,10 @@ from openrlhf.datasets import PromptDataset
 from openrlhf.utils.utils import get_tokenizer
 
 def get_seed(base_seed, num_workers=4):
-    """生成新的种子值
-    
+    """    
     Args:
         base_seed: 基础种子值
         num_workers: 工作进程数量
-        
     Returns:
         新的种子值
     """
@@ -37,15 +35,12 @@ def get_seed(base_seed, num_workers=4):
 
 def calculate_max_steps(args, strategy):
     """提前计算训练的max_steps
-    
     Args:
         args: 训练参数
         strategy: DeepSpeed策略
-        
     Returns:
         max_steps: 最大训练步数
     """   
-    # 准备数据集
     train_data = blending_datasets(
         args.prompt_data,
         args.prompt_data_probs,
@@ -55,16 +50,13 @@ def calculate_max_steps(args, strategy):
         dataset_split=args.prompt_split,
     )
     
-    # 创建训练数据集
     train_data = train_data.select(range(min(args.max_samples, len(train_data))))
     
-    # 获取第一个agent的pretrain路径来初始化tokenizer
     first_pretrain = args.agents[0][list(args.agents[0].keys())[0]]["pretrain"]
     tokenizer = get_tokenizer(first_pretrain, None, "left", strategy, use_fast=not args.disable_fast_tokenizer)
     
     prompts_dataset = PromptDataset(train_data, tokenizer, strategy, input_template=args.input_template)
     
-    # 计算max_steps
     max_steps = (
         len(prompts_dataset)
         * args.n_samples_per_prompt
@@ -72,12 +64,9 @@ def calculate_max_steps(args, strategy):
         * args.num_episodes
         * args.max_epochs
     )
-    
     return max_steps
 
-
 def init_agents_sequential(agent_configs, args, strategy, unified_pg_list, global_seed, max_steps):
-    """顺序初始化智能体"""
     agent_list = []
     for i, (agent_id, agent_config) in enumerate(agent_configs):
         # We copy the first agent to others under shared_agents settings
@@ -97,9 +86,7 @@ def init_agents_sequential(agent_configs, args, strategy, unified_pg_list, globa
         agent_list.append(agent)
     return agent_list
 
-# 修改的函数
 def init_agents_parallel(agent_configs, args, strategy, unified_pg_list, global_seed, max_steps):
-    """并行初始化智能体"""
     import concurrent.futures
     print(f"Initializing {len(agent_configs)} agents in parallel...")
     
@@ -126,7 +113,6 @@ def init_agents_parallel(agent_configs, args, strategy, unified_pg_list, global_
             print("Falling back to sequential initialization...")
             return init_agents_sequential(agent_configs, args, strategy, unified_pg_list, global_seed, max_steps)
         if args.shared_agents:
-            # 如果启用共享智能体，复制第一个智能体
             first_agent = agents[0]
             agents = [first_agent] * len(agent_configs)
         print(f"Successfully initialized {len(agents)} agents in parallel")
@@ -140,11 +126,11 @@ def train(args):
         dashboard_port=8265
         ray.init(runtime_env={
             "env_vars": {"TOKENIZERS_PARALLELISM": "true", "NCCL_DEBUG": "WARN"}},
-            logging_level=logging.DEBUG,  # 或 logging.INFO / logging.ERROR
+            logging_level=logging.DEBUG,
             logging_format="%(asctime)s %(levelname)s %(message)s",
-            dashboard_host="0.0.0.0",   # 允许外部访问 Dashboard
-            dashboard_port=8265,         # 固定端口号
-            include_dashboard=True,      # 启用 Dashboard
+            dashboard_host="0.0.0.0",
+            dashboard_port=8265,
+            include_dashboard=True, 
             )
 
     # Normalize global vllm_num_engines: convert None to 0
@@ -167,17 +153,6 @@ def train(args):
     # prepare placement_group for agents
     unified_pg_list = []
     for agent_id, agent_config in agent_configs:
-        # Set default parameters
-        # for key, value in args.default_agent.items():
-        #     if key not in agent_config:
-        #         agent_config[key] = value
-        
-        # # Override with global vllm config if provided
-        # if args.vllm_num_engines is not None and args.vllm_num_engines > 0:
-        #     agent_config["vllm_num_engines"] = args.vllm_num_engines
-        # if args.vllm_tensor_parallel_size > 0:
-        #     agent_config["vllm_tensor_parallel_size"] = args.vllm_tensor_parallel_size
-        
         # Normalize vllm_num_engines: convert None to 0
         if agent_config.get("vllm_num_engines") is None:
             agent_config["vllm_num_engines"] = 0
@@ -197,12 +172,12 @@ def train(args):
                 ray.get(pg.ready())
             unified_pg_list.append(pg)
 
-    # 提前计算 max_steps（用于初始化actor和critic的scheduler）
+    # init actor&critic scheduler
     strategy.print("Calculating max_steps for training...")
     max_steps = calculate_max_steps(args, strategy)
     strategy.print(f"Calculated max_steps: {max_steps}")
 
-    # 根据配置选择初始化方式   TODO 和multi_agent_ppotrainer对齐
+    # init multi agent
     agent_list = init_agents_parallel(agent_configs, args, strategy, unified_pg_list, global_seed, max_steps) if args.parallel_loading else init_agents_sequential(agent_configs, args, strategy, unified_pg_list, global_seed, max_steps)
     num_agents = len(agent_list)
 
@@ -228,7 +203,7 @@ def train(args):
     }
     
     ppo_trainer = MultiAgent_PPOTrainer.remote(
-        args.agents_pretrain[0],  # TODO 单智能体or多智能体？
+        args.agents_pretrain[0],
         strategy,
         agent_list,  # Pass the entire agent list
         prompt_max_len=args.prompt_max_len,
@@ -242,14 +217,12 @@ def train(args):
     ray.get(ppo_trainer.fit.remote())
 
     # save model
-    # TODO check 采用哪种保存方式
     for agent in agent_list:
         agent.save_actor_and_critic_model()
         # ray.get(agent.actor_model_group.async_save_model())
         # if args.critic_pretrain and args.save_value_network:
         #     ray.get(agent.critic_model_group.async_save_model())
 
-# 修改的函数
 def init_agent(agent_id, agent_config, global_config, strategy, pg_id, unified_pg_list, global_seed, max_steps):
     print("Create agent for", agent_id, agent_config)
 
@@ -276,7 +249,6 @@ def init_agent(agent_id, agent_config, global_config, strategy, pg_id, unified_p
     if agent_config["is_tuning"]:
         pg = unified_pg_list[pg_id]
 
-    print(f"经过这里 1")
     vllm_engines = None
     if agent_config["is_tuning"] or (not agent_config["is_tuning"] and agent_config["pretrain"] is not None):
         # init vLLM engine for text generation
@@ -314,8 +286,6 @@ def init_agent(agent_id, agent_config, global_config, strategy, pg_id, unified_p
                 agent_config.get("agent_func_path", None),
             )
 
-    print(f"经过这里 2")
-
     actor_model = None
     critic_model = None
     ref_model = None
@@ -330,7 +300,6 @@ def init_agent(agent_id, agent_config, global_config, strategy, pg_id, unified_p
             num_gpus_per_actor=0.2 if pg else 1,
             # duplicate_actors=agent_config["ring_attn_size"] * agent_config["ds_tensor_parallel_size"],
         )
-        print(f"经过这里 3")
 
         ref_model = RayActorGroup(
             agent_config["ref_num_nodes"],
@@ -340,7 +309,6 @@ def init_agent(agent_id, agent_config, global_config, strategy, pg_id, unified_p
             num_gpus_per_actor=0.2 if pg else 1,
             # duplicate_actors=agent_config["ring_attn_size"] * agent_config["ds_tensor_parallel_size"],
         )
-        print(f"经过这里 4")
 
         if not agent_config["colocate_all_models"]:
             pg = None
@@ -355,7 +323,6 @@ def init_agent(agent_id, agent_config, global_config, strategy, pg_id, unified_p
                 agent_config["critic_num_nodes"] * agent_config["critic_num_gpus_per_node"])]
             pg = placement_group(bundles, strategy="PACK")
             ray.get(pg.ready())
-        print(f"经过这里 5")
 
         if agent_config["critic_pretrain"]:
             critic_model = RayActorGroup(
@@ -366,9 +333,6 @@ def init_agent(agent_id, agent_config, global_config, strategy, pg_id, unified_p
                 num_gpus_per_actor=0.2 if pg else 1,
                 # duplicate_actors=agent_config["ring_attn_size"] * agent_config["ds_tensor_parallel_size"],
             )
-        
-        print(f"经过这里 6")
-
 
         # multiple reward models
         if agent_config["reward_pretrain"] is not None:
@@ -385,32 +349,27 @@ def init_agent(agent_id, agent_config, global_config, strategy, pg_id, unified_p
                         # duplicate_actors=agent_config["ring_attn_size"] * agent_config["ds_tensor_parallel_size"],
                     )
                 )
-        print(f"经过这里 7")
 
         if ref_model is not None:
             # init reference/reward/actor model
             refs = ref_model.async_init_model_from_pretrained(strategy, agent_config["pretrain"])
             ray.get(refs)
-        print(f"经过这里 8")
 
         refs = actor_model.async_init_model_from_pretrained(
             strategy, agent_config["pretrain"], max_steps, vllm_engines, actor_ckpt_path=agent_config["ckpt_path"])
         ray.get(refs)
-        print(f"经过这里 9")
 
         if agent_config["reward_pretrain"] is not None:
             for reward_model, reward_pretrain in zip(reward_models, reward_pretrains):
                 refs = reward_model.async_init_model_from_pretrained(
                     strategy, reward_pretrain)
             ray.get(refs)
-        print(f"经过这里 10")
 
         if agent_config["critic_pretrain"]:
             # critic scheduler initialization depends on max_step, so we have to init critic after actor
             refs = critic_model.async_init_model_from_pretrained(
                 strategy, agent_config["critic_pretrain"], max_steps, critic_ckpt_path=agent_config["ckpt_path"])
             ray.get(refs)
-        print(f"经过这里 11")
 
     return Agent(
         agent_id=agent_id,
@@ -424,8 +383,6 @@ def init_agent(agent_id, agent_config, global_config, strategy, pg_id, unified_p
         is_reasoning_model=agent_config["is_reasoning_model"]
     )
 
-
-# 修改的函数
 @dataclass
 class Agent:
     # One agent includes actor model (many workers), critic model, reference model, and vllm engines for PPO training
@@ -470,14 +427,8 @@ class Agent:
             # save tokenizer
             self.tokenizer.save_pretrained(os.path.join(self.agent_config["save_path"], self.agent_id))
 
-    
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    # Multi-agent specific arguments   reference_multi_agent_controller.py
-    # agents: 允许配置多个智能体，每个智能体有自己的ID和配置
-    # default_agent: 默认配置，用于所有智能体
-    # shared_agents: 是否共享同一个智能体
     # Multi agent papameters
     parser.add_argument("--agents", type=json.loads, nargs="+", required=True,
                       help="List of agent configurations, each containing agent_id and config")
@@ -554,10 +505,6 @@ if __name__ == "__main__":
     parser.add_argument("--enable_vllm_is_correction", action="store_true", default=False)
     parser.add_argument("--vllm_is_truncated_threshold", type=float, default=2)
 
-    # rollout-train mismatch
-    # parser.add_argument("--logprobs_mode", type=str, default=None)  # 
-    
-
     # Async training using ray
     parser.add_argument("--async_train", action="store_true", default=False, help="Enable async training")
 
@@ -575,7 +522,6 @@ if __name__ == "__main__":
         "--use_ds_universal_ckpt", action="store_true", help="Use deepspeed universal checkpoint", default=False
     )
 
-    # DeepSpeed
     # DeepSpeed
     parser.add_argument("--local_rank", type=int, default=-1, help="local_rank for deepspeed")
     parser.add_argument("--zero_stage", type=int, default=2, help="DeepSpeed ZeRO stage")
@@ -779,8 +725,15 @@ if __name__ == "__main__":
     # ModelScope parameters
     parser.add_argument("--use_ms", action="store_true", default=False)
 
-    args = parser.parse_args()
+    parser.add_argument("--dynamic_filtering_for_agents", action="store_true", default=False, help="Enable dynamic filtering for agents")
 
+    # eval config
+    parser.add_argument("--eval_before_training", action="store_true", default=False)
+    parser.add_argument("--eval_only", action="store_true", default=False)
+    args = parser.parse_args()
+    # Set vLLM generate_batch_size to rollout_batch_size if not specified
+    if not args.vllm_generate_batch_size:
+        args.vllm_generate_batch_size = args.rollout_batch_size
     # Validate arguments
     if args.eps_clip_low_high is None:
         args.eps_clip_low_high = (args.eps_clip, args.eps_clip)
@@ -821,9 +774,8 @@ if __name__ == "__main__":
                     agent_config["critic_pretrain"] = agent_config.get("pretrain")
 
             # Validate advantage estimator settings
-            # TODO lpf update: 增加num group关于workflow的判断
             if agent_config.get("advantage_estimator") in ["rloo", "reinforce_baseline", "group_norm"]:
-                assert agent_config.get("n_samples_per_prompt", 1) > 1 or args.workflow_args.get("max_num_nodes") > 1, \
+                assert agent_config.get("n_samples_per_prompt", 1) > 1 or args.workflow_args.get("max_num_nodes", -1) > 1, \
                     f"{agent_config.get('advantage_estimator')} requires n_samples_per_prompt > 1"
 
             # Validate remote_rm_url

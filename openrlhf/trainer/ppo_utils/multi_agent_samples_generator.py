@@ -64,11 +64,9 @@ class MultiAgentSamplesGenerator(SamplesGenerator):
         self.strategy = strategy
         self.args = strategy.args
         self.agents = agents
-        #logger.warning(f"agents: {self.agents}")
         # self.tokenizer_list = tokenizer_list
         self.prompt_max_len = prompt_max_len
         self.credit_model = credit_model
-        # TODO 用于适配单独的credit model
         self.credit_tokenizer=None
         """
         agents: List[Dict[str, Any]]
@@ -129,7 +127,6 @@ class MultiAgentSamplesGenerator(SamplesGenerator):
                 llms = [agent_llms[rank % len(agent_llms)]]
             else:
                 llms = agent_llms[rank::world_size]
-            #有问题：这里还得再调 参数找不到 暂时先固定住了
             generate_kwargs = agent.get("generate_kwargs") or {}
             sampling_params = SamplingParams(
                 temperature=generate_kwargs.get(
@@ -171,8 +168,7 @@ class MultiAgentSamplesGenerator(SamplesGenerator):
             from openrlhf.trainer.ray.vllm_engine import batch_vllm_engine_call
             for agent in self.agents:
                 batch_vllm_engine_call(agent["llms"], "wake_up")
-            print("成功wakeup", flush=True)
-            logger.warning(f"成功wakeup")
+            # print("[MultiAgentSamplesGenerator generate_samples] wakeup succeed", flush=True)
 
         rollout_samples = self._generate_vllm(all_prompts, all_labels, all_metadatas, **generate_kwargs)
 
@@ -180,11 +176,7 @@ class MultiAgentSamplesGenerator(SamplesGenerator):
         if self.strategy.args.vllm_enable_sleep:
             for agent in self.agents:
                 batch_vllm_engine_call(agent["llms"], "sleep")
-            print("成功sleep", flush=True)
-            logger.warning(f"成功sleep")
-
-
-
+            # print("[MultiAgentSamplesGenerator generate_samples] sleep succeed", flush=True)
         return rollout_samples
 
     @torch.no_grad()
@@ -192,24 +184,12 @@ class MultiAgentSamplesGenerator(SamplesGenerator):
         args = self.strategy.args
         # Set return_list to False, and then we only get one llm for async request
 
-        # Set up sampling parameters
-        # sampling_params = SamplingParams(
-        #     temperature=kwargs.get("temperature", 1.0),
-        #     top_p=kwargs.get("top_p", 1.0),
-        #     top_k=kwargs.get("top_k", -1),
-        #     max_tokens=kwargs.get("max_new_tokens", 1024),
-        #     min_tokens=kwargs.get("min_new_tokens", 1),
-        #     skip_special_tokens=kwargs.get("skip_special_tokens", False),
-        #     include_stop_str_in_output=True,
-        #     logprobs=1 if self.strategy.args.enable_vllm_is_correction else None,
-        # )
         # TODO check is eval的使用方式，优化
         is_eval = kwargs.get("is_eval", False)
         rank_agents_list = [self.get_rank_agent(
             rank=rank,
             world_size=self.num_vllms,
             is_eval=is_eval) for rank in range(self.num_vllms)]
-        print(f"llll-0000000000")
 
         temperature = kwargs.get("temperature", 1.0)
         max_response_length = kwargs.get("max_new_tokens", 1024)
@@ -221,19 +201,20 @@ class MultiAgentSamplesGenerator(SamplesGenerator):
             [[label] * n_samples_per_prompt for label in all_labels], [])
         all_metadatas = sum(
             [[metadata] * n_samples_per_prompt for metadata in all_metadatas], [])
-        print(f"llll-111111111")
-        all_trajectories = self.distribute_prompts(
+
+        # use different distributed prompts in eval and train stage
+        distribute_prompts_fn = self.distribute_prompts if not is_eval else self.distribute_prompts_single_agent
+        all_trajectories = distribute_prompts_fn(
             all_prompts,
             all_labels,
             all_metadatas,
             rank_agents_list,
             is_eval
         )
-        print(f"llll-22222222")
 
         rollout_samples = self.prepare_samples(all_trajectories, truncate_length, is_eval)
-        assert isinstance(rollout_samples, list), f"rollout samples should be list"
-        assert isinstance(rollout_samples[0], Experience), f"rollout samples [0] should be experience"
+        # assert isinstance(rollout_samples, list), f"rollout samples should be list"
+        # assert isinstance(rollout_samples[0], Experience), f"rollout samples [0] should be experience"
         return rollout_samples
 
     def distribute_prompts(self, all_prompts, all_labels, all_metadatas, rank_agents_list, is_eval=False):
@@ -245,7 +226,6 @@ class MultiAgentSamplesGenerator(SamplesGenerator):
         batch_size = (len(all_prompts) + len(rank_agents_list) - 1) // len(rank_agents_list)
 
         # Time the wrapper creation and request submission phase
-        wrapper_creation_start = time.time()
         expected_lens = []
         for i, agent_list in enumerate(rank_agents_list):
             prompts = all_prompts[i * batch_size : (i + 1) * batch_size]
@@ -268,9 +248,7 @@ class MultiAgentSamplesGenerator(SamplesGenerator):
             refs.append(ref)
             all_wrappers.append(multi_agent_wrapper)
 
-        print(f"llll-33333333")
         ray.get(refs)
-        workflow_execution_time = time.time() - wrapper_creation_start
 
         # Time the result collection phase
         result_collection_start = time.time()
@@ -286,87 +264,164 @@ class MultiAgentSamplesGenerator(SamplesGenerator):
         
         # Log comprehensive timing information
         logger = init_logger(__name__)
-        logger.info(f"MultiAgentWrapper distribute_prompts timing - "
-                   f"Total prompts: {len(prompts)}, "
-                   f"Workflow execution: {workflow_execution_time:.2f}s, "
-                   f"Result collection: {result_collection_time:.2f}s, "
-                   f"Total distribute time: {total_distribute_time:.2f}s")
+        logger.info(f"[MultiAgentWrapper distribute_prompts timing] Total distribute time: {total_distribute_time:.2f}s")
 
         all_trajectories = sum(all_trajectories, [])
         assert len(all_trajectories) == len(
             all_prompts), f"{len(all_trajectories)} vs {len(all_prompts)}"
         return all_trajectories
 
+    def distribute_prompts_single_agent(self, all_prompts, all_labels, all_metadatas, rank_agents_list, is_eval=False):
+        '''
+        rank_agents_list = List[List[agent_dict_for_rankxx]]
+        '''
+        agents_rank_list = list(map(list, zip(*rank_agents_list)))
+        assert len(agents_rank_list) == self.num_agents, f"rank_list of agents has different size with self.num_agents."
+        num_agents = self.num_agents
+        world_size = len(rank_agents_list)
+        # Start timing for the entire distribute_prompts phase
+        distribute_start_time = time.time()
+        # Distribute requests to engines and collect responses to outputs
+        refs = []
+        all_wrappers = []
+        batch_size = (len(all_prompts) + world_size - 1) // world_size
+
+        # Time the wrapper creation and request submission phase
+        expected_lens = []
+        for rank_id in range(world_size):
+            prompts = all_prompts[rank_id * batch_size : (rank_id + 1) * batch_size]
+            labels = all_labels[rank_id * batch_size : (rank_id + 1) * batch_size]
+            metadatas = all_metadatas[rank_id * batch_size : (rank_id + 1) * batch_size]
+            for agent_idx, rank_list in enumerate(agents_rank_list):
+                multi_agent_wrapper = MultiAgentWrapper.remote(
+                    agents=[rank_list[rank_id]],
+                    workflow_args=self.workflow_args,
+                    workflow_func_path=self.args.workflow_func_path
+                )
+                ref = multi_agent_wrapper.add_requests.remote(
+                    # tool_manager=self.tool_manager,
+                    prompts=prompts,
+                    labels=labels,
+                    metadatas=metadatas,
+                    is_eval=is_eval,
+                    # max_length=self.total_max_len,
+                )
+                expected_lens.append(len(prompts))
+                refs.append(ref)
+                all_wrappers.append(multi_agent_wrapper)
+
+        ray.get(refs)
+
+        # Time the result collection phase
+        result_collection_start = time.time()
+        all_output_refs = []
+
+        for expected_len, wrapper in zip(expected_lens, all_wrappers):
+            all_output_refs.append(wrapper.get_responses.remote(expected_len=expected_len))
+        all_trajectories = ray.get(all_output_refs)
+        result_collection_time = time.time() - result_collection_start
+        
+        # Calculate total time
+        total_distribute_time = time.time() - distribute_start_time
+        
+        # Log comprehensive timing information
+        logger = init_logger(__name__)
+        logger.info(f"[MultiAgentWrapper distribute_prompts timing] Total distribute time: {total_distribute_time:.2f}s")
+    
+        assert len(all_output_refs) == num_agents * world_size, f"size is error: len(all_output_refs) == num_agents * world_size: {len(all_output_refs)}  vs {num_agents} * {world_size}"
+        agent_trajectories_list = []
+        for agent_id in range(num_agents):
+            per_agent = []
+            for rank_id in range(world_size):
+                idx = rank_id * num_agents + agent_id
+                per_agent.extend(all_trajectories[idx])
+            agent_trajectories_list.append(per_agent)
+
+        # validate lengths: each agent should have total_prompts trajectories (some ranks' chunks could be empty)
+        for aid, per_agent in enumerate(agent_trajectories_list):
+            if len(per_agent) != len(all_prompts):
+                raise AssertionError(
+                    f"Agent {aid} trajectories length mismatch: {len(per_agent)} vs {len(all_prompts)}"
+                )
+
+        return agent_trajectories_list
+
     def prepare_samples(self, all_trajectories, truncate_length=4096, is_eval=False):
         """
-        Convert collected trajectories to a list of Experience objects.
-        Args:
-            all_trajectories: list of dicts containing prompt, label, trajectory, final_reward
-            tokenizer: tokenizer for token id to text conversion (optional)
-            max_length: truncate length
+        Convert collected trajectories (single-level or nested list) to Experience objects.
+
+        Supports:
+            - list[dict]
+            - list[list[dict]]
+
         Returns:
-            List[Experience]
+            - list[Experience] or list[list[Experience]] (matches input structure)
         """
-        samples_list = []
+        def _process_list_trajectories(all_trajectories):
+            """deal all_trajectory of single agent"""
+            samples = []
+            for traj_data in all_trajectories:
 
-        for traj_data in all_trajectories:
-            prompt = traj_data["prompt"]
-            label = traj_data["label"]
-            trajectory = traj_data["trajectory"]
+                prompt = traj_data["prompt"]
+                label = traj_data["label"]
+                trajectory = traj_data["trajectory"]
 
-            # 对 trajectory 中的每个 step 分别处理
-            for step in trajectory:
-                sequence_ids = step["sequence_ids"]
-                output_ids = step["output_ids"]
+                for step in trajectory:
+                    sequence_ids = step["sequence_ids"]
+                    output_ids = step["output_ids"]
 
-                # Create tensors
-                sequences = torch.tensor(sequence_ids)
-                attention_mask = torch.tensor([1] * len(sequences))
-    
-                # Create action mask based on tokenized action_ranges
-                action_mask = torch.zeros_like(attention_mask)
-                action_mask[-len(output_ids):] = 1
+                    # Create tensors
+                    sequences = torch.tensor(sequence_ids)
+                    attention_mask = torch.tensor([1] * len(sequences))
+                    action_mask = torch.zeros_like(attention_mask)
+                    action_mask[-len(output_ids):] = 1
 
-                # Apply length limit
-                sequences = sequences[:truncate_length].to("cpu")
-                attention_mask = attention_mask[:truncate_length].to("cpu")
-                action_mask = action_mask[1:truncate_length].to("cpu")
-                #logger.warning(f"step: {step}")
-                if step["rollout_log_prob"] is not None:
-                    rollout_log_probs = torch.tensor(step["rollout_log_prob"][1:truncate_length]).to("cpu")
-                else:
+                    # Apply length limit
+                    sequences = sequences[:truncate_length].to("cpu")
+                    attention_mask = attention_mask[:truncate_length].to("cpu")
+                    action_mask = action_mask[1:truncate_length].to("cpu")
+
                     rollout_log_probs = None
+                    if step.get("rollout_log_prob") is not None:
+                        rollout_log_probs = torch.tensor(step["rollout_log_prob"][1:truncate_length]).to("cpu")
 
-                # Calculate response length (distance between first and last 1)
-                ones_indices = torch.where(action_mask)[0]
-                response_length = (ones_indices[-1] - ones_indices[0] + 1).item() if len(ones_indices) else 0
-                total_length = attention_mask.float().sum()
-                is_clipped = total_length >= truncate_length
+                    # Calculate response length
+                    ones_indices = torch.where(action_mask)[0]
+                    response_length = (ones_indices[-1] - ones_indices[0] + 1).item() if len(ones_indices) else 0
+                    total_length = attention_mask.float().sum()
+                    is_clipped = total_length >= truncate_length
 
-                info = {
-                    "response_length": torch.tensor([response_length]),
-                    "total_length": torch.tensor([total_length]),
-                    "response_clip_ratio": torch.tensor([is_clipped], dtype=torch.float),
-                    "agent_role": step.get("agent_role", "unknown"),
-                    # "node_id": step["metadata"].get("expand_id", None),
-                    "agent_id": step.get("agent_id", None),
-                    "reward": step.get("reward", None),
-                    # "timestamp": step.get("metadata", {}).get("timestamp", None),
-                }
+                    info = {
+                        "response_length": torch.tensor([response_length]),
+                        "total_length": torch.tensor([total_length]),
+                        "response_clip_ratio": torch.tensor([is_clipped], dtype=torch.float),
+                        "agent_role": step.get("agent_role", "unknown"),
+                        "agent_id": step.get("agent_id", None),
+                        "reward": step.get("reward", None),
+                    }
 
-                rollout_sample = Experience(
-                    sequences=sequences.unsqueeze(0),
-                    attention_mask=attention_mask.unsqueeze(0),
-                    action_mask=action_mask.unsqueeze(0),
-                    rollout_log_probs=(
-                        rollout_log_probs.unsqueeze(0) if rollout_log_probs is not None else None
-                    ),
-                    prompts=[prompt],
-                    labels=[label],
-                    rewards=torch.tensor([step["reward"]]) if not is_eval else traj_data["final_reward"],
-                    scores=torch.tensor([step["reward"]]) if not is_eval else traj_data["final_reward"],
-                    info=info,
-                )
-                samples_list.append(rollout_sample)
+                    samples.append(
+                        Experience(
+                            sequences=sequences.unsqueeze(0),
+                            attention_mask=attention_mask.unsqueeze(0),
+                            action_mask=action_mask.unsqueeze(0),
+                            rollout_log_probs=(
+                                rollout_log_probs.unsqueeze(0) if rollout_log_probs is not None else None
+                            ),
+                            prompts=[prompt],
+                            labels=[label],
+                            rewards=torch.tensor([step["reward"]]) if not is_eval else traj_data["final_reward"],
+                            scores=torch.tensor([step["reward"]]) if not is_eval else traj_data["final_reward"],
+                            info=info,
+                        )
+                    )
+            return samples
 
-        return samples_list
+        if not all_trajectories:
+            return []
+
+        # check list[list[dict]]
+        if isinstance(all_trajectories[0], list):
+            return [_process_list_trajectories(traj_group) for traj_group in all_trajectories]
+        else:
+            return _process_list_trajectories(all_trajectories)

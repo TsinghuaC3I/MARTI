@@ -9,8 +9,8 @@ cd /mnt/shared-storage-user/marti/OpenRLHF
 
 # 基础配置
 MODEL_DIR="/mnt/shared-storage-user/marti/models"
-#使用areal 14B
-SHORT_NAME=${1:-"areal-boba-2-14B"}
+#使用areal 8B
+SHORT_NAME=${1:-"Qwen3-8B"}
 PRETRAIN="${MODEL_DIR}/${SHORT_NAME}"
 PROMPT_MAX_LEN=4096
 GENERATE_MAX_LEN=32768
@@ -27,12 +27,11 @@ PROMPT_DATA="json@/mnt/shared-storage-user/marti/lipengfei/MARTI_DEV/data/${TASK
 #改成8
 MCTS_NODES=8
 NUM_TASKS=128  # 异步任务并发数量，替代原来的 tools_config.num_workers
-EXP=all_tricks
+WORKFLOW_SAVE_PATH="${ROOT_DIR}/outputs/workflow/${SHORT_NAME}-${TASK}"
 
-WORKFLOW_SAVE_PATH="${ROOT_DIR}/outputs/workflow/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}"
-
-TENSORBOARD="${ROOT_DIR}/logs/tensorboard/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}"
-LOG_DIR=/mnt/shared-storage-user/marti/OpenRLHF/logs/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}.log
+EXP=gspo-tis-df-overlong-test-single
+TENSORBOARD="${ROOT_DIR}/logs/tensorboard/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-test-single"
+LOG_DIR=/mnt/shared-storage-user/marti/OpenRLHF/logs/single_ma-test-gspo_tis_datafilter_overlong_openrlhf_${SHORT_NAME}_test.log
 
 # 设置动态端口和环境变量
 export MASTER_PORT=$(shuf -i 10000-65535 -n 1)
@@ -59,8 +58,8 @@ AGENT0="{
     \"0\": {
         \"role\": \"generator\",
         \"pretrain\": \"${PRETRAIN}\",
-        \"save_path\": \"/mnt/shared-storage-user/marti/OpenRLHF/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0\",
-        \"ckpt_path\": \"/mnt/shared-storage-user/marti/OpenRLHF/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0\",
+        \"save_path\": \"/mnt/shared-storage-user/marti/OpenRLHF/outputs/final/${SHORT_NAME}-${EXP}-agent1\",
+        \"ckpt_path\": \"/mnt/shared-storage-user/marti/OpenRLHF/outputs/ckpt/${SHORT_NAME}-${EXP}-agent1\",
         \"is_tuning\": true
     }
 }"
@@ -81,10 +80,10 @@ export NCCL_DEBUG=WARN
 mkdir -p "${ROOT_DIR}/logs"
 mkdir -p "${WORKFLOW_SAVE_PATH}"
 mkdir -p "${TENSORBOARD}"
-mkdir -p "/mnt/shared-storage-user/marti/OpenRLHF/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0"
-mkdir -p "/mnt/shared-storage-user/marti/OpenRLHF/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent1"
-mkdir -p "/mnt/shared-storage-user/marti/OpenRLHF/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0"
-mkdir -p "/mnt/shared-storage-user/marti/OpenRLHF/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent1"
+mkdir -p "/mnt/shared-storage-user/marti/OpenRLHF/outputs/final/${SHORT_NAME}-${EXP}-agent1"
+mkdir -p "/mnt/shared-storage-user/marti/OpenRLHF/outputs/final/${SHORT_NAME}-${EXP}-agent2"
+mkdir -p "/mnt/shared-storage-user/marti/OpenRLHF/outputs/ckpt/${SHORT_NAME}-${EXP}-agent1"
+mkdir -p "/mnt/shared-storage-user/marti/OpenRLHF/outputs/ckpt/${SHORT_NAME}-${EXP}-agent2"
 
 # 运行训练脚本
 #--vllm_generate_batch_size 32
@@ -140,8 +139,9 @@ python3 -m openrlhf.cli.multi_agent_train_ppo_ray \
     --temperature 1.0 \
     --top_p 1.0 \
     --save_hf_ckpt \
-    --save_steps 4 \
-    --eval_steps 4 \
+    --save_steps 16 \
+    --eval_steps 8 \
+    --vllm_generate_batch_size 32 \
     --num_episodes 2 \
     --max_samples 100000 \
     --prompt_data ${PROMPT_DATA} \
@@ -150,8 +150,9 @@ python3 -m openrlhf.cli.multi_agent_train_ppo_ray \
     --eval_split "test" \
     --eval_temperature 1.0 \
     --eval_n_samples_per_prompt 1 \
+    --eval_before_training \
+    --eval_only \
     --input_key="prompt" \
     --label_key="label" \
     --load_checkpoint \
-    --dynamic_filtering_for_agents \
     --use_tensorboard "${TENSORBOARD}" 2>&1 | tee ${LOG_DIR}
