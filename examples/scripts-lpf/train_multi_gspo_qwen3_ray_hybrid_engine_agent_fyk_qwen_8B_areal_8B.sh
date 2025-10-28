@@ -30,7 +30,7 @@ PROMPT_DATA="json@/mnt/shared-storage-user/marti/lipengfei/MARTI_DEV/data/${TASK
 #改成8
 MCTS_NODES=16
 EXP=gspo-tis-df-overlong-fyk-multi3
-NUM_TASKS=256  # 异步任务并发数量，替代原来的 tools_config.num_workers
+NUM_TASKS=512  # 异步任务并发数量，替代原来的 tools_config.num_workers
 WORKFLOW_SAVE_PATH="${ROOT_DIR}/outputs/workflow/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}"
 
 TENSORBOARD="${ROOT_DIR}/logs/tensorboard/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}"
@@ -129,7 +129,7 @@ ray job submit --address="${RAY_ADDRESS}" \
     --vllm_num_engines 8 \
     --vllm_tensor_parallel_size 1 \
     --colocate_all_models \
-    --vllm_gpu_memory_utilization 0.75 \
+    --vllm_gpu_memory_utilization 0.9 \
     --micro_train_batch_size 1 \
     --train_batch_size 256 \
     --micro_rollout_batch_size 1 \
@@ -166,7 +166,7 @@ ray job submit --address="${RAY_ADDRESS}" \
     --top_p 1.0 \
     --save_hf_ckpt \
     --save_steps 1 \
-    --eval_steps 4 \
+    --eval_steps 1 \
     --num_episodes 2 \
     --max_samples 100000 \
     --prompt_data ${PROMPT_DATA} \
