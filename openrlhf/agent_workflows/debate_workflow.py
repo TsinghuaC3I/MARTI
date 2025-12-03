@@ -29,8 +29,8 @@ async def workflow(
     prompt: str,
     label: str,
     agents: List[Dict[str, Any]],
-    tool_manager,
-    task: str,
+    tool_manager=None,
+    task: str = None,
     metadata: Optional[Dict] = None,
     **kwargs,
 ) -> Dict[str, Any]:
@@ -46,7 +46,8 @@ async def workflow(
         metadata: Additional metadata
     """
     workflow_args = kwargs.get("workflow_args", {})
-
+    if task is None:
+        task = workflow_args.get("task", "math")
     initial_prompt = f"{prompt}\n\nPlease reason step by step, and put your final answer within \\boxed{{}}."
 
     debate_template = """Here are solutions from other agents:
@@ -94,14 +95,24 @@ Please reason step by step, and put your final answer within \\boxed{{}}."""
 
         tasks = []
         input_prompts = []
+        input_token_ids_list = []
         for agent, agent_input in zip(agents, agent_inputs):
             input_prompt = apply_template_with_tokenizer(
                 agent["tokenizer"], agent_input
             )
             input_prompts.append(input_prompt)
+            # Tokenize input prompt to get token IDs
+            input_token_ids = agent["tokenizer"](
+                input_prompt,
+                add_special_tokens=False,
+                return_tensors="pt",
+            )["input_ids"][0].tolist()
+            input_token_ids_list.append(input_token_ids)
             tasks.append(
                 agent["llm"].generate_async.remote(
-                    input_prompt, agent["sampling_params"]
+                    # prompt_ids=input_token_ids, agent["sampling_params"]
+                    prompt_ids=input_token_ids,
+                    sampling_params=agent["sampling_params"]
                 )
             )
 
@@ -112,14 +123,39 @@ Please reason step by step, and put your final answer within \\boxed{{}}."""
         )
 
         for index, agent in enumerate(agents):
+            result = agent_results[index]
+            input_token_ids = input_token_ids_list[index]
+            # Extract token IDs from result
+            output_token_ids = result.outputs[0].token_ids
+            # Build sequence_ids (input + output tokens)
+            sequence_ids = input_token_ids + output_token_ids
+            
+            # Extract rollout_log_probs if available
+            rollout_log_probs = None
+            if agent["sampling_params"].logprobs is not None:
+                rollout_log_probs = [0.0] * len(input_token_ids)
+                if hasattr(result.outputs[0], "logprobs") and result.outputs[0].logprobs is not None:
+                    for i, logprob_dict in enumerate(result.outputs[0].logprobs):
+                        if i < len(output_token_ids) and output_token_ids[i] in logprob_dict:
+                            rollout_log_probs.append(logprob_dict[output_token_ids[i]].logprob)
+                        else:
+                            rollout_log_probs.append(0.0)
+                else:
+                    rollout_log_probs.extend([0.0] * len(output_token_ids))
+            
             trajectory[index].append(
                 {
                     "turn_id": num_round,
                     "agent_index": index,
+                    "agent_id": agent["agent_id"],
                     "agent_name": agent["agent_id"],
                     "agent_role": agent["agent_role"],
                     "agent_input": input_prompts[index],
                     "agent_output": agent_outputs[index],
+                    "output_ids": output_token_ids,
+                    "sequence_ids": sequence_ids,
+                    "rollout_log_prob": rollout_log_probs,
+                    "reward": agent_rewards[index],
                     "metadata": {},
                 }
             )
@@ -130,11 +166,14 @@ Please reason step by step, and put your final answer within \\boxed{{}}."""
         ground_truth=label,
         task=task,
     )
-
+    flattened_trajectory = []
+    for agent_idx, agent_turns in enumerate(trajectory):
+        for turn in agent_turns:
+            flattened_trajectory.append(turn)
     return {
         "prompt": prompt,
         "label": label,
-        "trajectory": trajectory,
+        "trajectory": flattened_trajectory,
         "reward_matrix": rewards,
         "final_reward": final_reward,
     }
