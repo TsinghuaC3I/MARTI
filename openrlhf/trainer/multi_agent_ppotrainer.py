@@ -415,6 +415,126 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
             log_dir = os.path.join(self.strategy.args.use_tensorboard, self.strategy.args.wandb_run_name)
             self._tensorboard = SummaryWriter(log_dir=log_dir)
 
+    # def evaluate(self, eval_dataloader, global_step, temperature=0.6, n_samples_per_prompt=1):
+    #     """Evaluate model performance on eval dataset.
+
+    #     Args:
+    #         eval_dataloader: DataLoader containing evaluation prompts, labels and data sources
+    #         global_step: Current training step for logging
+    #         n_samples_per_prompt: Number of samples to generate per prompt for pass@k calculation
+    #     """
+    #     start_time = time.time()
+    #     logger.info(f"⏰ Evaluation start time: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+
+    #     with torch.no_grad():
+    #         # First collect all prompts and labels
+    #         all_prompts = []
+    #         all_labels = []
+    #         all_metadatas = []
+    #         prompt_to_datasource = {}  # Dictionary to store mapping between prompts and their data sources
+
+    #         for datasources, prompts, labels, metadatas in eval_dataloader:
+    #             all_prompts.extend(prompts)
+    #             all_labels.extend(labels)
+    #             all_metadatas.extend(metadatas)
+    #             # Create mapping for each prompt to its corresponding data source
+    #             for prompt, datasource in zip(prompts, datasources):
+    #                 prompt_to_datasource[prompt] = datasource
+
+    #         # Generate samples and calculate rewards
+    #         generate_kwargs = self.generate_kwargs.copy()
+    #         generate_kwargs["temperature"] = temperature
+    #         generate_kwargs["n_samples_per_prompt"] = n_samples_per_prompt
+
+    #         # get sample_list of different agents; len(sample_list) = num agents
+    #         samples_list = self.samples_generator.generate_samples(
+    #             all_prompts, all_labels, all_metadatas, remote_reward_model=self.remote_reward_model, is_eval=True, **generate_kwargs
+    #         )
+
+    #         # set num_nodes_per_prompt for multi agent mcts
+    #         num_nodes_per_prompt = self.strategy.args.workflow_args.get("eval_max_num_nodes", 1)
+
+    #         is_agent_list = isinstance(samples_list[0], list)
+
+    #         if not is_agent_list:
+    #             samples_list = [samples_list]  # -> [[samples_list]]
+
+    #         # logs init
+    #         agent_logs = {}
+    #         aggregated_metrics = {}
+
+    #         for agent_idx, agent_samples in enumerate(samples_list):
+    #             # select sample from different mcts process
+    #             if len(agent_samples) > len(all_prompts):
+    #                 agent_samples = agent_samples[::num_nodes_per_prompt]
+
+    #             # extra prompt/label/reward
+    #             agent_prompts = sum([s.prompts for s in agent_samples], [])
+    #             agent_labels = sum([s.labels for s in agent_samples], [])
+
+    #             rewards_list = [s.rewards for s in agent_samples]  # shape: [num_samples, ...]
+    #             rewards = torch.tensor(rewards_list).reshape(-1, n_samples_per_prompt, 2)
+
+    #             # compute metrics
+    #             agent_metrics = {}
+    #             num_prompts = len(agent_prompts) // n_samples_per_prompt
+
+    #             for i in range(num_prompts):
+    #                 original_prompt = agent_prompts[i * n_samples_per_prompt]
+    #                 datasource = prompt_to_datasource[original_prompt]
+
+    #                 if datasource not in agent_metrics:
+    #                     agent_metrics[datasource] = {
+    #                         f"pass{n_samples_per_prompt}": 0,
+    #                         "pass1": 0,
+    #                         "count": 0,
+    #                     }
+
+    #                 chunk_rewards = rewards[i]
+
+    #                 # pass@k 与 pass@1
+    #                 if n_samples_per_prompt > 1:
+    #                     agent_metrics[datasource][f"pass{n_samples_per_prompt}"] += chunk_rewards[:, 1].max().float().item()
+    #                 agent_metrics[datasource]["pass1"] += chunk_rewards[:, 0].mean().float().item()
+    #                 agent_metrics[datasource]["count"] += 1
+
+    #             # aggregated_metrics
+    #             logs = {}
+    #             for datasource, metrics in agent_metrics.items():
+    #                 if n_samples_per_prompt > 1:
+    #                     logs[f"eval_agent{agent_idx}_{datasource}_pass{n_samples_per_prompt}"] = (
+    #                         metrics[f"pass{n_samples_per_prompt}"] / metrics["count"]
+    #                     )
+    #                 logs[f"eval_agent{agent_idx}_{datasource}_pass1"] = (
+    #                     metrics["pass1"] / metrics["count"]
+    #                 )
+
+    #                 if datasource not in aggregated_metrics:
+    #                     aggregated_metrics[datasource] = {"passk_sum": 0, "pass1_sum": 0, "count": 0}
+    #                 if n_samples_per_prompt > 1:
+    #                     aggregated_metrics[datasource]["passk_sum"] += metrics[f"pass{n_samples_per_prompt}"]
+    #                 aggregated_metrics[datasource]["pass1_sum"] += metrics["pass1"]
+    #                 aggregated_metrics[datasource]["count"] += metrics["count"]
+
+    #             agent_logs[agent_idx] = logs
+
+    #         # compute avg metrics
+    #         for datasource, metrics in aggregated_metrics.items():
+    #             if metrics["count"] > 0:
+    #                 agent_logs.setdefault("all_avg_" + datasource, {})[f"eval_allagent_{datasource}_pass1"] = metrics["pass1_sum"] / metrics["count"]
+    #                 if n_samples_per_prompt > 1:
+    #                     agent_logs.setdefault("all_avg_" + datasource, {})[f"eval_allagent_{datasource}_pass{n_samples_per_prompt}"] = metrics["passk_sum"] / metrics["count"]
+
+    #         if self._wandb is not None:
+    #             logs = {"eval/%s" % k: v for logs_per_agent in agent_logs.values() for k, v in logs_per_agent.items()}
+    #             logs["global_step"] = global_step
+    #             self._wandb.log(logs)
+    #         elif self._tensorboard is not None:
+    #             for logs_per_agent in agent_logs.values():
+    #                 for k, v in logs_per_agent.items():
+    #                     self._tensorboard.add_scalar(f"eval/{k}", v, global_step)
+
+    #     logger.info(f"✨ Evaluation completed, global_step {global_step}, eval_metrics: {logs}")
     def evaluate(self, eval_dataloader, global_step, temperature=0.6, n_samples_per_prompt=1):
         """Evaluate model performance on eval dataset.
 
@@ -473,14 +593,101 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
                 agent_labels = sum([s.labels for s in agent_samples], [])
 
                 rewards_list = [s.rewards for s in agent_samples]  # shape: [num_samples, ...]
-                rewards = torch.tensor(rewards_list).reshape(-1, n_samples_per_prompt, 2)
+                # Concatenate all rewards tensors and handle different shapes
+                # final_reward can be: scalar (float), list (e.g., [float, float]), or tensor
+                if len(rewards_list) > 0:
+                    flat_rewards = []
+                    for r in rewards_list:
+                        if isinstance(r, torch.Tensor):
+                            if r.dim() == 0:  # scalar tensor
+                                flat_rewards.append(r.unsqueeze(0))
+                            else:
+                                flat_rewards.append(r.flatten())
+                        else:
+                            # Handle Python native types (float, list, etc.)
+                            r_tensor = torch.as_tensor(r)
+                            if r_tensor.dim() == 0:  # scalar
+                                flat_rewards.append(r_tensor.unsqueeze(0))
+                            else:
+                                flat_rewards.append(r_tensor.flatten())
+                    if flat_rewards:
+                        rewards = torch.cat(flat_rewards, dim=0)
+                    else:
+                        rewards = torch.tensor([])
+                else:
+                    rewards = torch.tensor([])
+                
+                # Handle reshape: rewards should be reshaped to (num_prompts, n_samples_per_prompt, 2)
+                # The dimension 2 represents [pass1_reward, passk_reward]
+                # If rewards don't have dimension 2, we duplicate them
+                total_rewards = rewards.numel()
+                if total_rewards == 0:
+                    rewards = rewards.reshape(0, n_samples_per_prompt, 2)
+                elif total_rewards % (n_samples_per_prompt * 2) == 0:
+                    # Has the expected shape with dimension 2
+                    rewards = rewards.reshape(-1, n_samples_per_prompt, 2)
+                elif total_rewards % n_samples_per_prompt == 0:
+                    # Only has n_samples_per_prompt dimension, add dimension 2 by duplicating
+                    rewards = rewards.reshape(-1, n_samples_per_prompt)
+                    rewards = rewards.unsqueeze(-1).expand(-1, -1, 2)  # [num_prompts, n_samples_per_prompt, 2]
+                else:
+                    # Cannot reshape properly - this might happen if num_rounds > 1 in debate workflow
+                    # In this case, we need to group by original prompt
+                    # For now, log a warning and try to handle it
+                    logger.warning(f"Cannot reshape rewards from shape {rewards.shape} to (-1, {n_samples_per_prompt}, 2). Total rewards: {total_rewards}, len(agent_prompts): {len(agent_prompts)}")
+                    # Try to group by unique prompts - this is a fallback for debate workflow with multiple rounds
+                    unique_prompts = []
+                    prompt_to_rewards = {}
+                    for idx, prompt in enumerate(agent_prompts):
+                        if prompt not in prompt_to_rewards:
+                            unique_prompts.append(prompt)
+                            prompt_to_rewards[prompt] = []
+                        if idx < len(rewards):
+                            prompt_to_rewards[prompt].append(rewards[idx])
+                    
+                    # Take the last reward for each prompt (final_reward from debate workflow)
+                    grouped_rewards = []
+                    for prompt in unique_prompts:
+                        prompt_rewards = prompt_to_rewards[prompt]
+                        if prompt_rewards:
+                            # Use the last reward (should be final_reward)
+                            last_reward = prompt_rewards[-1]
+                            grouped_rewards.append(last_reward)
+                    
+                    if grouped_rewards:
+                        rewards = torch.stack(grouped_rewards)
+                        # Reshape to (num_prompts, n_samples_per_prompt, 2)
+                        if rewards.numel() % (n_samples_per_prompt * 2) == 0:
+                            rewards = rewards.reshape(-1, n_samples_per_prompt, 2)
+                        elif rewards.numel() % n_samples_per_prompt == 0:
+                            rewards = rewards.reshape(-1, n_samples_per_prompt)
+                            rewards = rewards.unsqueeze(-1).expand(-1, -1, 2)
+                        else:
+                            # Final fallback: pad or truncate to match expected shape
+                            target_size = (len(unique_prompts) // n_samples_per_prompt) * n_samples_per_prompt * 2
+                            if rewards.numel() < target_size:
+                                # Pad with last value
+                                padding = rewards[-1:].expand(target_size - rewards.numel())
+                                rewards = torch.cat([rewards, padding])
+                            else:
+                                rewards = rewards[:target_size]
+                            rewards = rewards.reshape(-1, n_samples_per_prompt, 2)
+                    else:
+                        rewards = rewards.reshape(0, n_samples_per_prompt, 2)
 
                 # compute metrics
                 agent_metrics = {}
-                num_prompts = len(agent_prompts) // n_samples_per_prompt
+                # Calculate num_prompts based on actual rewards size to avoid index out of bounds
+                num_prompts = rewards.shape[0]
+                # Ensure we don't exceed the actual number of prompts available
+                num_prompts = min(num_prompts, len(agent_prompts) // n_samples_per_prompt) if len(agent_prompts) > 0 else 0
 
                 for i in range(num_prompts):
-                    original_prompt = agent_prompts[i * n_samples_per_prompt]
+                    # Ensure we don't exceed agent_prompts bounds
+                    prompt_idx = i * n_samples_per_prompt
+                    if prompt_idx >= len(agent_prompts):
+                        break
+                    original_prompt = agent_prompts[prompt_idx]
                     datasource = prompt_to_datasource[original_prompt]
 
                     if datasource not in agent_metrics:
@@ -490,7 +697,7 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
                             "count": 0,
                         }
 
-                    chunk_rewards = rewards[i]
+                    chunk_rewards = rewards[i]  # shape: [n_samples_per_prompt, 2]
 
                     # pass@k 与 pass@1
                     if n_samples_per_prompt > 1:
@@ -535,7 +742,6 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
                         self._tensorboard.add_scalar(f"eval/{k}", v, global_step)
 
         logger.info(f"✨ Evaluation completed, global_step {global_step}, eval_metrics: {logs}")
-
     def evaluate_system(self, eval_dataloader, global_step, temperature=0.6, n_samples_per_prompt=1):
         """Evaluate model performance on eval dataset.
 
