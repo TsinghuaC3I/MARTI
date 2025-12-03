@@ -359,15 +359,45 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
             import wandb
 
             self._wandb = wandb
-            if not wandb.api.api_key:
-                wandb.login(key=self.strategy.args.use_wandb)
-
+            # if not wandb.api.api_key:
+            wandb.login(key=self.strategy.args.use_wandb)
+            def safe_serialize(obj, max_depth=10, current_depth=0):
+                """Recursively serialize objects, handling non-serializable types."""
+                if current_depth > max_depth:
+                    return "<max_depth_exceeded>"
+                
+                # Handle basic types
+                if obj is None or isinstance(obj, (bool, int, float, str)):
+                    return obj
+                
+                # Handle lists and tuples
+                if isinstance(obj, (list, tuple)):
+                    return [safe_serialize(item, max_depth, current_depth + 1) for item in obj]
+                
+                # Handle dictionaries
+                if isinstance(obj, dict):
+                    return {k: safe_serialize(v, max_depth, current_depth + 1) for k, v in obj.items()}
+                
+                # For other types, try to convert to string
+                try:
+                    # Check if it's a simple type that can be serialized
+                    import json
+                    json.dumps(obj)
+                    return obj
+                except (TypeError, ValueError):
+                    # Convert to string representation
+                    try:
+                        return str(obj)
+                    except:
+                        return f"<non-serializable: {type(obj).__name__}>"
+            
+            config_dict = safe_serialize(self.strategy.args.__dict__)
             wandb.init(
                 entity=self.strategy.args.wandb_org,
                 project=self.strategy.args.wandb_project,
                 group=self.strategy.args.wandb_group,
                 name=self.strategy.args.wandb_run_name,
-                config=self.strategy.args.__dict__,
+                config=config_dict,
                 reinit=True,
             )
 
@@ -628,6 +658,7 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
                             "global_step": global_step,
                         }.items()
                     }
+                    logs["train/global_step"] = global_step
                     self._wandb.log(logs)
             # TensorBoard
             if self._tensorboard is not None:
