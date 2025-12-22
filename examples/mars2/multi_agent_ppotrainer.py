@@ -1,0 +1,1026 @@
+import os
+import time
+from abc import ABC
+from datetime import timedelta
+
+import ray
+import torch
+from tqdm import tqdm
+import json
+from openrlhf.datasets import PromptDataset
+from openrlhf.datasets.utils import blending_datasets
+from openrlhf.trainer.ppo_utils import AdaptiveKLController, FixedKLController
+from openrlhf.trainer.ppo_utils.multi_agent_experience_maker import MultiAgent_RemoteExperienceMaker as RemoteExperienceMaker
+from openrlhf.trainer.ppo_utils.multi_agent_samples_generator import MultiAgentSamplesGenerator as SamplesGenerator
+from openrlhf.trainer.ppo_utils.replay_buffer import balance_experiences
+from openrlhf.trainer.ray.launcher import RayActorGroup
+from openrlhf.utils.deepspeed import DeepspeedStrategy
+from openrlhf.utils.logging_utils import init_logger
+from openrlhf.utils.utils import get_tokenizer
+from openrlhf.trainer.ppo_trainer import BasePPOTrainer
+
+logger = init_logger(__name__)
+
+@ray.remote
+class MultiAgent_PPOTrainer(BasePPOTrainer):
+    """
+    Trainer for Proximal Policy Optimization (PPO) / REINFORCE++ / GRPO / RLOO and their variants.
+    Single Controller with Multiple ActorGroups
+    """
+    def __init__(
+        self,
+        pretrain: str,
+        strategy: DeepspeedStrategy,
+        agent_list,
+        prompt_max_len: int = 120,
+        dataloader_pin_memory: bool = True,
+        prompt_split: str = "train",
+        eval_split: str = "test",
+        **generate_kwargs,
+    ) -> None:
+        super().__init__(
+            pretrain,
+            strategy,
+            None,
+            None,
+            None,
+            None,
+            None,
+            prompt_max_len,
+            dataloader_pin_memory,
+            prompt_split,
+            eval_split,
+            **generate_kwargs,
+        )
+
+        if self.kl_target:
+            self.kl_ctl = AdaptiveKLController(self.init_kl_coef, self.kl_target, self.kl_horizon)
+        else:
+            self.kl_ctl = FixedKLController(self.init_kl_coef)
+
+        if self.args.remote_rm_url and not self.args.remote_rm_url[0] == "agent":
+            from openrlhf.utils.remote_rm_utils import RemoteRewardModel
+
+            self.remote_reward_model = RemoteRewardModel.remote(self.args, self.remote_rm_url)
+
+        self.agent_list = agent_list
+        self.num_agents = len(self.agent_list)
+        self.pass_rate = [None for _ in range(self.num_agents)]
+
+        # 初始化tokenizer list
+        self.tokenizer_list = []
+        for agent_idx in range(self.num_agents):
+            pretrain = self.args.agents_pretrain[agent_idx]
+            self.tokenizer_list.append(get_tokenizer(pretrain, None, "left", strategy, use_fast=not self.args.disable_fast_tokenizer))
+        #fyk:这里不需要tokenizer list了，因为每个agent都有自己的tokenizer
+        #fyk:marti里不是直接传入agent_list，而是传入agent_list.metadata方法 需要check下agents和agent_list的差异
+        self.samples_generator = SamplesGenerator(
+            [agent.get_metadata(
+            ) for agent in self.agent_list],
+            self.strategy,
+            self.prompt_max_len,
+            **generate_kwargs,
+        )
+
+        self.experience_maker = RemoteExperienceMaker(
+            self.agent_list,
+            self.kl_ctl,
+            self.strategy,
+            # self.tokenizer_list,
+            remote_reward_model=self.remote_reward_model,
+        )
+
+        assert self.args.apply_chat_template == False, "apply_chat_template should be false for multi agent"
+        self.prepare_datasets()
+        self._init_wandb()
+
+        # get eval and save steps
+        if self.args.eval_steps == -1:
+            self.args.eval_steps = float("inf")  # do not evaluate
+        if self.args.save_steps == -1:
+            self.args.save_steps = float("inf")  # do not save ckpt
+
+    def fit(
+        self,
+    ) -> None:
+        args = self.args
+
+        # broadcast init checkpoint to vllm
+        for agent_idx, agent in enumerate(self.agent_list):
+            ckpt_path = os.path.join(agent.agent_config["ckpt_path"], "_actor")
+            if args.load_checkpoint and os.path.exists(ckpt_path):
+                # checkpoint_states = ray.get(self.actor_model_group.async_run_method(method_name="get_checkpoint_states"))[
+                checkpoint_states = ray.get(agent.actor_model_group.async_run_method(method_name="get_checkpoint_states"))[
+                    0
+                ]
+                logger.info(f"Agent {agent_idx} checkpoint_states: {checkpoint_states}")
+                self._broadcast_to_vllm(agent)
+            else:
+                checkpoint_states = {"global_step": 0, "episode": 0, "data_loader_state_dict": {}}
+        if args.eval_before_training:
+            print(f"[MultiAgent_PPOTrainer evaluate]: {args.eval_before_training}, {checkpoint_states['global_step']}")
+            self.save_logs_and_checkpoints(args, checkpoint_states['global_step'], None)
+        if args.eval_only:
+            return
+        # Restore step and start_epoch
+        steps = checkpoint_states["global_step"] + 1
+        episode = checkpoint_states["episode"]
+
+        # agent_steps_list init
+        self.agent_steps_list = []
+        for agent_idx in range(self.num_agents):
+            agent_step_key = f"agent_{agent_idx}_step"
+            if agent_step_key in checkpoint_states:
+                self.agent_steps_list.append(checkpoint_states[agent_step_key] + 1)
+            else:
+                self.agent_steps_list.append(checkpoint_states.get("global_step", 0) + 1)
+
+        data_loader_state_dict = checkpoint_states["data_loader_state_dict"]
+        if data_loader_state_dict:
+            self.prompts_dataloader.load_state_dict(data_loader_state_dict)
+
+        generate_kwargs = self.generate_kwargs
+        generate_kwargs["n_samples_per_prompt"] = self.args.n_samples_per_prompt
+
+        for episode in range(episode, args.num_episodes):
+            pbar = tqdm(
+                range(self.prompts_dataloader.__len__()),
+                desc=f"Episode [{episode + 1}/{args.num_episodes}]",
+                disable=False,
+                initial=steps,
+            )
+
+            filtered_samples_per_agent = [[] for _ in range(self.num_agents)]
+            number_of_samples = [0] * self.num_agents
+            for _, rand_prompts, labels, metadata in self.prompts_dataloader:
+                remote_reward_model = self.remote_reward_model if self.args.dynamic_filtering else None
+                # get List(Experience)
+                logger.info("[MultiAgent_PPOTrainer] Begin ROLLOUT")
+                rollout_samples = self.samples_generator.generate_samples(
+                    rand_prompts, labels, metadata, remote_reward_model=remote_reward_model, **self.generate_kwargs
+                )
+                pbar.update()
+                # dynamic filtering
+                if self.args.dynamic_filtering:
+                    pass_rate_dynamic = None
+                    number_of_samples_dynamic = len(rollout_samples)
+                    filtered_samples = []
+                    dynamic_step=self.strategy.args.workflow_args.get("max_num_nodes", 1)*self.args.n_samples_per_prompt
+                    logger.info(f"dynamic_step: {dynamic_step}")
+                    # Group individual samples into batches of n_samples size
+                    for i in range(0, len(rollout_samples),dynamic_step):
+                        batch_samples = rollout_samples[i : i + dynamic_step]
+                        if len(batch_samples) < dynamic_step:
+                            continue
+
+                        # Calculate average reward for this batch of samples
+                        avg_reward = sum(sample.scores[0].item() for sample in batch_samples) / len(batch_samples)
+
+                        # Check if average reward is within the specified range
+                        min_reward, max_reward = self.args.dynamic_filtering_reward_range
+                        if min_reward + 1e-6 < avg_reward < max_reward - 1e-6:
+                            filtered_samples.extend(batch_samples)
+
+                    # Continue sampling if filtered samples are insufficient
+                    if len(filtered_samples) / self.args.n_samples_per_prompt < self.args.rollout_batch_size:
+                        logger.info(
+                            f"filtered_samples {len(filtered_samples) / self.args.n_samples_per_prompt} < rollout_batch_size {self.args.rollout_batch_size}, continue sampling"
+                        )
+                        continue
+
+                    pass_rate_dynamic = len(filtered_samples) / number_of_samples_dynamic * 100
+                    logger.info(
+                        f"Dynamic filtering pass rate: {pass_rate_dynamic:.2f}% ({len(filtered_samples)}/{number_of_samples_dynamic})"
+                    )
+                    rollout_samples = filtered_samples
+                logger.info("[MultiAgent_PPOTrainer] ROLLOUT FINISHED! Begin making experiences")
+                # TODO only support micro rollout batch size =1 to process different agent experiences for extra experiences of different agent
+                experiences = self.experience_maker.make_experience_batch(rollout_samples)
+
+                # TODO update dynamic batch for multi agent
+                # balance experiences across dp
+                # if args.use_dynamic_batch:
+                #     experiences = balance_experiences(experiences, args)
+
+                # get List(List(Experience) of agent)
+                experiences = self.experience_maker.get_agent_experiences(experiences)
+
+                # dynamic filtering for multi agent
+                self.pass_rate = [None for _ in range(self.num_agents)]
+                if getattr(self.args, "dynamic_filtering_for_agents", False):
+                    number_of_samples = [x + len(experiences[agent_idx]) for agent_idx, x in enumerate(number_of_samples)]
+                    for agent_idx, experiences_agent in enumerate(experiences):
+                        filtered_samples_per_agent[agent_idx].extend(experiences_agent)
+
+                        # check whether agentxx has enough samples 
+                        if len(filtered_samples_per_agent[agent_idx]) < max(self.args.rollout_batch_size, self.args.train_batch_size):
+                            logger.info(
+                                f"[Agent {agent_idx}] filtered_samples {len(filtered_samples_per_agent[agent_idx])} "
+                                f"< max(rollout_batch_size, train_batch_size) {max(self.args.rollout_batch_size, self.args.train_batch_size)}, continue sampling"
+                            )
+                            continue
+
+                        # update pass_rate of multi agent 
+                        self.pass_rate[agent_idx] = len(filtered_samples_per_agent[agent_idx]) / number_of_samples[agent_idx] * 100
+                        logger.info(
+                            f"[Agent {agent_idx}] Dynamic filtering pass rate: {self.pass_rate}% "
+                            f"({len(filtered_samples_per_agent[agent_idx])}/{number_of_samples[agent_idx]})"
+                        )
+
+                    if all(x is None for x in self.pass_rate):
+                        continue
+                    # experiences = [
+                    #     (
+                    #         filtered_samples_per_agent[agent_idx][: self.args.rollout_batch_size * self.args.n_samples_per_prompt]
+                    #         if is_pass
+                    #         else None
+                    #     )
+                    #     for agent_idx, is_pass in enumerate(self.pass_rate)
+                    # ]
+                    experiences = []
+                    for agent_idx, is_pass in enumerate(self.pass_rate):
+                        if is_pass:
+                            available_samples = len(filtered_samples_per_agent[agent_idx])
+                            batch_size = max(self.args.rollout_batch_size, self.args.train_batch_size)
+                            num_batches = available_samples // batch_size
+                            actual_size = num_batches * batch_size
+                            experiences.append(filtered_samples_per_agent[agent_idx][:actual_size] if actual_size > 0 else None)
+                        else:
+                            experiences.append(None)                   
+                    for agent_idx, is_pass in enumerate(self.pass_rate):
+                        if is_pass:
+                            filtered_samples_per_agent[agent_idx] = []
+                            number_of_samples[agent_idx] = 0
+                refs = []
+                for idx in range(self.num_agents):
+                    if experiences[idx] is not None:
+                        refs.extend(
+                            self.agent_list[idx].actor_model_group.async_run_method_batch(method_name="append", experience=experiences[idx])
+                        )
+                        if self.agent_list[idx].critic_model_group is not None:
+                            refs.extend(
+                                self.agent_list[idx].critic_model_group.async_run_method_batch(method_name="append", experience=experiences[idx])
+                            )
+                ray.get(refs)
+
+                # Training begining
+                logger.info("[MultiAgent_PPOTrainer] make_experience FINISHED! Begin Training")
+                agents_status = self.ppo_train(steps)  # format: {"agent_0": status, ...}
+
+                for agent_key, status in agents_status.items():
+                    if experiences[idx] is not None:
+                        agent_idx = int(agent_key.split("_")[1])  # 从 "agent_0" → 0
+                        if "kl" in status:
+                            self.kl_ctl.update(status["kl"], args.rollout_batch_size * args.n_samples_per_prompt)
+
+                        logger.warning(f"✨ Global step {steps}: {status}")
+                        sample0 = self.tokenizer_list[agent_idx].batch_decode(
+                            experiences[agent_idx][0].sequences[0].unsqueeze(0), skip_special_tokens=True
+                        )
+                        # status["generated_samples"] = [sample0[0], experiences[agent_idx][0].info["reward"][0]]
+                        status["generated_samples"] = [sample0[0], experiences[agent_idx][0].info["reward"]]
+
+                # logs/checkpoints
+                client_states = {
+                    "global_step": steps,
+                    "episode": episode,
+                    "data_loader_state_dict": self.prompts_dataloader.state_dict(),
+                }
+                for agent_idx in range(self.num_agents):
+                    client_states[f"agent_{agent_idx}_step"] = self.agent_steps_list[agent_idx]
+                self.save_logs_and_checkpoints(args, steps, pbar, agents_status, client_states)
+
+                steps = steps + 1
+                for agent_idx in range(self.num_agents):
+                    if self.pass_rate[agent_idx] is not None:
+                        self.agent_steps_list[agent_idx] += 1
+
+        if self._wandb is not None:
+            self._wandb.finish()
+        if self._tensorboard is not None:
+            self._tensorboard.close()
+
+    def ppo_train(self, global_steps):
+        all_status = {}
+
+        reload_critic_refs, critic_refs, critic_agents, offload_critic_refs = [], [], [], []
+        num_critic_refs = 0
+        for agent_idx, agent in enumerate(self.agent_list):
+            if self.pass_rate[agent_idx] is None:
+                continue
+            if agent.critic_model_group is not None:
+                if self.strategy.args.deepspeed_enable_sleep:
+                    reload_critic_refs.extend(agent.critic_model_group.async_run_method(method_name="reload_states"))
+                critic_refs.extend(
+                    agent.critic_model_group.async_run_method(method_name="fit")
+                )
+                critic_agents.append((agent_idx, num_critic_refs))
+                num_critic_refs = len(critic_refs)
+                if self.strategy.args.deepspeed_enable_sleep:
+                    offload_critic_refs.extend(agent.critic_model_group.async_run_method(method_name="offload_states"))
+
+        if reload_critic_refs and self.strategy.args.deepspeed_enable_sleep:
+            ray.get(reload_critic_refs)
+        if critic_refs and (self.strategy.args.colocate_all_models or self.strategy.args.deepspeed_enable_sleep):
+            critic_results = ray.get(critic_refs)
+            for agent_idx, start_idx in critic_agents:
+                all_status.setdefault(f"agent_{agent_idx}", {}).update(critic_results[start_idx])
+        if offload_critic_refs and self.strategy.args.deepspeed_enable_sleep:
+            ray.get(offload_critic_refs)
+
+        # actor model training
+        reload_actor_refs, actor_refs, actor_agents, offload_actor_refs = [], [], [], []
+        num_actor_refs = 0
+        for agent_idx, agent in enumerate(self.agent_list):
+            if self.pass_rate[agent_idx] is None:
+                continue
+            #if global_steps > self.freezing_actor_steps:
+            if self.agent_steps_list[agent_idx] > self.freezing_actor_steps:
+                logger.info(f"[MultiAgent_PPOTrainer] Begin actor{agent_idx} fit")
+                
+                if self.strategy.args.deepspeed_enable_sleep:
+                    reload_actor_refs.extend(agent.actor_model_group.async_run_method(method_name="reload_states"))
+                actor_refs.extend(
+                    agent.actor_model_group.async_run_method(method_name="fit", kl_ctl=self.kl_ctl.value)
+                )
+                actor_agents.append((agent_idx, num_actor_refs))
+                num_actor_refs = len(actor_refs)
+                if self.strategy.args.deepspeed_enable_sleep:
+                    offload_actor_refs.extend(agent.actor_model_group.async_run_method(method_name="offload_states"))
+
+        if reload_actor_refs and self.strategy.args.deepspeed_enable_sleep:
+            ray.get(reload_actor_refs)
+        if actor_refs:
+            actor_results = ray.get(actor_refs)
+            offset = 0
+            for agent_idx, start_idx in actor_agents:
+                all_status.setdefault(f"agent_{agent_idx}", {}).update(actor_results[start_idx])
+        if offload_actor_refs and self.strategy.args.deepspeed_enable_sleep:
+            ray.get(offload_actor_refs)
+
+        # 4. broadcast weights to vllm engines
+        #if global_steps > self.freezing_actor_steps:
+        for agent_idx, agent in enumerate(self.agent_list):
+            if self.agent_steps_list[agent_idx] > self.freezing_actor_steps:
+                if self.pass_rate[agent_idx] is None:
+                    continue
+                if getattr(agent, "vllm_engines", None):
+                    self._broadcast_to_vllm(agent)
+
+        # 5. wait remote critic model training done
+        if critic_refs and not self.strategy.args.colocate_all_models:
+            critic_results = ray.get(critic_refs)
+            for agent_idx, result in zip(critic_agents, critic_results):
+                all_status.setdefault(f"agent_{agent_idx}", {}).update(result[0])
+
+        return all_status
+
+    def _broadcast_to_vllm(self, agent):
+        if self.strategy.args.vllm_enable_sleep:
+            from openrlhf.trainer.ray.vllm_engine import batch_vllm_engine_call
+
+            batch_vllm_engine_call(agent.vllm_engines, "wake_up")
+
+        ray.get(agent.actor_model_group.async_run_method(method_name="broadcast_to_vllm"))
+
+        if self.strategy.args.vllm_enable_sleep:
+            batch_vllm_engine_call(agent.vllm_engines, "sleep")
+
+
+    def _init_wandb(self):
+        # wandb/tensorboard setting
+        self._wandb = None
+        self._tensorboard = None
+        self.generated_samples_table_map = {}
+
+        if self.strategy.args.use_wandb:
+            import wandb
+
+            self._wandb = wandb
+            if not wandb.api.api_key:
+                wandb.login(key=self.strategy.args.use_wandb)
+
+            wandb.init(
+                entity=self.strategy.args.wandb_org,
+                project=self.strategy.args.wandb_project,
+                group=self.strategy.args.wandb_group,
+                name=self.strategy.args.wandb_run_name,
+                config=self.strategy.args.__dict__,
+                reinit=True,
+            )
+
+            wandb.define_metric("train/global_step")
+            wandb.define_metric("train/*", step_metric="train/global_step", step_sync=True)
+            wandb.define_metric("eval/epoch")
+            wandb.define_metric("eval/*", step_metric="eval/epoch", step_sync=True)
+            # self.generated_samples_table = wandb.Table(columns=["global_step", "text", "reward"])
+
+        # Initialize TensorBoard writer if wandb is not available
+        if self.strategy.args.use_tensorboard and self._wandb is None:
+            from torch.utils.tensorboard import SummaryWriter
+
+            os.makedirs(self.strategy.args.use_tensorboard, exist_ok=True)
+            log_dir = os.path.join(self.strategy.args.use_tensorboard, self.strategy.args.wandb_run_name)
+            self._tensorboard = SummaryWriter(log_dir=log_dir)
+
+    def save_eval_results(self, global_step, start_time, samples_list, all_prompts, prompt_to_datasource, 
+                          agent_logs, temperature, n_samples_per_prompt, num_nodes_per_prompt, eval_type="agent"):
+        """
+        保存评测结果到文件
+        
+        Args:
+            global_step: 当前训练步数
+            start_time: 评测开始时间
+            samples_list: 生成的样本列表
+            all_prompts: 所有提示词
+            prompt_to_datasource: 提示词到数据源的映射
+            agent_logs: 评测指标日志
+            temperature: 采样温度
+            n_samples_per_prompt: 每个提示生成的样本数
+            num_nodes_per_prompt: 每个提示的MCTS节点数
+            eval_type: 评测类型，"agent" 或 "system"
+        """        
+        # 是否保存样本（可通过参数控制）
+        if not getattr(self.strategy.args, 'eval_save_path', False):
+            logger.info("⏭️  Skip saving eval samples (eval_save_path=False)")
+            return
+        eval_results_dir = os.path.join(self.strategy.args.eval_save_path, "eval_results")
+        os.makedirs(eval_results_dir, exist_ok=True)
+        
+
+        
+        # 如果是system评测，samples_list需要包装成列表
+        if eval_type == "system":
+            samples_list = [samples_list]
+        
+        # 保存每个agent的详细样本
+        max_samples_to_save = getattr(self.strategy.args, 'max_eval_samples_to_save', 200)
+        
+        for agent_idx, agent_samples in enumerate(samples_list):
+            # 选择正确的样本（如果有mcts节点需要筛选）
+            if len(agent_samples) > len(all_prompts):
+                agent_samples = agent_samples[::num_nodes_per_prompt]
+            
+            # 提取prompts和labels
+            agent_prompts_for_save = sum([s.prompts for s in agent_samples], [])
+            agent_labels_for_save = sum([s.labels for s in agent_samples], [])
+            
+            samples_data = []
+            num_samples_to_save = min(len(agent_samples), max_samples_to_save)
+            
+            for i in range(num_samples_to_save):
+                sample = agent_samples[i]
+                
+                # 获取对应的生成文本
+                generated_texts = []
+                if hasattr(sample, 'sequences') and sample.sequences is not None:
+                    try:
+                        # 解码生成的文本
+                        num_texts = min(n_samples_per_prompt, len(sample.sequences))
+                        for seq_idx in range(num_texts):
+                            decoded_text = self.tokenizer_list[agent_idx].decode(
+                                sample.sequences[seq_idx], skip_special_tokens=True
+                            )
+                            generated_texts.append(decoded_text)
+                    except Exception as e:
+                        logger.warning(f"Failed to decode sequences for sample {i}: {e}")
+                        generated_texts = None
+                
+                # 构建样本信息
+                prompt_idx = i * n_samples_per_prompt
+                sample_info = {
+                    "sample_idx": i,
+                    "prompt": agent_prompts_for_save[prompt_idx] if prompt_idx < len(agent_prompts_for_save) else "",
+                    #"label": agent_labels_for_save[prompt_idx] if prompt_idx < len(agent_labels_for_save) else "",
+                    "rewards": sample.rewards if hasattr(sample, 'rewards') else None,
+                    "generated_texts": generated_texts,
+                    "datasource": prompt_to_datasource.get(
+                        agent_prompts_for_save[prompt_idx] if prompt_idx < len(agent_prompts_for_save) else "", 
+                        "unknown"
+                    ),
+                }
+                samples_data.append(sample_info)
+            
+            # 保存到JSON文件
+            if eval_type == "system":
+                samples_file = os.path.join(eval_results_dir, f"eval_system_samples_step{global_step}.json")
+            else:
+                samples_file = os.path.join(eval_results_dir, f"eval_samples_step{global_step}_agent{agent_idx}.json")
+            
+            with open(samples_file, 'w', encoding='utf-8') as f:
+                json.dump(samples_data, f, indent=2, ensure_ascii=False)
+            
+            logger.info(f"📝 {eval_type.capitalize()} {'Agent ' + str(agent_idx) if eval_type == 'agent' else ''}: Saved {len(samples_data)} samples to {samples_file}")
+        
+        # 保存评测指标摘要
+        eval_summary = {
+            "global_step": global_step,
+            "timestamp": time.strftime('%Y-%m-%d %H:%M:%S'),
+            "duration": time.time() - start_time,
+            "temperature": temperature,
+            "n_samples_per_prompt": n_samples_per_prompt,
+            "eval_type": eval_type,
+            "metrics": {}
+        }
+        
+        # 根据评测类型处理metrics
+        if eval_type == "agent":
+            eval_summary["metrics"] = {f"agent_{k}": v for k, v in agent_logs.items()}
+        else:
+            eval_summary["metrics"] = agent_logs
+        
+        # 保存摘要文件
+        if eval_type == "system":
+            summary_file = os.path.join(eval_results_dir, f"eval_system_summary_step{global_step}.json")
+        else:
+            summary_file = os.path.join(eval_results_dir, f"eval_summary_step{global_step}.json")
+        
+        with open(summary_file, 'w', encoding='utf-8') as f:
+            json.dump(eval_summary, f, indent=2, ensure_ascii=False)
+        
+        logger.info(f"📊 Evaluation summary saved to {summary_file}")
+
+    def evaluate(self, eval_dataloader, global_step, temperature=0.6, n_samples_per_prompt=1):
+        """Evaluate model performance on eval dataset.
+        Args:
+            eval_dataloader: DataLoader containing evaluation prompts, labels and data sources
+            global_step: Current training step for logging
+            n_samples_per_prompt: Number of samples to generate per prompt for pass@k calculation
+        """
+        start_time = time.time()
+        logger.info(f"⏰ Evaluation start time: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+
+        with torch.no_grad():
+            # First collect all prompts and labels
+            all_prompts = []
+            all_labels = []
+            all_metadatas = []
+            prompt_to_datasource = {}  # Dictionary to store mapping between prompts and their data sources
+            for datasources, prompts, labels, metadatas in eval_dataloader:
+                all_prompts.extend(prompts)
+                all_labels.extend(labels)
+                all_metadatas.extend(metadatas)
+                # Create mapping for each prompt to its corresponding data source
+                for prompt, datasource in zip(prompts, datasources):
+                    prompt_to_datasource[prompt] = datasource
+
+            # Generate samples and calculate rewards
+            generate_kwargs = self.generate_kwargs.copy()
+            generate_kwargs["temperature"] = temperature
+            generate_kwargs["n_samples_per_prompt"] = n_samples_per_prompt
+
+            # get sample_list of different agents; len(sample_list) = num agents
+            samples_list = self.samples_generator.generate_samples(
+                all_prompts, all_labels, all_metadatas, remote_reward_model=self.remote_reward_model, is_eval=True, evaluate_mcts_methods=self.args.evaluate_mcts_methods, **generate_kwargs
+            )
+
+            # set num_nodes_per_prompt for multi agent mcts
+            num_nodes_per_prompt = self.strategy.args.workflow_args.get("eval_max_num_nodes", 1)
+
+            is_agent_list = isinstance(samples_list[0], list)
+
+            if not is_agent_list:
+                samples_list = [samples_list]  # -> [[samples_list]]
+
+            # logs init
+            agent_logs = {}
+            aggregated_metrics = {}
+
+            for agent_idx, agent_samples in enumerate(samples_list):
+                # select sample from different mcts process
+                if len(agent_samples) > len(all_prompts):
+                    agent_samples = agent_samples[::num_nodes_per_prompt]
+
+                # extra prompt/label/reward
+                agent_prompts = sum([s.prompts for s in agent_samples], [])
+                agent_labels = sum([s.labels for s in agent_samples], [])
+
+                rewards_list = [s.rewards for s in agent_samples]  # shape: [num_samples, ...]
+                assert agent_samples[0]
+                # rewards = torch.tensor(rewards_list).reshape(-1, n_samples_per_prompt, 2)
+                rewards = torch.tensor(rewards_list).reshape(-1, n_samples_per_prompt, 3)
+
+                # compute metrics
+                agent_metrics = {}
+                num_prompts = len(agent_prompts) // n_samples_per_prompt
+
+                for i in range(num_prompts):
+                    original_prompt = agent_prompts[i * n_samples_per_prompt]
+                    datasource = prompt_to_datasource[original_prompt]
+
+                    if datasource not in agent_metrics:
+                        agent_metrics[datasource] = {
+                            f"pass{n_samples_per_prompt}": 0,
+                            "pass1": 0,
+                            "passtopk": 0,
+                            "avg_pass1": 0,
+                            "count": 0,
+                        }
+
+                    chunk_rewards = rewards[i]
+
+                    # pass@k 与 pass@1
+                    if n_samples_per_prompt > 1:
+                        agent_metrics[datasource][f"pass{n_samples_per_prompt}"] += chunk_rewards[:, 1].max().float().item()
+                    agent_metrics[datasource]["pass1"] += chunk_rewards[:, 0].mean().float().item()
+                    agent_metrics[datasource]["passtopk"] += chunk_rewards[:, 1].mean().float().item()
+                    agent_metrics[datasource]["avg_pass1"] += chunk_rewards[:, 2].mean().float().item()
+                    agent_metrics[datasource]["count"] += 1
+
+                # aggregated_metrics
+                logs = {}
+                for datasource, metrics in agent_metrics.items():
+                    if n_samples_per_prompt > 1:
+                        logs[f"eval_agent{agent_idx}_{datasource}_pass{n_samples_per_prompt}"] = (
+                            metrics[f"pass{n_samples_per_prompt}"] / metrics["count"]
+                        )
+                    logs[f"eval_agent{agent_idx}_{datasource}_pass1"] = (
+                        metrics["pass1"] / metrics["count"]
+                    )
+                    logs[f"eval_agent{agent_idx}_{datasource}_passtopk"] = (
+                        metrics["passtopk"] / metrics["count"]
+                    )
+                    logs[f"eval_agent{agent_idx}_{datasource}_avg_pass1"] = (
+                        metrics["avg_pass1"] / metrics["count"]
+                    )
+
+                    if datasource not in aggregated_metrics:
+                        aggregated_metrics[datasource] = {"passk_sum": 0, "pass1_sum": 0, "passtopk_sum": 0,  "avg_pass1_sum": 0, "count": 0}
+                    if n_samples_per_prompt > 1:
+                        aggregated_metrics[datasource]["passk_sum"] += metrics[f"pass{n_samples_per_prompt}"]
+                    aggregated_metrics[datasource]["pass1_sum"] += metrics["pass1"]
+                    aggregated_metrics[datasource]["passtopk_sum"] += metrics["passtopk"]
+                    aggregated_metrics[datasource]["avg_pass1_sum"] += metrics["avg_pass1"]
+                    aggregated_metrics[datasource]["count"] += metrics["count"]
+
+                agent_logs[agent_idx] = logs
+
+            # compute avg metrics
+            for datasource, metrics in aggregated_metrics.items():
+                if metrics["count"] > 0:
+                    agent_logs.setdefault("all_avg_" + datasource, {})[f"eval_allagent_{datasource}_pass1"] = metrics["pass1_sum"] / metrics["count"]
+                    agent_logs.setdefault("all_avg_" + datasource, {})[f"eval_allagent_{datasource}_passtopk"] = metrics["passtopk_sum"] / metrics["count"]
+                    agent_logs.setdefault("all_avg_" + datasource, {})[f"eval_allagent_{datasource}_avg_pass1"] = metrics["avg_pass1_sum"] / metrics["count"]
+                    if n_samples_per_prompt > 1:
+                        agent_logs.setdefault("all_avg_" + datasource, {})[f"eval_allagent_{datasource}_pass{n_samples_per_prompt}"] = metrics["passk_sum"] / metrics["count"]
+
+            if self._wandb is not None:
+                logs = {"eval/%s" % k: v for logs_per_agent in agent_logs.values() for k, v in logs_per_agent.items()}
+                logs["global_step"] = global_step
+                self._wandb.log(logs)
+            elif self._tensorboard is not None:
+                for logs_per_agent in agent_logs.values():
+                    for k, v in logs_per_agent.items():
+                        self._tensorboard.add_scalar(f"eval/{k}", v, global_step)
+
+        logger.info(f"✨ Evaluation completed, global_step {global_step}, eval_metrics: {logs}")
+                # 保存评测结果
+        self.save_eval_results(
+            global_step=global_step,
+            start_time=start_time,
+            samples_list=samples_list,
+            all_prompts=all_prompts,
+            prompt_to_datasource=prompt_to_datasource,
+            agent_logs=agent_logs,
+            temperature=temperature,
+            n_samples_per_prompt=n_samples_per_prompt,
+            num_nodes_per_prompt=num_nodes_per_prompt,
+            eval_type="agent"
+        )
+
+    def evaluate_system(self, eval_dataloader, global_step, temperature=0.6, n_samples_per_prompt=1):
+        """Evaluate model performance on eval dataset.
+
+        Args:
+            eval_dataloader: DataLoader containing evaluation prompts, labels and data sources
+            global_step: Current training step for logging
+            n_samples_per_prompt: Number of samples to generate per prompt for pass@k calculation
+        """
+        start_time = time.time()
+        logger.info(f"⏰ Evaluation start time: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+
+        with torch.no_grad():
+            # First collect all prompts and labels
+            all_prompts = []
+            all_labels = []
+            all_metadatas = []
+            prompt_to_datasource = {}  # Dictionary to store mapping between prompts and their data sources
+            
+            # TODO 为什么添加global_indices？和agent 评估提取metadata方式对齐会有问题吗？
+            # Get global indices from sampler if using DistributedSampler
+            global_indices = None
+            if hasattr(eval_dataloader, 'sampler') and eval_dataloader.sampler is not None:
+                if hasattr(eval_dataloader.sampler, '__iter__'):
+                    global_indices = list(eval_dataloader.sampler)
+                    logger.info(f"🔍 Rank evaluation - Global indices: {global_indices[:10]}...{global_indices[-5:]} (total: {len(global_indices)})")
+
+            batch_offset = 0
+
+            for datasources, prompts, labels, metadatas in eval_dataloader:
+                all_prompts.extend(prompts)
+                all_labels.extend(labels)
+                
+                # Add global_prompt_id to metadata for distributed evaluation
+                if global_indices is not None:
+                    # Convert to list if it's a tuple to allow modification
+                    metadatas = list(metadatas)
+                    for i, meta in enumerate(metadatas):
+                        if isinstance(meta, dict):
+                            # If already a dict, just add the field
+                            meta['global_prompt_id'] = global_indices[batch_offset + i]
+                        elif isinstance(meta, str):
+                            # If it's a JSON string, parse it first
+                            try:
+                                import json
+                                parsed_meta = json.loads(meta)
+                                parsed_meta['global_prompt_id'] = global_indices[batch_offset + i]
+                                metadatas[i] = parsed_meta
+                            except:
+                                # If parsing fails, create new dict with original string
+                                metadatas[i] = {'_original': meta, 'global_prompt_id': global_indices[batch_offset + i]}
+                        else:
+                            # For other types, preserve original and add global_prompt_id
+                            metadatas[i] = {'_original': meta, 'global_prompt_id': global_indices[batch_offset + i]}
+                    batch_offset += len(prompts)
+                
+                all_metadatas.extend(metadatas)
+                # Create mapping for each prompt to its corresponding data source
+                for prompt, datasource in zip(prompts, datasources):
+                    prompt_to_datasource[prompt] = datasource
+
+            # Generate samples and calculate rewards
+            generate_kwargs = self.generate_kwargs.copy()
+            generate_kwargs["temperature"] = temperature
+            generate_kwargs["n_samples_per_prompt"] = n_samples_per_prompt
+
+            # get sample_list of different agents; len(sample_list) = num agents
+            samples_list = self.samples_generator.generate_samples(
+                all_prompts, all_labels, all_metadatas, remote_reward_model=self.remote_reward_model, is_eval=True, evaluate_mcts_methods=self.args.evaluate_mcts_methods, **generate_kwargs
+            )
+
+            # select sample from different mcts process
+            num_nodes_per_prompt = self.strategy.args.workflow_args.get("eval_max_num_nodes", 1)
+            if len(samples_list) > len(all_prompts):
+                samples_list = samples_list[::num_nodes_per_prompt]
+
+            # duplicate prompts and labels for each sample
+            all_prompts = sum([s.prompts for s in samples_list], [])
+            all_labels = sum([s.labels for s in samples_list], [])
+
+            # Get rewards from samples, such as agent rewards or remote reward models
+            rewards_list = []
+            for samples in samples_list:
+                rewards_list.append(samples.rewards)
+
+            # Only for mcts system evaluate
+            rewards = torch.tensor(rewards_list).reshape(-1, n_samples_per_prompt, 3)
+            # rewards = torch.tensor(rewards_list).reshape(-1, n_samples_per_prompt)
+
+            # Collect local statistics for each data source
+            global_metrics = {}  # {datasource: {"pass{n_samples_per_prompt}": 0, "pass1": 0, "count": 0}}
+
+            # Process rewards in chunks of n_samples_per_prompt
+            num_prompts = len(all_prompts) // n_samples_per_prompt
+            for i in range(num_prompts):
+                # Get the original prompt (first one in the chunk)
+                original_prompt = all_prompts[i * n_samples_per_prompt]
+                datasource = prompt_to_datasource[original_prompt]  # Get corresponding data source using the mapping
+
+                if datasource not in global_metrics:
+                    global_metrics[datasource] = {f"pass{n_samples_per_prompt}": 0, "pass1": 0, "passtopk": 0, "avg_pass1": 0, "count": 0}
+                # Get rewards for this chunk
+                chunk_rewards = rewards[i]
+
+                # Calculate pass@k and pass@1
+                if n_samples_per_prompt > 1:
+                    global_metrics[datasource][f"pass{n_samples_per_prompt}"] += chunk_rewards[:, 1].max().float().item()
+                global_metrics[datasource]["pass1"] += chunk_rewards[:, 0].mean().float().item()
+                global_metrics[datasource]["passtopk"] += chunk_rewards[:, 1].mean().float().item()
+                global_metrics[datasource]["avg_pass1"] += chunk_rewards[:, 2].mean().float().item()
+                global_metrics[datasource]["count"] += 1
+
+            # Calculate global averages
+            logs = {}
+            for datasource, metrics in global_metrics.items():
+                if n_samples_per_prompt > 1:
+                    logs[f"eval_system_{datasource}_pass{n_samples_per_prompt}"] = (
+                        metrics[f"pass{n_samples_per_prompt}"] / metrics["count"]
+                    )
+                logs[f"eval_system_{datasource}_pass1"] = metrics["pass1"] / metrics["count"]
+                logs[f"eval_system_{datasource}_passtopk"]= metrics["passtopk"] / metrics["count"]
+                logs[f"eval_system_{datasource}_avg_pass1"] = metrics["avg_pass1"] / metrics["count"]
+
+            # Log to wandb/tensorboard
+            if self._wandb is not None:
+                logs = {"eval/%s" % k: v for k, v in {**logs, "global_step": global_step}.items()}
+                self._wandb.log(logs)
+            elif self._tensorboard is not None:
+                for k, v in logs.items():
+                    self._tensorboard.add_scalar(f"eval/{k}", v, global_step)
+
+        end_time = time.time()
+        duration = end_time - start_time
+        time_str = str(timedelta(seconds=duration)).split(".")[0]
+        logger.info(f"✨ Evaluation completed in {time_str}, global_step {global_step}, eval_metrics: {logs}, num of data: all_prompts vs rewards -- {len(all_prompts)} vs {len(rewards)}")
+        # 保存评测结果
+        self.save_eval_results(
+            global_step=global_step,
+            start_time=start_time,
+            samples_list=samples_list,
+            all_prompts=all_prompts,
+            prompt_to_datasource=prompt_to_datasource,
+            agent_logs=logs,  # 注意：这里直接传logs
+            temperature=temperature,
+            n_samples_per_prompt=n_samples_per_prompt,
+            num_nodes_per_prompt=num_nodes_per_prompt,
+            eval_type="system"
+        )
+
+    def evaluate_system_lpf(self, eval_dataloader, global_step, temperature=0.6, n_samples_per_prompt=1):
+        """Evaluate model performance on eval dataset.
+
+        Args:
+            eval_dataloader: DataLoader containing evaluation prompts, labels and data sources
+            global_step: Current training step for logging
+            n_samples_per_prompt: Number of samples to generate per prompt for pass@k calculation
+        """
+        start_time = time.time()
+        logger.info(f"⏰ Evaluation start time: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+
+        with torch.no_grad():
+            # First collect all prompts and labels
+            all_prompts = []
+            all_labels = []
+            all_metadatas = []
+            prompt_to_datasource = {}  # Dictionary to store mapping between prompts and their data sources
+
+            for datasources, prompts, labels, metadatas in eval_dataloader:
+                all_prompts.extend(prompts)
+                all_labels.extend(labels)
+                all_metadatas.extend(metadatas)
+                # Create mapping for each prompt to its corresponding data source
+                for prompt, datasource in zip(prompts, datasources):
+                    prompt_to_datasource[prompt] = datasource
+
+            # Generate samples and calculate rewards
+            generate_kwargs = self.generate_kwargs.copy()
+            generate_kwargs["temperature"] = temperature
+            generate_kwargs["n_samples_per_prompt"] = n_samples_per_prompt
+
+            # get sample_list of different agents; len(sample_list) = num agents
+            samples_list = self.samples_generator.generate_samples(
+                all_prompts, all_labels, all_metadatas, remote_reward_model=self.remote_reward_model, is_eval=True, evaluate_mcts_methods=self.args.evaluate_mcts_methods, **generate_kwargs
+            )
+
+            # select sample from different mcts process
+            num_nodes_per_prompt = self.strategy.args.workflow_args.get("eval_max_num_nodes", 1)
+            
+            if len(samples_list) > len(all_prompts):
+                samples_list = samples_list[::num_nodes_per_prompt]
+
+            # duplicate prompts and labels for each sample
+            all_prompts = sum([s.prompts for s in samples_list], [])
+            all_labels = sum([s.labels for s in samples_list], [])
+
+            # Get rewards from samples, such as agent rewards or remote reward models
+            rewards_list = []
+            for samples in samples_list:
+                rewards_list.append(samples.rewards)
+
+            # Only for mcts system evaluate
+            rewards = torch.tensor(rewards_list).reshape(-1, n_samples_per_prompt, 3)
+            # rewards = torch.tensor(rewards_list).reshape(-1, n_samples_per_prompt)
+
+            # Collect local statistics for each data source
+            global_metrics = {}  # {datasource: {"pass{n_samples_per_prompt}": 0, "pass1": 0, "count": 0}}
+
+            # Process rewards in chunks of n_samples_per_prompt
+            num_prompts = len(all_prompts) // n_samples_per_prompt
+            for i in range(num_prompts):
+                # Get the original prompt (first one in the chunk)
+                original_prompt = all_prompts[i * n_samples_per_prompt]
+                datasource = prompt_to_datasource[original_prompt]  # Get corresponding data source using the mapping
+
+                if datasource not in global_metrics:
+                    global_metrics[datasource] = {f"pass{n_samples_per_prompt}": 0, "pass1": 0, "avg_pass1": 0, "count": 0}
+                # Get rewards for this chunk
+                chunk_rewards = rewards[i]
+
+                # Calculate pass@k and pass@1
+                if n_samples_per_prompt > 1:
+                    global_metrics[datasource][f"pass{n_samples_per_prompt}"] += chunk_rewards[:, 1].max().float().item()
+                global_metrics[datasource]["pass1"] += chunk_rewards[:, 0].mean().float().item()
+                global_metrics[datasource]["avg_pass1"] += chunk_rewards[:, 2].mean().float().item()
+                global_metrics[datasource]["count"] += 1
+
+            # Calculate global averages
+            logs = {}
+            for datasource, metrics in global_metrics.items():
+                if n_samples_per_prompt > 1:
+                    logs[f"eval_system_{datasource}_pass{n_samples_per_prompt}"] = (
+                        metrics[f"pass{n_samples_per_prompt}"] / metrics["count"]
+                    )
+                logs[f"eval_system_{datasource}_pass1"] = metrics["pass1"] / metrics["count"]
+                logs[f"eval_system_{datasource}_avg_pass1"] = metrics["avg_pass1"] / metrics["count"]
+
+            # Log to wandb/tensorboard
+            if self._wandb is not None:
+                logs = {"eval/%s" % k: v for k, v in {**logs, "global_step": global_step}.items()}
+                self._wandb.log(logs)
+            elif self._tensorboard is not None:
+                for k, v in logs.items():
+                    self._tensorboard.add_scalar(f"eval/{k}", v, global_step)
+
+        end_time = time.time()
+        duration = end_time - start_time
+        time_str = str(timedelta(seconds=duration)).split(".")[0]
+        logger.info(f"✨ Evaluation completed in {time_str}, global_step {global_step}, eval_metrics: {logs}")
+        # 保存评测结果
+        self.save_eval_results(
+            global_step=global_step,
+            start_time=start_time,
+            samples_list=samples_list,
+            all_prompts=all_prompts,
+            prompt_to_datasource=prompt_to_datasource,
+            agent_logs=logs,  # 注意：这里直接传logs
+            temperature=temperature,
+            n_samples_per_prompt=n_samples_per_prompt,
+            num_nodes_per_prompt=num_nodes_per_prompt,
+            eval_type="system"
+        )
+
+
+
+    def save_logs_and_checkpoints(self, args, global_step, step_bar, agents_status={}, client_states={}):
+        if global_step % args.logging_steps == 0:
+            # wandb
+            if self._wandb is not None:
+                # Add generated samples to wandb using Table
+                # 逐 agent 记录
+                for agent_key, logs_dict in agents_status.items():
+                    if "generated_samples" in logs_dict:
+                        table = self.generated_samples_table_map.get(agent_key, None)
+                        if table is None:
+                            table = self._wandb.Table(columns=["global_step", "text", "reward"])
+                        
+                        new_table = self._wandb.Table(columns=table.columns, data=table.data)
+                        new_table.add_data(global_step, *logs_dict.pop("generated_samples"))
+                        self.generated_samples_table_map[agent_key] = new_table
+
+                        self._wandb.log({f"train/{agent_key}/generated_samples": new_table})
+
+                    logs = {
+                        f"train/{agent_key}/{k}": v
+                        for k, v in {
+                            **logs_dict,
+                            "global_step": global_step,
+                        }.items()
+                    }
+                    self._wandb.log(logs)
+            # TensorBoard
+            if self._tensorboard is not None:
+                logger.warning(f"agents_status: {agents_status}")
+                for agent_key, logs_dict in agents_status.items():
+                    for k, v in logs_dict.items():
+                        if k == "generated_samples":
+                            # Record generated samples in TensorBoard using simple text format
+                            text, reward = v
+                            if isinstance(reward, torch.Tensor):
+                                reward = reward.item()
+                            formatted_text = f"Sample:\n{text}\n\nReward: {reward:.4f}"
+                            # formatted_text = f"Sample:\n{text}\n\nReward: {reward:.4f}"
+                            self._tensorboard.add_text(f"train/{agent_key}/generated_samples", formatted_text, global_step)
+                        else:
+                            self._tensorboard.add_scalar(f"train/{agent_key}/{k}", v, global_step)
+                            agent_idx = int(agent_key.split("_")[1])
+                            self._tensorboard.add_scalar(f"agent_{agent_idx}_step/train/{k}", v, self.agent_steps_list[agent_idx])
+
+        # TODO: Add evaluation mechanism for PPO
+        
+        # evaluate_fn = self.evaluate if args.evaluate_mcts_methods == "agent" else self.evaluate_system
+        if args.evaluate_mcts_methods == "agent":
+          evaluate_fn = self.evaluate
+        elif args.evaluate_mcts_methods == "system":
+          evaluate_fn = self.evaluate_system
+        elif args.evaluate_mcts_methods == "system_lpf":
+          evaluate_fn = self.evaluate_system_lpf
+
+        # if global_step % args.eval_steps == 0 and self.eval_dataloader and len(self.eval_dataloader) > 0:
+        if (global_step % args.eval_steps == 0 or args.eval_only) and self.eval_dataloader and len(self.eval_dataloader) > 0:
+            evaluate_fn(self.eval_dataloader, global_step, args.eval_temperature, args.eval_n_samples_per_prompt)
+
+        # save ckpt
+        # TODO: save best model on dev, use loss/perplexity/others on whole dev dataset as metric
+        # if only evaluate, not save ckpt
+        if args.eval_only:
+            return
+        if global_step % args.save_steps == 0:
+            tag = f"global_step{global_step}"
+            refs = []
+            for agent_idx, agent in enumerate(getattr(self, "agent_list", [])):
+                refs.extend(agent.actor_model_group.async_run_method(
+                    method_name="save_checkpoint", tag=tag, client_states=client_states
+                ))
+                if agent.critic_model_group is not None:
+                    refs.extend(agent.critic_model_group.async_run_method(method_name="save_checkpoint", tag=tag))
+            ray.get(refs)

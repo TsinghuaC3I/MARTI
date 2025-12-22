@@ -108,6 +108,9 @@ def log_probs_from_logits(logits: torch.Tensor, labels: torch.Tensor, temperatur
         log_probs_labels = torch.stack(log_probs_labels)
     return log_probs_labels
 
+def masked_sum(tensor: torch.Tensor, mask: Optional[torch.Tensor], dim: int = None) -> torch.Tensor:
+    valid_values = torch.where(mask.bool(), tensor, 0.0)
+    return (valid_values * mask).sum(axis=dim)
 
 def masked_mean(tensor: torch.Tensor, mask: Optional[torch.Tensor], dim: int = None) -> torch.Tensor:
     if mask is None:

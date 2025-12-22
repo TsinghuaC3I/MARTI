@@ -1,0 +1,19 @@
+{
+    "type": "function",
+    "function": {
+        "name": "python",
+        "description": "A tool for execute python code",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "description": "python code needs to be execute and grad, you should use `print()` to get the standard outputs in the code"
+                }
+            },
+            "required": [
+                "code"
+            ]
+        }
+    }
+}

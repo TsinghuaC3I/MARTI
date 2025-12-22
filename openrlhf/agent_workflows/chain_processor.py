@@ -36,35 +36,9 @@ def processor(
     
     for traj_id, (traj, reward_matrix) in enumerate(zip(trajectories, local_rewards)):
         flattened_agent_data = []
-        for agent_id, agent_data in enumerate(traj["trajectory"]):
-            assert len(agent_data) == len(reward_matrix[agent_id]), (
-                f"Length mismatch: agent {agent_id}, "
-                f"{len(agent_data)} turns vs {len(reward_matrix[agent_id])} rewards"
-            )
-            for turn, reward in zip(agent_data, reward_matrix[agent_id]):
-                turn["reward"] = reward
-            flattened_agent_data.extend(agent_data)
+        for turn_id, turn in enumerate(traj["trajectory"]):
+            turn["reward"] = reward_matrix[turn_id]
+            flattened_agent_data.append(turn)
         traj["trajectory"] = flattened_agent_data
 
     return trajectories
-
-    # flattened_trajectory = []
-    # for agent_idx, agent_turns in enumerate(trajectory):
-    #     for turn in agent_turns:
-    #         flattened_trajectory.append(turn)
-
-    # # Initialize empty sample buckets for each agent
-    # samples = [
-    #     {"prompts": [], "outputs": [], "labels": []}
-    #     for _ in range(num_agents)
-    # ]
-
-    # # Single pass: collect inputs, outputs, rewards per agent
-    # for traj, reward_matrix in zip(trajectories, local_rewards):
-    #     for agent_id, agent_data in enumerate(traj["trajectory"]):
-    #         for turn, reward in zip(agent_data, reward_matrix[agent_id]):
-    #             samples[agent_id]["prompts"].append(turn["agent_input"])
-    #             samples[agent_id]["outputs"].append(turn["agent_output"])
-    #             samples[agent_id]["labels"].append(reward)
-
-    # return samples

@@ -1,79 +1,122 @@
 from typing import List, Dict
 from openrlhf.verifiers.auto_reward_alloc import MultiAgentRewardAllocation
+import numpy as np
+from collections import Counter
+from copy import deepcopy
 
-
-class MultiAgentRewardAllocation_abmcts(MultiAgentRewardAllocation):
+class MultiAgentMCTSRewardAllocation(MultiAgentRewardAllocation):
     def __init__(self,
                  verify="math",
                  name=None,
                  alpha=0.5, 
                  beta=0.5,
                  *args, **kwargs):
-        super().__init__(verify, name, alpha, beta, *args, **kwargs)
+        print("Multi-agent Reward Allocation", locals())
+        self.verify = verify
+        self.name = name
+        self.alpha = alpha
+        self.beta = beta
 
-    def assign_rewards_mcts(self, all_answers, golden_answers, method_rewards):
-        local_rewards = [[] for _ in all_answers]
-        outcome_rewards = []
-        for pid, prob_answers in enumerate(all_answers):
-            for aid, agent_answers in enumerate(prob_answers):
-                ## **使用mcts过程中的reward替换agent reward 避免二次计算**
-                agent_rewards = method_rewards[pid][aid]
-                if not isinstance(agent_rewards, list):
-                    agent_rewards = [agent_rewards]
-                local_rewards[pid].append(agent_rewards)
+        # if verify == "math":
+        #     self.reward_fn = qwen_reward_fn
+        # elif verify == "math_format":
+        #     self.reward_fn = qwen_reward_fn_format
+
+        self.use_ttrl = kwargs.get("ttrl", False)
+
+    def assign_rewards(self, local_rewards, turn_ids=None):
+        local_rewards = np.asarray(local_rewards, dtype=np.float32)
+
+        # compute accuracy of final answer for chain / mixture
+        # outcome_rewards = [prob_rewards[-1] for prob_rewards in local_rewards]
+        local_rewards = self._reward_shaping(local_rewards, turn_ids)
+
+        return local_rewards
+
+    def _reward_shaping(self, local_rewards, turn_ids=None):
+        if self.name in ["quality", "margin", "conditional_quality", "quality_with_outcome", "margin_with_outcome"]:
+            from copy import deepcopy
+            raw_rewards = deepcopy(local_rewards)
+            M, T = raw_rewards.shape
+
+            for m in range(M):
+                # We need to start from turn 1, especially for mixture of agents
+                # For chain / debate, turn is equal to turn_id
+                start = 1
+                if turn_ids is not None:
+                    for turn, turn_id in enumerate(turn_ids[m]):
+                        if turn_id == 1:
+                            start = turn
+                            break
+
+                for t in range(start, T):
+                    if turn_ids is None:
+                        # compute all previous rewards for debate
+                        Q = np.mean(raw_rewards[:, :t])
+                    else:
+                        Q = np.mean(raw_rewards[m][:t])
+
+                    R_final = raw_rewards[m][t]
+                    if "quality" in self.name:
+                        dynamic_term = Q * R_final - (1-Q) * (1-R_final)
+                        # print(f"{m} - {t}", Q, R_final, dynamic_term)
+                        shaped_reward = R_final + self.alpha * dynamic_term
+                    elif "margin" in self.name:
+                        baseline_term = R_final - Q
+                        shaped_reward = R_final + self.alpha * baseline_term
+                    else:
+                        raise NotImplementedError
+
+                    local_rewards[m][t] = shaped_reward
+
+            if "outcome" in self.name:
+                for m in range(M):
+                    for t in range(T):
+                        local_rewards[m][t] += self.beta * raw_rewards[m][-1]
+
+        return local_rewards
+
+    def init_golden_answers_from_majority_voting(self, histories, batch_size):
+        n_prompts = len(histories) // batch_size
+        all_golden_answers = []
+        for prompt_idx in range(n_prompts):
+            all_outputs = histories[batch_size * prompt_idx:batch_size*(prompt_idx+1)]
+            candidate_answers = []
+            # (num_problems, num_agents, num_turns)
+            for group_outputs in all_outputs:
+                for agent_outputs in group_outputs:
+                    if isinstance(agent_outputs, str):
+                        candidate_answers.append(extract_answer(agent_outputs, "math"))
+                    else:
+                        for agent_output in agent_outputs:
+                            assert isinstance(agent_output, str)
+                            candidate_answers.append(extract_answer(agent_output, "math"))
+            
+            model_answers = [answer for answer in candidate_answers if answer is not None]
+
+            counter = Counter(model_answers)
+            majority_answer, _ = counter.most_common(1)[0]
+            all_golden_answers.extend([majority_answer for _ in range(batch_size)])
+        assert len(all_golden_answers) == len(histories)
+        return all_golden_answers
         
-        return local_rewards, outcome_rewards
-
-
-    def _assign_rewards(self, all_answers, golden_answers, turn_ids=None, workflow_type="", method_rewards=None):   
-        if turn_ids is None and workflow_type == "mcts":
-            assert method_rewards is not None, f"mcts must have reward info from rollout"
-            return self.assign_rewards_mcts(all_answers, golden_answers, method_rewards)
-        else:
-            return self.assign_rewards(all_answers, golden_answers, turn_ids)
-        
-    def run(self, histories, golden_answers, n_samples_per_prompt=None, answer_key="assistant", workflow_type=""):
-        all_rewards=None
-        # if isinstance(histories[0][0], dict):
-
-        #     all_answers = [
-        #         [agent[answer_key] for agent in agent_data]
-        #         for agent_data in histories
-        #     ]
-        #     turn_ids = [
-        #         [agent["turn_id"] for agent in agent_data]
-        #         for agent_data in histories
-        #     ]
-        if workflow_type == "mcts":
-            try:
-                all_answers = [
-                    [[node[answer_key] for node in agent] for agent in agent_data] 
-                    for agent_data in histories
-                ]
-                all_rewards =[
-                    [[node["agent_inout_score"] for node in agent] for agent in agent_data] 
-                    for agent_data in histories
-                ]
-            except Exception as e:
-                raise e
-            turn_ids = None
-        elif isinstance(histories[0][0], list):
-            all_answers = [
-                [[turn[answer_key] for turn in agent] for agent in agent_data]
-                for agent_data in histories
-            ]# num_agents * num_turns
-            turn_ids = [
-                [[turn["turn_id"] for turn in agent] for agent in agent_data]
-                for agent_data in histories
-            ]
-        else:
-            raise ValueError
-
+    def run(self, histories, golden_answers, local_rewards=None, turn_ids=None, n_samples_per_prompt=None, answer_key="assistant"):
+        """
+        mcts
+        """
         if self.use_ttrl:
             assert n_samples_per_prompt is not None, "`n_samples_per_prompt` should be provided for test-time RL"
             golden_answers = self.init_golden_answers_from_majority_voting(all_answers, n_samples_per_prompt)
 
-        return self._assign_rewards(all_answers, golden_answers, turn_ids, workflow_type=workflow_type, method_rewards=all_rewards)
+        return self.assign_rewards(local_rewards, turn_ids)
+
+
+def flatten(lst):
+    for item in lst:
+        if isinstance(item, list):
+            yield from flatten(item)
+        else:
+            yield item
 
 def processor(
     trajectories: List[Dict],
@@ -95,41 +138,35 @@ def processor(
     """
     # group same prompts together by sorting
     for traj in trajectories:
-        for agent_idx, agent_data in enumerate(traj["trajectory"]):
-            traj['trajectory'][agent_idx] = sorted(
-                agent_data, key=lambda t: t['metadata'].get("expand_idx", 0)
-            )
+        traj["trajectory"] = sorted(traj['trajectory'], key=lambda t: t["turn_id"])
 
     trajectories = sorted(
         trajectories, key=lambda traj: int(traj.get("prompt_id", 0))
     )
 
-    reward_alloc = MultiAgentRewardAllocation_abmcts(
+    local_rewards = [[turn["reward"] for turn in traj["trajectory"]] for pid, traj in enumerate(trajectories)]
+    turn_id = range(len(trajectories[0]["trajectory"]))
+    turn_ids = [turn_id for _ in trajectories]
+
+    reward_alloc = MultiAgentMCTSRewardAllocation(
         verify=global_args.verify_task,
         **global_args.reward_alloc
     )
 
-    local_rewards, outcome_rewards = reward_alloc.run(
+    shaping_local_rewards = reward_alloc.run(
         [traj["trajectory"] for traj in trajectories],
         [traj["label"] for traj in trajectories],
-        # rewards=[traj[""] for traj in trajectories],
+        local_rewards = local_rewards,
+        turn_ids = turn_ids,
         n_samples_per_prompt=global_args.n_samples_per_prompt,
         answer_key="agent_output",
-        workflow_type="mcts"
     )
     
-    # Initialize empty sample buckets for each agent
-    samples = [
-        {"prompts": [], "outputs": [], "labels": []}
-        for _ in range(num_agents)
-    ]
+    for traj, reward_matrix in zip(trajectories, shaping_local_rewards):
+        flattened_agent_data = []
+        for turn_id, turn in enumerate(traj["trajectory"]):
+            turn["reward"] = reward_matrix[turn_id]
+            flattened_agent_data.append(turn)
+        traj["trajectory"] = flattened_agent_data
 
-    # Single pass: collect inputs, outputs, rewards per agent
-    for traj, reward_matrix in zip(trajectories, local_rewards):
-        for agent_id, agent_data in enumerate(traj["trajectory"]):
-            for turn, reward in zip(agent_data, reward_matrix[agent_id]):
-                samples[agent_id]["prompts"].append(turn["agent_input"])
-                samples[agent_id]["outputs"].append(turn["agent_output"])
-                samples[agent_id]["labels"].append(reward)
-
-    return samples
+    return trajectories

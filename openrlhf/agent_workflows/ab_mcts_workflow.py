@@ -194,11 +194,12 @@ async def workflow(
         agent_id = getattr(gen_result, "agent_id", None)
         # print(f"the agent id is: {agent_id} with type {type(agent_id)}")
         node_record = {
+            "turn_id": node.expand_idx,
             "node_id": node_id,
             "agent_id": agent_id,
             "agent_role": agents_dict[agent_id].get("agent_role", "unknown"),
-            "input": gen_result.request.messages,
-            "output": gen_result.action_text,
+            "agent_input": gen_result.request.messages,
+            "agent_output": gen_result.action_text,
             "output_ids": gen_result.action_tokens,
             "sequence_ids": gen_result.sequence_ids,
             "reward": node.score,

@@ -30,7 +30,7 @@ class MultiAgentWrapper:
         self.workflow_args = workflow_args
         self.workflow_func_path = kwargs.pop("workflow_func_path")
         self.result_queue = asyncio.Queue()
-        
+
         # Load workflow function once during initialization
         if self.workflow_func_path.endswith(".py"):
             import importlib.util
@@ -51,7 +51,8 @@ class MultiAgentWrapper:
         labels: List[str],
         metadatas: Optional[List[Dict]] = None,
         max_length: int = None,
-        is_eval: bool = False
+        is_eval: bool = False,
+        tool_manager: Dict = None
     ) -> List[Dict[str, Any]]:
         """Process requests using multi-agent workflow."""
         
@@ -69,6 +70,7 @@ class MultiAgentWrapper:
                     label=label,
                     agents=self.agents,
                     metadata=meta,
+                    tool_manager=tool_manager,
                     workflow_args=self.workflow_args,
                     max_length=max_length,
                     is_eval=is_eval,

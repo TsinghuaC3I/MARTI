@@ -70,14 +70,11 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
         # 初始化tokenizer list
         self.tokenizer_list = []
         for agent_idx in range(self.num_agents):
-            # TODO add agents_pretrains的路径list，指定多智能体的pretrain path list
             pretrain = self.args.agents_pretrain[agent_idx]
             self.tokenizer_list.append(get_tokenizer(pretrain, None, "left", strategy, use_fast=not self.args.disable_fast_tokenizer))
         #fyk:这里不需要tokenizer list了，因为每个agent都有自己的tokenizer
         #fyk:marti里不是直接传入agent_list，而是传入agent_list.metadata方法 需要check下agents和agent_list的差异
-        # TODO generator class目前是写死的，后期可能需要适配特定的generator class
-        # TODO lpf：fix--get metadata 没有返回generate kwargs
-        self.samples_generator = SamplesGenerator(  # TODO 根据yikun修改的SamplesGeneratorAsync类, 传入对应参数进行初始化
+        self.samples_generator = SamplesGenerator(
             [agent.get_metadata(
             ) for agent in self.agent_list],
             self.strategy,
@@ -322,8 +319,8 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
 
         # 4. broadcast weights to vllm engines
         #if global_steps > self.freezing_actor_steps:
-        if self.agent_steps_list[agent_idx] > self.freezing_actor_steps:
-            for agent_idx, agent in enumerate(self.agent_list):
+        for agent_idx, agent in enumerate(self.agent_list):
+            if self.agent_steps_list[agent_idx] > self.freezing_actor_steps:
                 if self.pass_rate[agent_idx] is None:
                     continue
                 if getattr(agent, "vllm_engines", None):
@@ -415,129 +412,8 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
             log_dir = os.path.join(self.strategy.args.use_tensorboard, self.strategy.args.wandb_run_name)
             self._tensorboard = SummaryWriter(log_dir=log_dir)
 
-    # def evaluate(self, eval_dataloader, global_step, temperature=0.6, n_samples_per_prompt=1):
-    #     """Evaluate model performance on eval dataset.
-
-    #     Args:
-    #         eval_dataloader: DataLoader containing evaluation prompts, labels and data sources
-    #         global_step: Current training step for logging
-    #         n_samples_per_prompt: Number of samples to generate per prompt for pass@k calculation
-    #     """
-    #     start_time = time.time()
-    #     logger.info(f"⏰ Evaluation start time: {time.strftime('%Y-%m-%d %H:%M:%S')}")
-
-    #     with torch.no_grad():
-    #         # First collect all prompts and labels
-    #         all_prompts = []
-    #         all_labels = []
-    #         all_metadatas = []
-    #         prompt_to_datasource = {}  # Dictionary to store mapping between prompts and their data sources
-
-    #         for datasources, prompts, labels, metadatas in eval_dataloader:
-    #             all_prompts.extend(prompts)
-    #             all_labels.extend(labels)
-    #             all_metadatas.extend(metadatas)
-    #             # Create mapping for each prompt to its corresponding data source
-    #             for prompt, datasource in zip(prompts, datasources):
-    #                 prompt_to_datasource[prompt] = datasource
-
-    #         # Generate samples and calculate rewards
-    #         generate_kwargs = self.generate_kwargs.copy()
-    #         generate_kwargs["temperature"] = temperature
-    #         generate_kwargs["n_samples_per_prompt"] = n_samples_per_prompt
-
-    #         # get sample_list of different agents; len(sample_list) = num agents
-    #         samples_list = self.samples_generator.generate_samples(
-    #             all_prompts, all_labels, all_metadatas, remote_reward_model=self.remote_reward_model, is_eval=True, **generate_kwargs
-    #         )
-
-    #         # set num_nodes_per_prompt for multi agent mcts
-    #         num_nodes_per_prompt = self.strategy.args.workflow_args.get("eval_max_num_nodes", 1)
-
-    #         is_agent_list = isinstance(samples_list[0], list)
-
-    #         if not is_agent_list:
-    #             samples_list = [samples_list]  # -> [[samples_list]]
-
-    #         # logs init
-    #         agent_logs = {}
-    #         aggregated_metrics = {}
-
-    #         for agent_idx, agent_samples in enumerate(samples_list):
-    #             # select sample from different mcts process
-    #             if len(agent_samples) > len(all_prompts):
-    #                 agent_samples = agent_samples[::num_nodes_per_prompt]
-
-    #             # extra prompt/label/reward
-    #             agent_prompts = sum([s.prompts for s in agent_samples], [])
-    #             agent_labels = sum([s.labels for s in agent_samples], [])
-
-    #             rewards_list = [s.rewards for s in agent_samples]  # shape: [num_samples, ...]
-    #             rewards = torch.tensor(rewards_list).reshape(-1, n_samples_per_prompt, 2)
-
-    #             # compute metrics
-    #             agent_metrics = {}
-    #             num_prompts = len(agent_prompts) // n_samples_per_prompt
-
-    #             for i in range(num_prompts):
-    #                 original_prompt = agent_prompts[i * n_samples_per_prompt]
-    #                 datasource = prompt_to_datasource[original_prompt]
-
-    #                 if datasource not in agent_metrics:
-    #                     agent_metrics[datasource] = {
-    #                         f"pass{n_samples_per_prompt}": 0,
-    #                         "pass1": 0,
-    #                         "count": 0,
-    #                     }
-
-    #                 chunk_rewards = rewards[i]
-
-    #                 # pass@k 与 pass@1
-    #                 if n_samples_per_prompt > 1:
-    #                     agent_metrics[datasource][f"pass{n_samples_per_prompt}"] += chunk_rewards[:, 1].max().float().item()
-    #                 agent_metrics[datasource]["pass1"] += chunk_rewards[:, 0].mean().float().item()
-    #                 agent_metrics[datasource]["count"] += 1
-
-    #             # aggregated_metrics
-    #             logs = {}
-    #             for datasource, metrics in agent_metrics.items():
-    #                 if n_samples_per_prompt > 1:
-    #                     logs[f"eval_agent{agent_idx}_{datasource}_pass{n_samples_per_prompt}"] = (
-    #                         metrics[f"pass{n_samples_per_prompt}"] / metrics["count"]
-    #                     )
-    #                 logs[f"eval_agent{agent_idx}_{datasource}_pass1"] = (
-    #                     metrics["pass1"] / metrics["count"]
-    #                 )
-
-    #                 if datasource not in aggregated_metrics:
-    #                     aggregated_metrics[datasource] = {"passk_sum": 0, "pass1_sum": 0, "count": 0}
-    #                 if n_samples_per_prompt > 1:
-    #                     aggregated_metrics[datasource]["passk_sum"] += metrics[f"pass{n_samples_per_prompt}"]
-    #                 aggregated_metrics[datasource]["pass1_sum"] += metrics["pass1"]
-    #                 aggregated_metrics[datasource]["count"] += metrics["count"]
-
-    #             agent_logs[agent_idx] = logs
-
-    #         # compute avg metrics
-    #         for datasource, metrics in aggregated_metrics.items():
-    #             if metrics["count"] > 0:
-    #                 agent_logs.setdefault("all_avg_" + datasource, {})[f"eval_allagent_{datasource}_pass1"] = metrics["pass1_sum"] / metrics["count"]
-    #                 if n_samples_per_prompt > 1:
-    #                     agent_logs.setdefault("all_avg_" + datasource, {})[f"eval_allagent_{datasource}_pass{n_samples_per_prompt}"] = metrics["passk_sum"] / metrics["count"]
-
-    #         if self._wandb is not None:
-    #             logs = {"eval/%s" % k: v for logs_per_agent in agent_logs.values() for k, v in logs_per_agent.items()}
-    #             logs["global_step"] = global_step
-    #             self._wandb.log(logs)
-    #         elif self._tensorboard is not None:
-    #             for logs_per_agent in agent_logs.values():
-    #                 for k, v in logs_per_agent.items():
-    #                     self._tensorboard.add_scalar(f"eval/{k}", v, global_step)
-
-    #     logger.info(f"✨ Evaluation completed, global_step {global_step}, eval_metrics: {logs}")
     def evaluate(self, eval_dataloader, global_step, temperature=0.6, n_samples_per_prompt=1):
         """Evaluate model performance on eval dataset.
-
         Args:
             eval_dataloader: DataLoader containing evaluation prompts, labels and data sources
             global_step: Current training step for logging
@@ -552,7 +428,6 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
             all_labels = []
             all_metadatas = []
             prompt_to_datasource = {}  # Dictionary to store mapping between prompts and their data sources
-
             for datasources, prompts, labels, metadatas in eval_dataloader:
                 all_prompts.extend(prompts)
                 all_labels.extend(labels)
@@ -568,7 +443,7 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
 
             # get sample_list of different agents; len(sample_list) = num agents
             samples_list = self.samples_generator.generate_samples(
-                all_prompts, all_labels, all_metadatas, remote_reward_model=self.remote_reward_model, is_eval=True, **generate_kwargs
+                all_prompts, all_labels, all_metadatas, remote_reward_model=self.remote_reward_model, is_eval=True, evaluate_mcts_methods=self.args.evaluate_mcts_methods, **generate_kwargs
             )
 
             # set num_nodes_per_prompt for multi agent mcts
@@ -742,102 +617,6 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
                         self._tensorboard.add_scalar(f"eval/{k}", v, global_step)
 
         logger.info(f"✨ Evaluation completed, global_step {global_step}, eval_metrics: {logs}")
-    def evaluate_system(self, eval_dataloader, global_step, temperature=0.6, n_samples_per_prompt=1):
-        """Evaluate model performance on eval dataset.
-
-        Args:
-            eval_dataloader: DataLoader containing evaluation prompts, labels and data sources
-            global_step: Current training step for logging
-            n_samples_per_prompt: Number of samples to generate per prompt for pass@k calculation
-        """
-        start_time = time.time()
-        logger.info(f"⏰ Evaluation start time: {time.strftime('%Y-%m-%d %H:%M:%S')}")
-
-        with torch.no_grad():
-            # First collect all prompts and labels
-            all_prompts = []
-            all_labels = []
-            all_metadatas = []
-            prompt_to_datasource = {}  # Dictionary to store mapping between prompts and their data sources
-
-            for datasources, prompts, labels, metadatas in eval_dataloader:
-                all_prompts.extend(prompts)
-                all_labels.extend(labels)
-                all_metadatas.extend(metadatas)
-                # Create mapping for each prompt to its corresponding data source
-                for prompt, datasource in zip(prompts, datasources):
-                    prompt_to_datasource[prompt] = datasource
-
-            # Generate samples and calculate rewards
-            generate_kwargs = self.generate_kwargs.copy()
-            generate_kwargs["temperature"] = temperature
-            generate_kwargs["n_samples_per_prompt"] = n_samples_per_prompt
-
-            # get sample_list of different agents; len(sample_list) = num agents
-            samples_list = self.samples_generator.generate_samples(
-                all_prompts, all_labels, all_metadatas, remote_reward_model=self.remote_reward_model, is_eval=True, **generate_kwargs
-            )
-
-            # select sample from different mcts process
-            num_nodes_per_prompt = self.strategy.args.workflow_args.get("eval_max_num_nodes", 1)
-            if len(samples_list) > len(all_prompts):
-                samples_list = samples_list[::num_nodes_per_prompt]
-
-            # duplicate prompts and labels for each sample
-            all_prompts = sum([s.prompts for s in samples_list], [])
-            all_labels = sum([s.labels for s in samples_list], [])
-
-            # Get rewards from samples, such as agent rewards or remote reward models
-            rewards_list = []
-            for samples in samples_list:
-                rewards_list.append(samples.rewards)
-
-            # Only for mcts system evaluate
-            rewards = torch.tensor(rewards_list).reshape(-1, n_samples_per_prompt, 2)
-            # rewards = torch.tensor(rewards_list).reshape(-1, n_samples_per_prompt)
-
-            # Collect local statistics for each data source
-            global_metrics = {}  # {datasource: {"pass{n_samples_per_prompt}": 0, "pass1": 0, "count": 0}}
-
-            # Process rewards in chunks of n_samples_per_prompt
-            num_prompts = len(all_prompts) // n_samples_per_prompt
-            for i in range(num_prompts):
-                # Get the original prompt (first one in the chunk)
-                original_prompt = all_prompts[i * n_samples_per_prompt]
-                datasource = prompt_to_datasource[original_prompt]  # Get corresponding data source using the mapping
-
-                if datasource not in global_metrics:
-                    global_metrics[datasource] = {f"pass{n_samples_per_prompt}": 0, "pass1": 0, "count": 0}
-
-                # Get rewards for this chunk
-                chunk_rewards = rewards[i]
-
-                # Calculate pass@k and pass@1
-                if n_samples_per_prompt > 1:
-                    global_metrics[datasource][f"pass{n_samples_per_prompt}"] += chunk_rewards[:, 1].max().float().item()
-                global_metrics[datasource]["pass1"] += chunk_rewards[:, 0].mean().float().item()
-                global_metrics[datasource]["count"] += 1
-
-            # Calculate global averages
-            logs = {}
-            for datasource, metrics in global_metrics.items():
-                logs[f"eval_{datasource}_pass{n_samples_per_prompt}"] = (
-                    metrics[f"pass{n_samples_per_prompt}"] / metrics["count"]
-                )
-                logs[f"eval_{datasource}_pass1"] = metrics["pass1"] / metrics["count"]
-
-            # Log to wandb/tensorboard
-            if self._wandb is not None:
-                logs = {"eval/%s" % k: v for k, v in {**logs, "global_step": global_step}.items()}
-                self._wandb.log(logs)
-            elif self._tensorboard is not None:
-                for k, v in logs.items():
-                    self._tensorboard.add_scalar(f"eval/{k}", v, global_step)
-
-        end_time = time.time()
-        duration = end_time - start_time
-        time_str = str(timedelta(seconds=duration)).split(".")[0]
-        logger.info(f"✨ Evaluation completed in {time_str}, global_step {global_step}, eval_metrics: {logs}")
 
     def save_logs_and_checkpoints(self, args, global_step, step_bar, agents_status={}, client_states={}):
         if global_step % args.logging_steps == 0:
@@ -887,6 +666,9 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
 
         # save ckpt
         # TODO: save best model on dev, use loss/perplexity/others on whole dev dataset as metric
+        # if only evaluate, not save ckpt
+        if args.eval_only:
+            return
         if global_step % args.save_steps == 0:
             tag = f"global_step{global_step}"
             refs = []

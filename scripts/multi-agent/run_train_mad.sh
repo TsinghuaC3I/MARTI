@@ -2,17 +2,16 @@
 # gspo + tis + datafilter + overlong
 # Debate workflow with 4 GPUs
 # set -x
-# source /mnt/shared-storage-user/marti/miniconda3/etc/profile.d/conda.sh
-# conda activate marti_vllm
-# which conda
-# which python
+source /mnt/shared-storage-user/marti/miniconda3/etc/profile.d/conda.sh
+conda activate marti_vllm
+which conda
+which python
 # cd /mnt/shared-storage-user/marti/OpenRLHF
 
-# 基础配置
-MODEL_DIR="/mnt/public/hf_models/Qwen/"
-#使用qwen3 8B
-SHORT_NAME=${1:-"Qwen2.5-3B-Instruct"}
-PRETRAIN="${MODEL_DIR}/${SHORT_NAME}"
+# basic config
+MODEL_DIR="/mnt/shared-storage-user/marti/models/"
+SHORT_NAME=${1:-"Qwen3-4B-Instruct-2507"}
+PRETRAIN="${MODEL_DIR}${SHORT_NAME}"
 PROMPT_MAX_LEN=4096
 GENERATE_MAX_LEN=5000
 EVAL_GENERATE_MAX_LEN=5000
@@ -20,29 +19,32 @@ OVERLONG_BUFFER_LEN=2048
 MAX_LEN=30000
 ADVANTAGE="group_norm"
 
-ROOT_DIR="/mnt/public/tk/1024/MARTI-Dev-openrlhf-v2"
+ROOT_DIR="/mnt/shared-storage-user/marti/MARTI-v2"
 TASK="MATH"
-PROMPT_DATA="json@/mnt/public/tk/1024/MARTI/data/${TASK}"
+PROMPT_DATA="json@/mnt/shared-storage-user/marti/lipengfei/MARTI_HSY/data/${TASK}"
 
-# Workflow 配置
-NUM_TASKS=16  # 异步任务并发数量，替代原来的 tools_config.num_workers
+# Workflow config
+NUM_TASKS=16
 EXP=debate
 
 WORKFLOW_SAVE_PATH="${ROOT_DIR}/outputs/workflow/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}"
 
 TENSORBOARD="${ROOT_DIR}/logs/tensorboard/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}"
-LOG_DIR=/mnt/public/tk/1024/MARTI-Dev-openrlhf-v2/logs/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}.log
+LOG_DIR=${ROOT_DIR}/logs/multi_agent/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}.log
 
-# 设置动态端口和环境变量
-export MASTER_PORT=8266
+# port&env
+export PYTHONNOUSERSITE=1
+export MASTER_PORT=$(shuf -i 10000-65535 -n 1)
 export OPENRLHF_ASYNC_NUM_TASKS=${NUM_TASKS}
+# export MASTER_PORT=8266
+# export OPENRLHF_ASYNC_NUM_TASKS=${NUM_TASKS}
 
-# 定义默认智能体配置
+# default agent config
 DEFAULT_AGENT="{
     \"is_reasoning_model\": false
 }"
 
-# 定义 Workflow 参数配置
+# Workflow params config
 WORKFLOW_ARGS="{
     \"task\": \"math\",
     \"num_rounds\": 2,
@@ -51,68 +53,80 @@ WORKFLOW_ARGS="{
     \"shuffle_responses\": true
 }"
 
-# 定义智能体1配置（generator角色）
+TOOLS_ARGS="{
+    \"num_workers\": 128,
+    \"max_concurrent_calls\": 8,
+    \"enable_metrics\": true,
+    \"enable_rate_limiting\": true,
+    \"rate_limit\": 8
+}"
+
+REWARD_ALLOC_ARGS="{
+    \"name\": \"margin\",
+    \"alpha\": 0.5,
+    \"beta\": 0.5,
+    \"use_ttrl\": false
+}"
+
 AGENT0="{
     \"0\": {
         \"role\": \"generator\",
         \"pretrain\": \"${PRETRAIN}\",
-        \"save_path\": \"/mnt/public/tk/1024/MARTI-Dev-openrlhf-v2/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0\",
-        \"ckpt_path\": \"/mnt/public/tk/1024/MARTI-Dev-openrlhf-v2/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0\",
+        \"save_path\": \"${ROOT_DIR}/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0\",
+        \"ckpt_path\": \"${ROOT_DIR}/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0\",
         \"is_tuning\": true
     }
 }"
 
-# 定义智能体2配置（generator角色）
 AGENT1="{
     \"1\": {
         \"role\": \"generator\",
         \"pretrain\": \"${PRETRAIN}\",
-        \"save_path\": \"/mnt/public/tk/1024/MARTI-Dev-openrlhf-v2/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent1\",
-        \"ckpt_path\": \"/mnt/public/tk/1024/MARTI-Dev-openrlhf-v2/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent1\",
+        \"save_path\": \"${ROOT_DIR}/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent1\",
+        \"ckpt_path\": \"${ROOT_DIR}/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent1\",
         \"is_tuning\": true
     }
 }"
 
-WANDB_KEY="6461769bfefb0c4fa60bde38d55799cf3ee3986e"  # 你的 wandb API key
+WANDB_KEY="6461769bfefb0c4fa60bde38d55799cf3ee3986e"  # your wandb API key
 # WANDB_PROJECT="openrlhf_math_ppo"
-# # WANDB_ORG="your-wandb-org"  # 可选
-# # WANDB_GROUP="${ADVANTAGE}-${SHORT_NAME}-${TASK}"  # 可选
-# WANDB_RUN_NAME="${ADVANTAGE}-${SHORT_NAME}-${TASK}-${EXP}"  # 可选
+# # WANDB_ORG="your-wandb-org"  # optional
+# # WANDB_GROUP="${ADVANTAGE}-${SHORT_NAME}-${TASK}"  # optional
+# WANDB_RUN_NAME="${ADVANTAGE}-${SHORT_NAME}-${TASK}-${EXP}"  # optional
 
 export NCCL_DEBUG=WARN
 
-# 确保所有必要的目录存在
-mkdir -p "${ROOT_DIR}/logs"
+mkdir -p "${ROOT_DIR}/logs/multi_agent"
 mkdir -p "${WORKFLOW_SAVE_PATH}"
 mkdir -p "${TENSORBOARD}"
-mkdir -p "/mnt/public/tk/1024/MARTI-Dev-openrlhf-v2/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0"
-mkdir -p "/mnt/public/tk/1024/MARTI-Dev-openrlhf-v2/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent1"
-mkdir -p "/mnt/public/tk/1024/MARTI-Dev-openrlhf-v2/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0"
-mkdir -p "/mnt/public/tk/1024/MARTI-Dev-openrlhf-v2/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent1"
-
-# 运行训练脚本
-#--vllm_generate_batch_size 32
+mkdir -p "${ROOT_DIR}/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0"
+mkdir -p "${ROOT_DIR}/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent1"
+mkdir -p "${ROOT_DIR}/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0"
+mkdir -p "${ROOT_DIR}/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent1"
 
 python3 -m openrlhf.cli.multi_agent_train_ppo_ray \
     --default_agent "$DEFAULT_AGENT" \
     --agents "$AGENT0" "$AGENT1" \
     --workflow_args "$WORKFLOW_ARGS" \
-    --workflow_func_path /mnt/public/tk/1024/MARTI-Dev-openrlhf-v2/openrlhf/agent_workflows/debate_workflow.py \
+    --tools_config "$TOOLS_ARGS" \
+    --reward_alloc "$REWARD_ALLOC_ARGS" \
+    --workflow_func_path openrlhf/agent_workflows/debate_workflow.py \
+    --processor_func_path openrlhf/agent_workflows/debate_processor.py \
     --parallel_loading \
     --ref_num_nodes 1 \
-    --ref_num_gpus_per_node 2 \
+    --ref_num_gpus_per_node 1 \
     --reward_num_nodes 1 \
-    --reward_num_gpus_per_node 2 \
+    --reward_num_gpus_per_node 1 \
     --actor_num_nodes 1 \
-    --actor_num_gpus_per_node 2 \
+    --actor_num_gpus_per_node 1 \
     --vllm_num_engines 1 \
-    --vllm_tensor_parallel_size 2 \
+    --vllm_tensor_parallel_size 1 \
     --colocate_all_models \
     --vllm_gpu_memory_utilization 0.6 \
     --micro_train_batch_size 1 \
-    --train_batch_size 32 \
+    --train_batch_size 16 \
     --micro_rollout_batch_size 1 \
-    --rollout_batch_size 32 \
+    --rollout_batch_size 16 \
     --n_samples_per_prompt 2 \
     --max_epochs 1 \
     --seed 42 \
@@ -157,17 +171,12 @@ python3 -m openrlhf.cli.multi_agent_train_ppo_ray \
     --input_key="prompt" \
     --label_key="answer" \
     --load_checkpoint \
-    --dynamic_filtering_for_agents \
-    --use_wandb "${WANDB_KEY}" \
-    --wandb_project "MARTI" \
-    --wandb_run_name "${EXP}"
+    --dynamic_filtering_for_agents 2>&1 | tee ${LOG_DIR}
+    # --use_wandb "${WANDB_KEY}" \
+    # --wandb_project "MARTI" \
+    # --wandb_run_name "${EXP}"
     # --use_tensorboard "${TENSORBOARD}" \
     # ${WANDB_API_KEY:+--use_wandb "${WANDB_API_KEY}"} \
     # ${WANDB_PROJECT:+--wandb_project "${WANDB_PROJECT}"} \
     # ${WANDB_RUN_NAME:+--wandb_run_name "${WANDB_RUN_NAME}"} \
     # 2>&1 | tee ${LOG_DIR}
-
-
-    # --task "math" \
-    # --tool_manager None\
-

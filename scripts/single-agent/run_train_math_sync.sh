@@ -7,9 +7,9 @@
 # which python
 # cd /mnt/shared-storage-user/marti/OpenRLHF
 
-# 基础配置
-MODEL_DIR="/mnt/public/hf_models/Qwen/"
-#使用qwen3 8B
+# basic config
+# set local model path
+MODEL_DIR=""
 SHORT_NAME=${1:-"Qwen3-1.7B"}
 PRETRAIN="${MODEL_DIR}/${SHORT_NAME}"
 PROMPT_MAX_LEN=4096
@@ -19,59 +19,43 @@ OVERLONG_BUFFER_LEN=2048
 MAX_LEN=40000
 ADVANTAGE="group_norm"
 
-ROOT_DIR="/mnt/public/tk/1024/MARTI-Dev-openrlhf-v2"
+# set correct root dir
+ROOT_DIR=""
 TASK="MATH"
-PROMPT_DATA="json@/mnt/public/tk/1024/MARTI/data/${TASK}"
+PROMPT_DATA="json@${ROOT_DIR}/data/${TASK}"
 
-# Workflow 配置
-#改成8
+# Workflow config
 MCTS_NODES=2
-NUM_TASKS=16  # 异步任务并发数量，替代原来的 tools_config.num_workers
+NUM_TASKS=16
 EXP=all_tricks
 
 WORKFLOW_SAVE_PATH="${ROOT_DIR}/outputs/workflow/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}"
 
 TENSORBOARD="${ROOT_DIR}/logs/tensorboard/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}"
-LOG_DIR=/mnt/public/tk/1024/MARTI-Dev-openrlhf-v2/logs/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}.log
-
-# 设置动态端口和环境变量
+LOG_DIR=./logs/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}.log
 export MASTER_PORT=8266
 export OPENRLHF_ASYNC_NUM_TASKS=${NUM_TASKS}
 
-# 定义默认智能体配置
 DEFAULT_AGENT="{
     \"is_reasoning_model\": true
 }"
-
-# 定义 Workflow 参数配置
-# WORKFLOW_ARGS="{
-#     \"max_num_nodes\": ${MCTS_NODES},
-#     \"eval_max_num_nodes\": 1,
-#     \"save_path\": \"${WORKFLOW_SAVE_PATH}\",
-#     \"task\": \"math\",
-#     \"tool_manager\": null,
-#     \"algo\": {
-#         \"class_name\": \"AsyncABMCTSA\",
-#         \"params\": {}
-#     }
-# }"
 
 WORKFLOW_ARGS="{
     \"task\": \"math\"
 }"
 
-# 定义智能体1配置（generator角色）
+
 AGENT0="{
     \"0\": {
         \"role\": \"generator\",
         \"pretrain\": \"${PRETRAIN}\",
-        \"save_path\": \"/mnt/public/tk/1024/MARTI-Dev-openrlhf-v2/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0\",
-        \"ckpt_path\": \"/mnt/public/tk/1024/MARTI-Dev-openrlhf-v2/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0\",
+        \"save_path\": \"./outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0\",
+        \"ckpt_path\": \"./outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0\",
         \"is_tuning\": true
     }
 }"
 
-# 定义智能体2配置（generator角色）
+
 # AGENT2="{
 #     \"agent2\": {
 #         \"role\": \"generator\",
@@ -83,23 +67,22 @@ AGENT0="{
 # }"
 export NCCL_DEBUG=WARN
 
-# 确保所有必要的目录存在
+
 mkdir -p "${ROOT_DIR}/logs"
 mkdir -p "${WORKFLOW_SAVE_PATH}"
 mkdir -p "${TENSORBOARD}"
-mkdir -p "/mnt/public/tk/1024/MARTI-Dev-openrlhf-v2/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0"
-mkdir -p "/mnt/public/tk/1024/MARTI-Dev-openrlhf-v2/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent1"
-mkdir -p "/mnt/public/tk/1024/MARTI-Dev-openrlhf-v2/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0"
-mkdir -p "/mnt/public/tk/1024/MARTI-Dev-openrlhf-v2/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent1"
+mkdir -p "./outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0"
+mkdir -p "./outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent1"
+mkdir -p "./outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0"
+mkdir -p "./outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent1"
 
-# 运行训练脚本
-#--vllm_generate_batch_size 32
+
 
 python3 -m openrlhf.cli.multi_agent_train_ppo_ray \
     --default_agent "$DEFAULT_AGENT" \
     --agents "$AGENT0" \
     --workflow_args "$WORKFLOW_ARGS" \
-    --workflow_func_path /mnt/public/tk/1024/MARTI-Dev-openrlhf-v2/openrlhf/agent_workflows/single_workflow.py \
+    --workflow_func_path openrlhf/agent_workflows/single_mathworkflow.py \
     --parallel_loading \
     --ref_num_nodes 1 \
     --ref_num_gpus_per_node 2 \

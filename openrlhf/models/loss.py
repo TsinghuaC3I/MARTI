@@ -5,7 +5,7 @@ import torch.distributed as dist
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .utils import masked_mean
+from .utils import masked_mean, masked_sum
 
 
 class GPTLMLoss(nn.Module):
@@ -86,6 +86,10 @@ class PolicyLoss(nn.Module):
         policy_loss_type: str = "ppo",
         enable_vllm_is_correction: bool = False,
         vllm_is_truncated_threshold: float = None,
+        vllm_is_level: str = "token",
+        vllm_is_mode: str = "truncate",
+        vllm_is_truncated_threshold_lower: float = None,
+        vllm_is_veto_threshold: Optional[float] = 1e-4,
     ) -> None:
         super().__init__()
         self.clip_eps_low = clip_eps_low
@@ -95,6 +99,10 @@ class PolicyLoss(nn.Module):
         self.policy_loss_type = policy_loss_type
         self.enable_vllm_is_correction = enable_vllm_is_correction
         self.vllm_is_truncated_threshold = vllm_is_truncated_threshold
+        self.vllm_is_level = vllm_is_level
+        self.vllm_is_mode = vllm_is_mode
+        self.vllm_is_truncated_threshold_lower = vllm_is_truncated_threshold_lower
+        self.vllm_is_veto_threshold = vllm_is_veto_threshold
 
         # GSPO requires sequence-level loss
         if policy_loss_type == "gspo":
@@ -142,10 +150,86 @@ class PolicyLoss(nn.Module):
 
         # Your Efficient RL Framework Secretly Brings You Off-Policy RL Training: https://fengyao.notion.site/off-policy-rl
         vllm_kl = None
-        if self.enable_vllm_is_correction and self.policy_loss_type == "ppo":
-            vllm_is = torch.exp(old_log_probs - rollout_log_probs).clamp(max=self.vllm_is_truncated_threshold).detach()
-            loss = vllm_is * loss
+        vllm_metrics = {"vllm_kl": vllm_kl}
+        if self.enable_vllm_is_correction:  # rollout-training mismatch correction
+            vllm_log_ratio = old_log_probs - rollout_log_probs
+            if self.vllm_is_level == "token":
+                # Token-level IS: π_train(a|s) / π_rollout(a|s) per token
+                vllm_is_weights = torch.exp(vllm_log_ratio)
+            elif self.vllm_is_level == "sequence":
+                # Sequence-level IS: π_train(y|x) / π_rollout(y|x) for entire sequence
+                # Product of token ratios: exp(Σ log(π_train/π_rollout))
+                log_ratio_sum = masked_sum(vllm_log_ratio, action_mask, dim=-1).unsqueeze(-1)
+                vllm_is_weights = torch.exp(log_ratio_sum).expand_as(old_log_probs)
+            elif self.vllm_is_level == "geometric":
+                # Geometric mean IS: (∏ π_train/π_rollout)^(1/T)
+                # Equivalent to exp(mean(log(π_train/π_rollout)))
+                log_ratio_mean = masked_mean(vllm_log_ratio, action_mask, dim=-1).unsqueeze(-1)
+                vllm_is_weights = torch.exp(log_ratio_mean).expand_as(old_log_probs)
+            else:
+                raise ValueError(f"Invalid self.vl_is_level: {self.vllm_is_level}. Must be 'token', 'sequence', or 'geometric'.")
+
+            # Step 1.5: Apply per-token veto check in log space (memory efficient)
+            if self.vllm_is_veto_threshold is not None:
+                log_veto_threshold = torch.log(torch.tensor(self.vllm_is_veto_threshold, device=old_log_probs.device))
+
+                # Check if any token ratio is below veto threshold (in log space)
+                # log(π_train/π_rollout) < log(veto_threshold) ⟺ π_train/π_rollout < veto_threshold
+                catastrophic_tokens = (vllm_log_ratio < log_veto_threshold) & action_mask.bool()
+
+                # For each sequence, check if it has any catastrophic token
+                # Use broadcasting instead of expand_as to save memory
+                has_catastrophic = catastrophic_tokens.any(dim=-1, keepdim=True)
+
+                # Create veto mask: 0 if sequence has catastrophic token, 1 otherwise
+                veto_mask = (~has_catastrophic).float()
+            else:
+                # No veto mechanism
+                catastrophic_tokens = torch.zeros_like(action_mask, dtype=torch.bool)
+                has_catastrophic = torch.zeros((old_log_probs.size(0), 1), dtype=torch.bool, device=old_log_probs.device)
+                veto_mask = torch.ones((old_log_probs.size(0), 1), dtype=torch.float32, device=old_log_probs.device)
+
+
+
+            if self.vllm_is_mode == "truncate":  # TIS 
+                vllm_is_weights = vllm_is_weights.clamp(max=self.vllm_is_truncated_threshold).detach()
+            elif self.vllm_is_mode == "mask":  # MIS (icepop)
+                upper_threshold = self.vllm_is_truncated_threshold
+                if self.vllm_is_truncated_threshold_lower is not None:
+                    lower_threshold = self.vllm_is_truncated_threshold_lower
+                else:
+                    # Default: lower = 1/upper (reciprocal)
+                    lower_threshold = 1.0 / self.vllm_is_truncated_threshold
+
+                # Masked IS (MIS): zero out weights outside [lower_threshold, upper_threshold]
+                mask = (vllm_is_weights >= lower_threshold) & (vllm_is_weights <= upper_threshold)
+                mask = mask.float()
+
+                # Track MIS-specific metrics
+                vllm_metrics["rollout_is_masked_fraction"] = masked_mean(1 - mask, action_mask)
+
+                # Sequence-level masking fraction
+                if self.vllm_is_level in ["sequence", "geometric"]:
+                    # All tokens in a sequence have the same weight, so reuse mask
+                    vllm_metrics["rollout_is_seq_masked_fraction"] = (1 - mask[:, 0]).mean()
+                else:
+                    # Check if any token in each sequence is masked
+                    seq_has_masked = masked_sum(1 - mask, action_mask, dim=-1) > 0
+                    vllm_metrics["rollout_is_seq_masked_fraction"] = seq_has_masked.float().mean()
+                vllm_is_weights = vllm_is_weights * mask
+            else:
+                raise ValueError(f"Invalid self.vllm_is_mode: {self.vllm_is_mode}. Must be 'truncate' or 'mask'.")
+
+            vllm_is_weights = vllm_is_weights * veto_mask
+
+
+            loss = vllm_is_weights * loss
             vllm_kl = masked_mean(rollout_log_probs - old_log_probs, action_mask, dim=None)
+            vllm_metrics["vllm_kl"] = vllm_kl
+        # if self.enable_vllm_is_correction and self.policy_loss_type == "ppo":
+        #     vllm_is = torch.exp(old_log_probs - rollout_log_probs).clamp(max=self.vllm_is_truncated_threshold).detach()
+        #     loss = vllm_is * loss
+        #     vllm_kl = masked_mean(rollout_log_probs - old_log_probs, action_mask, dim=None)
 
         loss = (
             masked_mean(loss, action_mask, dim=None)
@@ -154,7 +238,8 @@ class PolicyLoss(nn.Module):
         )
         clip_ratio = masked_mean(torch.lt(surr2, surr1).float(), action_mask, dim=None)
         ppo_kl = masked_mean(-log_ratio.detach(), action_mask, dim=None)
-        return loss, clip_ratio, ppo_kl, vllm_kl
+        return loss, clip_ratio, ppo_kl, vllm_metrics
+        # return loss, clip_ratio, ppo_kl, vllm_kl
 
 
 class ValueLoss(nn.Module):

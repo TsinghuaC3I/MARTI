@@ -3,27 +3,27 @@
 # Chain workflow with 4 GPUs
 # Pattern: Generator -> Verifier -> Refiner
 # set -x
-# source /mnt/shared-storage-user/marti/miniconda3/etc/profile.d/conda.sh
-# conda activate marti_vllm
-# which conda
-# which python
+source /mnt/shared-storage-user/marti/miniconda3/etc/profile.d/conda.sh
+conda activate marti_vllm
+which conda
+which python
 # cd /mnt/shared-storage-user/marti/OpenRLHF
 
 # 基础配置
-MODEL_DIR="/mnt/public/hf_models/Qwen/"
-#使用qwen3 8B
+MODEL_DIR="/mnt/shared-storage-user/marti/models/"
 SHORT_NAME=${1:-"Qwen2.5-3B-Instruct"}
+# SHORT_NAME=${1:-"Qwen3-4B-Instruct-2507"}
 PRETRAIN="${MODEL_DIR}/${SHORT_NAME}"
 PROMPT_MAX_LEN=4096
 GENERATE_MAX_LEN=32768
 EVAL_GENERATE_MAX_LEN=32768
 OVERLONG_BUFFER_LEN=2048
-MAX_LEN=30000
+MAX_LEN=42024 # 30000
 ADVANTAGE="group_norm"
 
-ROOT_DIR="/mnt/public/tk/1024/MARTI-Dev-openrlhf-v2"
+ROOT_DIR="/mnt/shared-storage-user/marti/MARTI-v2"
 TASK="MATH"
-PROMPT_DATA="json@/mnt/public/tk/1024/MARTI/data/${TASK}"
+PROMPT_DATA="json@/mnt/shared-storage-user/marti/lipengfei/MARTI_HSY/data/${TASK}"
 
 # Workflow 配置
 NUM_TASKS=16  # 异步任务并发数量，替代原来的 tools_config.num_workers
@@ -32,7 +32,7 @@ EXP=chain
 WORKFLOW_SAVE_PATH="${ROOT_DIR}/outputs/workflow/${ADVANTAGE}-${SHORT_NAME}-${TASK}-ch-${EXP}"
 
 TENSORBOARD="${ROOT_DIR}/logs/tensorboard/${ADVANTAGE}-${SHORT_NAME}-${TASK}-ch-${EXP}"
-LOG_DIR=/mnt/public/tk/1024/MARTI-Dev-openrlhf-v2/logs/${ADVANTAGE}-${SHORT_NAME}-${TASK}-ch-${EXP}.log
+LOG_DIR=/mnt/shared-storage-user/marti/MARTI-v2/logs/${ADVANTAGE}-${SHORT_NAME}-${TASK}-ch-${EXP}.log
 
 # 设置动态端口和环境变量
 export MASTER_PORT=8266
@@ -53,8 +53,8 @@ AGENT0="{
     \"0\": {
         \"role\": \"generator\",
         \"pretrain\": \"${PRETRAIN}\",
-        \"save_path\": \"/mnt/public/tk/1024/MARTI-Dev-openrlhf-v2/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-ch-${EXP}-agent0\",
-        \"ckpt_path\": \"/mnt/public/tk/1024/MARTI-Dev-openrlhf-v2/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-ch-${EXP}-agent0\",
+        \"save_path\": \"/mnt/shared-storage-user/marti/MARTI-v2/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-ch-${EXP}-agent0\",
+        \"ckpt_path\": \"/mnt/shared-storage-user/marti/MARTI-v2/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-ch-${EXP}-agent0\",
         \"is_tuning\": true,
         \"chat_template\": [\"\\$question\\n\\nPlease reason step by step, and put your final answer within \\\\boxed{}.\\n\"]
     }
@@ -65,8 +65,8 @@ AGENT1="{
     \"1\": {
         \"role\": \"verifier\",
         \"pretrain\": \"${PRETRAIN}\",
-        \"save_path\": \"/mnt/public/tk/1024/MARTI-Dev-openrlhf-v2/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-ch-${EXP}-agent1\",
-        \"ckpt_path\": \"/mnt/public/tk/1024/MARTI-Dev-openrlhf-v2/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-ch-${EXP}-agent1\",
+        \"save_path\": \"/mnt/shared-storage-user/marti/MARTI-v2/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-ch-${EXP}-agent1\",
+        \"ckpt_path\": \"/mnt/shared-storage-user/marti/MARTI-v2/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-ch-${EXP}-agent1\",
         \"is_tuning\": true,
         \"chat_template\": [\"You are tasked with analyzing an answer to a problem and providing constructive feedback.\\n\\nProblem: \\$question\\n\\nSolution: \\$generator\\n\\nDo NOT provide direct solutions.\\n\"]
     }
@@ -77,14 +77,14 @@ AGENT2="{
     \"2\": {
         \"role\": \"refiner\",
         \"pretrain\": \"${PRETRAIN}\",
-        \"save_path\": \"/mnt/public/tk/1024/MARTI-Dev-openrlhf-v2/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-ch-${EXP}-agent2\",
-        \"ckpt_path\": \"/mnt/public/tk/1024/MARTI-Dev-openrlhf-v2/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-ch-${EXP}-agent2\",
+        \"save_path\": \"/mnt/shared-storage-user/marti/MARTI-v2/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-ch-${EXP}-agent2\",
+        \"ckpt_path\": \"/mnt/shared-storage-user/marti/MARTI-v2/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-ch-${EXP}-agent2\",
         \"is_tuning\": true,
         \"chat_template\": [\"You are tasked with revising a draft solution to a problem based on the critique provided. Please provide a revised solution that addresses the feedback and improves the overall quality of the solution.\\n\\nProblem: \\$question\\n\\nSolution: \\$generator\\n\\nCritique: \\$verifier\\n\\nPlease reason step by step, and put your final answer within \\\\boxed{}.\\n\"]
     }
 }"
 
-WANDB_KEY="6461769bfefb0c4fa60bde38d55799cf3ee3986e"  # 你的 wandb API key
+# WANDB_KEY="6461769bfefb0c4fa60bde38d55799cf3ee3986e"  # 你的 wandb API key
 # WANDB_PROJECT="openrlhf_math_ppo"
 # # WANDB_ORG="your-wandb-org"  # 可选
 # # WANDB_GROUP="${ADVANTAGE}-${SHORT_NAME}-${TASK}"  # 可选
@@ -96,21 +96,25 @@ export NCCL_DEBUG=WARN
 mkdir -p "${ROOT_DIR}/logs"
 mkdir -p "${WORKFLOW_SAVE_PATH}"
 mkdir -p "${TENSORBOARD}"
-mkdir -p "/mnt/public/tk/1024/MARTI-Dev-openrlhf-v2/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-ch-${EXP}-agent0"
-mkdir -p "/mnt/public/tk/1024/MARTI-Dev-openrlhf-v2/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-ch-${EXP}-agent1"
-mkdir -p "/mnt/public/tk/1024/MARTI-Dev-openrlhf-v2/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-ch-${EXP}-agent2"
-mkdir -p "/mnt/public/tk/1024/MARTI-Dev-openrlhf-v2/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-ch-${EXP}-agent0"
-mkdir -p "/mnt/public/tk/1024/MARTI-Dev-openrlhf-v2/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-ch-${EXP}-agent1"
-mkdir -p "/mnt/public/tk/1024/MARTI-Dev-openrlhf-v2/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-ch-${EXP}-agent2"
+# /mnt/shared-storage-user/marti/MARTI-v2/scripts/multi-agent/run_train_chain.sh
+mkdir -p "/mnt/shared-storage-user/marti/MARTI-v2/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-ch-${EXP}-agent0"
+mkdir -p "/mnt/shared-storage-user/marti/MARTI-v2/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-ch-${EXP}-agent1"
+mkdir -p "/mnt/shared-storage-user/marti/MARTI-v2/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-ch-${EXP}-agent2"
+mkdir -p "/mnt/shared-storage-user/marti/MARTI-v2/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-ch-${EXP}-agent0"
+mkdir -p "/mnt/shared-storage-user/marti/MARTI-v2/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-ch-${EXP}-agent1"
+mkdir -p "/mnt/shared-storage-user/marti/MARTI-v2/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-ch-${EXP}-agent2"
 
 # 运行训练脚本
 #--vllm_generate_batch_size 32
+    # --reward_alloc "${REWARD_ALLOC_ARGS}" \
+
 
 python3 -m openrlhf.cli.multi_agent_train_ppo_ray \
     --default_agent "$DEFAULT_AGENT" \
     --agents "$AGENT0" "$AGENT1" "$AGENT2" \
     --workflow_args "$WORKFLOW_ARGS" \
-    --workflow_func_path /mnt/public/tk/1024/MARTI-Dev-openrlhf-v2/openrlhf/agent_workflows/chain_workflow.py \
+    --workflow_func_path openrlhf/agent_workflows/chain_workflow.py \
+    --processor_func_path openrlhf/agent_workflows/chain_processor.py \
     --parallel_loading \
     --ref_num_nodes 1 \
     --ref_num_gpus_per_node 1 \
@@ -123,9 +127,9 @@ python3 -m openrlhf.cli.multi_agent_train_ppo_ray \
     --colocate_all_models \
     --vllm_gpu_memory_utilization 0.6 \
     --micro_train_batch_size 1 \
-    --train_batch_size 32 \
+    --train_batch_size 16 \
     --micro_rollout_batch_size 1 \
-    --rollout_batch_size 32 \
+    --rollout_batch_size 16 \
     --n_samples_per_prompt 2 \
     --max_epochs 1 \
     --seed 42 \
@@ -170,10 +174,11 @@ python3 -m openrlhf.cli.multi_agent_train_ppo_ray \
     --input_key="prompt" \
     --label_key="answer" \
     --load_checkpoint \
-    --dynamic_filtering_for_agents \
-    --use_wandb "${WANDB_KEY}" \
-    --wandb_project "MARTI" \
-    --wandb_run_name "${EXP}"
+    --truncate_prompt \
+    --dynamic_filtering_for_agents 2>&1 | tee ${LOG_DIR}
+    # --use_wandb "${WANDB_KEY}" \
+    # --wandb_project "MARTI" \
+    # --wandb_run_name "${EXP}"
     # --use_tensorboard "${TENSORBOARD}" \
     # ${WANDB_API_KEY:+--use_wandb "${WANDB_API_KEY}"} \
     # ${WANDB_PROJECT:+--wandb_project "${WANDB_PROJECT}"} \

@@ -242,7 +242,7 @@ class ActorPPOTrainer(ABC):
         )
 
         # loss function
-        actor_loss, clip_ratio, ppo_kl, vllm_kl = self.actor_loss_fn(
+        actor_loss, clip_ratio, ppo_kl, vllm_metrics = self.actor_loss_fn(
             action_log_probs,
             old_action_log_probs,
             advantages,
@@ -251,8 +251,8 @@ class ActorPPOTrainer(ABC):
         )
         experience.info["ppo_clip_ratio"] = clip_ratio.detach()
         experience.info["ppo_kl"] = ppo_kl.detach()
-        if vllm_kl is not None:
-            experience.info["vllm_kl"] = vllm_kl.detach()
+        if vllm_metrics["vllm_kl"] is not None:
+            experience.info["vllm_kl"] = vllm_metrics["vllm_kl"].detach()
 
         if self.args.use_kl_loss:
             if self.args.init_kl_coef > 0:

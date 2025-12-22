@@ -166,14 +166,15 @@ Please reason step by step, and put your final answer within \\boxed{{}}."""
         ground_truth=label,
         task=task,
     )
-    flattened_trajectory = []
-    for agent_idx, agent_turns in enumerate(trajectory):
-        for turn in agent_turns:
-            flattened_trajectory.append(turn)
+    # # TODO 增加processor后，不需要加flatten， 在processor里展平
+    # flattened_trajectory = []
+    # for agent_idx, agent_turns in enumerate(trajectory):
+    #     for turn in agent_turns:
+    #         flattened_trajectory.append(turn)
     return {
         "prompt": prompt,
         "label": label,
-        "trajectory": flattened_trajectory,
+        "trajectory": trajectory, #flattened_trajectory,
         "reward_matrix": rewards,
         "final_reward": final_reward,
     }

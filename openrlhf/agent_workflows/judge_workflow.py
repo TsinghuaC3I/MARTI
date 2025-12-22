@@ -121,11 +121,24 @@ async def workflow(
         generator_agent["tokenizer"],
         prompt
     )
+    # ====== 添加：获取输入token_ids ======
+    generator_input_token_ids = generator_agent["tokenizer"](
+        generator_input,
+        add_special_tokens=False,
+        return_tensors="pt",
+    )["input_ids"][0].tolist()
+    # ====================================
+    
     generator_response = await generator_agent["llm"].generate_async.remote(
         generator_input,
         generator_agent["sampling_params"]
     )
     generated_answer = generator_response.outputs[0].text.strip()
+    
+    # ====== 添加：获取输出token_ids和组合sequence_ids ======
+    generator_output_token_ids = generator_response.outputs[0].token_ids
+    generator_sequence_ids = generator_input_token_ids + generator_output_token_ids
+    # ====================================================
 
     # 4. Judge evaluates using custom template
     # Default judge template (backward compatible)
@@ -152,12 +165,25 @@ async def workflow(
         judge_agent["tokenizer"],
         judge_input
     )
+    
+    # ====== 添加：获取judge输入token_ids ======
+    judge_input_token_ids = judge_agent["tokenizer"](
+        judge_input,
+        add_special_tokens=False,
+        return_tensors="pt",
+    )["input_ids"][0].tolist()
+    # ========================================
 
     judge_response = await judge_agent["llm"].generate_async.remote(
         judge_input,
         judge_agent["sampling_params"]
     )
     judge_output = judge_response.outputs[0].text.strip()
+    
+    # ====== 添加：获取judge输出token_ids和组合sequence_ids ======
+    judge_output_token_ids = judge_response.outputs[0].token_ids
+    judge_sequence_ids = judge_input_token_ids + judge_output_token_ids
+    # =========================================================
 
     # 5. Extract score using configurable parser
     judge_score = score_parser(judge_output)
@@ -191,12 +217,20 @@ async def workflow(
         # Generator trajectory
         {
             "turn_id": 0,
-            "agent_index": 0,
+            #加入node_id
+            "node_id": 0,
+            #改为agent_id
+            "agent_id": 0,
             "agent_name": generator_agent["agent_id"],
             "agent_role": generator_agent["agent_role"],
             "agent_input": generator_input,
             "agent_output": generated_answer,
-            "agent_reward": generator_combined_reward,
+            # ====== 修改：正确获取output_ids和sequence_ids ======
+            "output_ids": generator_output_token_ids,
+            "sequence_ids": generator_sequence_ids,
+            # =================================================
+            #修改final_reward名称为reward
+            "reward": generator_combined_reward,
             "metadata": {
                 "judge_score": judge_score,
                 "rule_reward": rule_reward,
@@ -206,11 +240,18 @@ async def workflow(
         # Judge trajectory
         {
             "turn_id": 1,
-            "agent_index": 1,
+            #加入node_id
+            "node_id": 1,
+            #改为agent_id
+            "agent_id": 1,
             "agent_name": judge_agent["agent_id"],
             "agent_role": judge_agent["agent_role"],
             "agent_input": judge_input,
             "agent_output": judge_output,
+            # ====== 添加：output_ids和sequence_ids ======
+            "output_ids": judge_output_token_ids,
+            "sequence_ids": judge_sequence_ids,
+            # =========================================
             "agent_reward": judge_combined_reward,
             "metadata": {},
         }

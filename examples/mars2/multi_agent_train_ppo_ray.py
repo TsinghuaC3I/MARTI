@@ -182,7 +182,8 @@ def train(args):
     num_agents = len(agent_list)
 
     # Training loop using MultiAgent_PPOTrainer
-    from openrlhf.trainer.multi_agent_ppotrainer import MultiAgent_PPOTrainer
+    # from openrlhf.trainer.multi_agent_ppotrainer import MultiAgent_PPOTrainer
+    from examples.mars2.multi_agent_ppotrainer import MultiAgent_PPOTrainer
 
     # Collect pretrain paths for all agents
     agents_pretrain = []
@@ -443,7 +444,7 @@ if __name__ == "__main__":
     parser.add_argument("--workflow_args", type=json.loads, default={}, help="Workflow arguments (dict)")
     parser.add_argument("--workflow_func_path", type=str, default=None, help="Workflow function script path")
     parser.add_argument("--processor_func_path", type=str, default=None, help="reward shaping processor script path")
-    # parser.add_argument("--evaluate_mcts_methods", type=str, default="agent", help="Workflow function script path")
+    parser.add_argument("--evaluate_mcts_methods", type=str, default="agent", help="Workflow function script path")
 
     # tool args
     parser.add_argument("--tools_config", type=json.loads, default={}, help="tool arguments (dict)")
@@ -747,6 +748,7 @@ if __name__ == "__main__":
     # eval config
     parser.add_argument("--eval_before_training", action="store_true", default=False)
     parser.add_argument("--eval_only", action="store_true", default=False)
+    parser.add_argument("--eval_save_path", type=str, default=None, help="Path to save evaluation results")
     parser.add_argument("--verify_task", type=str, default="math")
     parser.add_argument("--verify_task_eval", type=str, default="math")
     args = parser.parse_args()

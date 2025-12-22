@@ -19,48 +19,10 @@ from vllm import SamplingParams
 from openrlhf.agent_workflows.utils import register_mcp_tools, register_openai_tools, print_tools, assign_action_mask
 from openrlhf.agent_workflows.tools.manager import ToolManager
 from openrlhf.agent_workflows.tools.mcp_manager import MCPManager
+# from openrlhf.trainer.ppo_utils.multi_agent_samples_generator import MultiAgentSamplesGenerator
 #from openrlhf.worlds.base_world import Samples
 
 logger = init_logger(__name__)
-
-def update_samples_with_rewards(rewards_info, samples_list):
-    """Process rewards info and update samples with rewards, scores and extra logs.
-
-    Args:
-        rewards_info: List of reward information dictionaries
-        samples_list: List of Experience objects to update
-    """
-    # Process rewards and scores
-    samples_len = [len(sample.sequences) for sample in samples_list]
-
-    rewards_list = torch.cat([torch.as_tensor(info["rewards"]) for info in rewards_info], dim=0).split(samples_len)
-    if "scores" in rewards_info[0]:
-        scores_list = torch.cat([torch.as_tensor(info["scores"]) for info in rewards_info], dim=0).split(samples_len)
-    else:
-        scores_list = rewards_list
-
-    # Process extra_logs if present
-    if "extra_logs" in rewards_info[0]:
-        # Merge all extra_logs tensors first
-        merged_logs = {
-            key: torch.cat(
-                [torch.as_tensor(logs[key]) for logs in [info["extra_logs"] for info in rewards_info]], dim=0
-            ).split(samples_len)
-            for key in rewards_info[0]["extra_logs"].keys()
-        }
-
-    # Update samples with rewards, scores and extra logs
-    for i, samples in enumerate(samples_list):
-        samples.rewards = rewards_list[i]
-        samples.scores = scores_list[i]
-        samples.info["score"] = scores_list[i]
-        samples.info["reward"] = rewards_list[i]
-        if "extra_logs" in rewards_info[0]:
-            for key, values in merged_logs.items():
-                samples.info[key] = values[i]
-
-    return samples_list
-
 
 class MultiAgentSamplesGenerator(SamplesGenerator):
     def __init__(self, agents, strategy, prompt_max_len, credit_model=None, *args, **kwargs):
@@ -244,24 +206,16 @@ class MultiAgentSamplesGenerator(SamplesGenerator):
         # use different distributed prompts in eval and train stage
         evaluate_mcts_methods = kwargs.get("evaluate_mcts_methods", "")
         # distribute_prompts_fn = self.distribute_prompts if not is_eval or evaluate_mcts_methods != "agent" else self.distribute_prompts_single_agent
-        # distribute_prompts_fn = self.distribute_prompts_single_agent if is_eval and evaluate_mcts_methods == "agent" else self.distribute_prompts
-        all_trajectories = self.distribute_prompts(
+        distribute_prompts_fn = self.distribute_prompts_single_agent if is_eval and evaluate_mcts_methods == "agent" else self.distribute_prompts
+        all_trajectories = distribute_prompts_fn(
             all_prompts,
             all_labels,
             all_metadatas,
             rank_agents_list,
             is_eval
         )
-        # if self.processor: 
-        # TODO add default processor
-        if self.processor:
-            all_trajectories = self.processor(all_trajectories, self.num_agents, self.args)
 
-        print(f"总共有{len(all_prompts)}个prompts")
-        assert len(all_trajectories) == len(all_prompts), f"轨迹数据和prompt的数量应该是一致的：{len(all_trajectories)} vs {len(all_prompts)}"
         rollout_samples = self.prepare_samples(all_trajectories, truncate_length, is_eval)
-        print(f"总共有{len(rollout_samples)}个rollout samples数据")
-        assert len(rollout_samples) > len(all_trajectories), f"展平之后总的数据量应该大于轨迹数量,{len(rollout_samples)} vs {len(all_trajectories)}"
         # assert isinstance(rollout_samples, list), f"rollout samples should be list"
         # assert isinstance(rollout_samples[0], Experience), f"rollout samples [0] should be experience"
         return rollout_samples
@@ -319,6 +273,81 @@ class MultiAgentSamplesGenerator(SamplesGenerator):
         assert len(all_trajectories) == len(
             all_prompts), f"{len(all_trajectories)} vs {len(all_prompts)}"
         return all_trajectories
+
+    def distribute_prompts_single_agent(self, all_prompts, all_labels, all_metadatas, rank_agents_list, is_eval=False):
+        '''
+        rank_agents_list = List[List[agent_dict_for_rankxx]]
+        '''
+        agents_rank_list = list(map(list, zip(*rank_agents_list)))
+        assert len(agents_rank_list) == self.num_agents, f"rank_list of agents has different size with self.num_agents."
+        num_agents = self.num_agents
+        world_size = len(rank_agents_list)
+        # Start timing for the entire distribute_prompts phase
+        distribute_start_time = time.time()
+        # Distribute requests to engines and collect responses to outputs
+        refs = []
+        all_wrappers = []
+        batch_size = (len(all_prompts) + world_size - 1) // world_size
+
+        # Time the wrapper creation and request submission phase
+        expected_lens = []
+        for rank_id in range(world_size):
+            prompts = all_prompts[rank_id * batch_size : (rank_id + 1) * batch_size]
+            labels = all_labels[rank_id * batch_size : (rank_id + 1) * batch_size]
+            metadatas = all_metadatas[rank_id * batch_size : (rank_id + 1) * batch_size]
+            for agent_idx, rank_list in enumerate(agents_rank_list):
+                multi_agent_wrapper = MultiAgentWrapper.remote(
+                    agents=[rank_list[rank_id]],
+                    workflow_args=self.workflow_args,
+                    workflow_func_path=self.args.workflow_func_path
+                )
+                ref = multi_agent_wrapper.add_requests.remote(
+                    # tool_manager=self.tool_manager,
+                    prompts=prompts,
+                    labels=labels,
+                    metadatas=metadatas,
+                    is_eval=is_eval,
+                    # max_length=self.total_max_len,
+                )
+                expected_lens.append(len(prompts))
+                refs.append(ref)
+                all_wrappers.append(multi_agent_wrapper)
+
+        ray.get(refs)
+
+        # Time the result collection phase
+        result_collection_start = time.time()
+        all_output_refs = []
+
+        for expected_len, wrapper in zip(expected_lens, all_wrappers):
+            all_output_refs.append(wrapper.get_responses.remote(expected_len=expected_len))
+        all_trajectories = ray.get(all_output_refs)
+        result_collection_time = time.time() - result_collection_start
+        
+        # Calculate total time
+        total_distribute_time = time.time() - distribute_start_time
+        
+        # Log comprehensive timing information
+        logger = init_logger(__name__)
+        logger.info(f"[MultiAgentWrapper distribute_prompts timing] Total distribute time: {total_distribute_time:.2f}s")
+    
+        assert len(all_output_refs) == num_agents * world_size, f"size is error: len(all_output_refs) == num_agents * world_size: {len(all_output_refs)}  vs {num_agents} * {world_size}"
+        agent_trajectories_list = []
+        for agent_id in range(num_agents):
+            per_agent = []
+            for rank_id in range(world_size):
+                idx = rank_id * num_agents + agent_id
+                per_agent.extend(all_trajectories[idx])
+            agent_trajectories_list.append(per_agent)
+
+        # validate lengths: each agent should have total_prompts trajectories (some ranks' chunks could be empty)
+        for aid, per_agent in enumerate(agent_trajectories_list):
+            if len(per_agent) != len(all_prompts):
+                raise AssertionError(
+                    f"Agent {aid} trajectories length mismatch: {len(per_agent)} vs {len(all_prompts)}"
+                )
+
+        return agent_trajectories_list
 
     def prepare_samples(self, all_trajectories, truncate_length=4096, is_eval=False):
         """
