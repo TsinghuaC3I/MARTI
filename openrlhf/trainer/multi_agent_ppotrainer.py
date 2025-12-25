@@ -6,7 +6,6 @@ from datetime import timedelta
 import ray
 import torch
 from tqdm import tqdm
-
 from openrlhf.datasets import PromptDataset
 from openrlhf.datasets.utils import blending_datasets
 from openrlhf.trainer.ppo_utils import AdaptiveKLController, FixedKLController
@@ -106,7 +105,11 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
         args = self.args
 
         # broadcast init checkpoint to vllm
+        checkpoint_states = {"global_step": 0, "episode": 0, "data_loader_state_dict": {}}
         for agent_idx, agent in enumerate(self.agent_list):
+            # Only load checkpoint for agents with actor model (is_tuning=True)
+            if agent.actor_model_group is None:
+                continue
             ckpt_path = os.path.join(agent.agent_config["ckpt_path"], "_actor")
             if args.load_checkpoint and os.path.exists(ckpt_path):
                 # checkpoint_states = ray.get(self.actor_model_group.async_run_method(method_name="get_checkpoint_states"))[
@@ -115,8 +118,6 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
                 ]
                 logger.info(f"Agent {agent_idx} checkpoint_states: {checkpoint_states}")
                 self._broadcast_to_vllm(agent)
-            else:
-                checkpoint_states = {"global_step": 0, "episode": 0, "data_loader_state_dict": {}}
         if args.eval_before_training:
             print(f"[MultiAgent_PPOTrainer evaluate]: {args.eval_before_training}, {checkpoint_states['global_step']}")
             self.save_logs_and_checkpoints(args, checkpoint_states['global_step'], None)
@@ -213,9 +214,11 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
                 refs = []
                 for idx in range(self.num_agents):
                     if experiences[idx] is not None:
-                        refs.extend(
-                            self.agent_list[idx].actor_model_group.async_run_method_batch(method_name="append", experience=experiences[idx])
-                        )
+                        # Only append experience for agents with actor model (is_tuning=True)
+                        if self.agent_list[idx].actor_model_group is not None:
+                            refs.extend(
+                                self.agent_list[idx].actor_model_group.async_run_method_batch(method_name="append", experience=experiences[idx])
+                            )
                         if self.agent_list[idx].critic_model_group is not None:
                             refs.extend(
                                 self.agent_list[idx].critic_model_group.async_run_method_batch(method_name="append", experience=experiences[idx])
@@ -293,6 +296,9 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
         for agent_idx, agent in enumerate(self.agent_list):
             if self.pass_rate[agent_idx] is None:
                 continue
+            # Skip agents without actor model (is_tuning=False)
+            if agent.actor_model_group is None:
+                continue
             #if global_steps > self.freezing_actor_steps:
             if self.agent_steps_list[agent_idx] > self.freezing_actor_steps:
                 logger.info(f"[MultiAgent_PPOTrainer] Begin actor{agent_idx} fit")
@@ -335,6 +341,10 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
         return all_status
 
     def _broadcast_to_vllm(self, agent):
+        # Skip if agent has no actor model (is_tuning=False)
+        if agent.actor_model_group is None:
+            return
+            
         if self.strategy.args.vllm_enable_sleep:
             from openrlhf.trainer.ray.vllm_engine import batch_vllm_engine_call
 
@@ -577,7 +587,7 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
                     # pass@k 与 pass@1
                     if n_samples_per_prompt > 1:
                         agent_metrics[datasource][f"pass{n_samples_per_prompt}"] += chunk_rewards[:, 1].max().float().item()
-                    agent_metrics[datasource]["pass1"] += chunk_rewards[:, 0].mean().float().item()
+                    agent_metrics[datasource]["pass1"] += chunk_rewards[:, 0].float().mean().item()
                     agent_metrics[datasource]["count"] += 1
 
                 # aggregated_metrics
@@ -618,6 +628,113 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
 
         logger.info(f"✨ Evaluation completed, global_step {global_step}, eval_metrics: {logs}")
 
+    def evaluate_system(self, eval_dataloader, global_step, temperature=0.6, n_samples_per_prompt=1):
+        """Evaluate model performance on eval dataset.
+        Args:
+            eval_dataloader: DataLoader containing evaluation prompts, labels and data sources
+            global_step: Current training step for logging
+            n_samples_per_prompt: Number of samples to generate per prompt for pass@k calculation
+        """
+        start_time = time.time()
+
+        with torch.no_grad():
+            all_prompts = []
+            all_labels = []
+            all_metadatas = []
+            prompt_to_datasource = {}
+            global_indices = None
+            if hasattr(eval_dataloader, 'sampler') and eval_dataloader.sampler is not None:
+                if hasattr(eval_dataloader.sampler, '__iter__'):
+                    global_indices = list(eval_dataloader.sampler)
+
+            batch_offset = 0
+
+            for datasources, prompts, labels, metadatas in eval_dataloader:
+                all_prompts.extend(prompts)
+                all_labels.extend(labels)
+                
+                if global_indices is not None:
+                    metadatas = list(metadatas)
+                    for i, meta in enumerate(metadatas):
+                        if isinstance(meta, dict):
+                            meta['global_prompt_id'] = global_indices[batch_offset + i]
+                        elif isinstance(meta, str):
+                            try:
+                                import json
+                                parsed_meta = json.loads(meta)
+                                parsed_meta['global_prompt_id'] = global_indices[batch_offset + i]
+                                metadatas[i] = parsed_meta
+                            except:
+                                metadatas[i] = {'_original': meta, 'global_prompt_id': global_indices[batch_offset + i]}
+                        else:
+                            metadatas[i] = {'_original': meta, 'global_prompt_id': global_indices[batch_offset + i]}
+                    batch_offset += len(prompts)
+                
+                all_metadatas.extend(metadatas)
+                for prompt, datasource in zip(prompts, datasources):
+                    prompt_to_datasource[prompt] = datasource
+
+            generate_kwargs = self.generate_kwargs.copy()
+            generate_kwargs["temperature"] = temperature
+            generate_kwargs["n_samples_per_prompt"] = n_samples_per_prompt
+
+            samples_list = self.samples_generator.generate_samples(
+                all_prompts, all_labels, all_metadatas, remote_reward_model=self.remote_reward_model, is_eval=True, evaluate_mcts_methods=self.args.evaluate_mcts_methods, **generate_kwargs
+            )
+
+            num_nodes_per_prompt = self.strategy.args.workflow_args.get("eval_max_num_nodes", 1)
+            if len(samples_list) > len(all_prompts):
+                samples_list = samples_list[::num_nodes_per_prompt]
+
+            all_prompts = sum([s.prompts for s in samples_list], [])
+            all_labels = sum([s.labels for s in samples_list], [])
+
+            rewards_list = []
+            for samples in samples_list:
+                rewards_list.append(samples.rewards)
+
+            rewards = torch.tensor(rewards_list).reshape(-1, n_samples_per_prompt, 3)
+
+            global_metrics = {}
+
+            num_prompts = len(all_prompts) // n_samples_per_prompt
+            for i in range(num_prompts):
+                original_prompt = all_prompts[i * n_samples_per_prompt]
+                datasource = prompt_to_datasource[original_prompt]
+
+                if datasource not in global_metrics:
+                    global_metrics[datasource] = {f"pass{n_samples_per_prompt}": 0, "pass1": 0, "passtopk": 0, "avg_pass1": 0, "count": 0}
+                chunk_rewards = rewards[i]
+
+                if n_samples_per_prompt > 1:
+                    global_metrics[datasource][f"pass{n_samples_per_prompt}"] += chunk_rewards[:, 1].max().float().item()
+                global_metrics[datasource]["pass1"] += chunk_rewards[:, 0].mean().float().item()
+                global_metrics[datasource]["passtopk"] += chunk_rewards[:, 1].mean().float().item()
+                global_metrics[datasource]["avg_pass1"] += chunk_rewards[:, 2].mean().float().item()
+                global_metrics[datasource]["count"] += 1
+
+            logs = {}
+            for datasource, metrics in global_metrics.items():
+                if n_samples_per_prompt > 1:
+                    logs[f"eval_system_{datasource}_pass{n_samples_per_prompt}"] = (
+                        metrics[f"pass{n_samples_per_prompt}"] / metrics["count"]
+                    )
+                logs[f"eval_system_{datasource}_pass1"] = metrics["pass1"] / metrics["count"]
+                logs[f"eval_system_{datasource}_passtopk"]= metrics["passtopk"] / metrics["count"]
+                logs[f"eval_system_{datasource}_avg_pass1"] = metrics["avg_pass1"] / metrics["count"]
+
+            if self._wandb is not None:
+                logs = {"eval/%s" % k: v for k, v in {**logs, "global_step": global_step}.items()}
+                self._wandb.log(logs)
+            elif self._tensorboard is not None:
+                for k, v in logs.items():
+                    self._tensorboard.add_scalar(f"eval/{k}", v, global_step)
+
+        end_time = time.time()
+        duration = end_time - start_time
+        time_str = str(timedelta(seconds=duration)).split(".")[0]
+        logger.info(f"Evaluation completed in {time_str}, global_step {global_step}, eval_metrics: {logs}")
+
     def save_logs_and_checkpoints(self, args, global_step, step_bar, agents_status={}, client_states={}):
         if global_step % args.logging_steps == 0:
             # wandb
@@ -653,7 +770,9 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
                         if k == "generated_samples":
                             # Record generated samples in TensorBoard using simple text format
                             text, reward = v
-                            formatted_text = f"Sample:\n{text}\n\nReward: {reward:.4f}"
+                            # Convert tensor to scalar for formatting
+                            reward_val = reward.item() if hasattr(reward, 'item') else float(reward)
+                            formatted_text = f"Sample:\n{text}\n\nReward: {reward_val:.4f}"
                             self._tensorboard.add_text(f"train/{agent_key}/generated_samples", formatted_text, global_step)
                         else:
                             self._tensorboard.add_scalar(f"train/{agent_key}/{k}", v, global_step)
@@ -661,7 +780,7 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
                             self._tensorboard.add_scalar(f"agent_{agent_idx}_step/train/{k}", v, self.agent_steps_list[agent_idx])
 
         # TODO: Add evaluation mechanism for PPO
-        if global_step % args.eval_steps == 0 and self.eval_dataloader and len(self.eval_dataloader) > 0:
+        if (global_step % args.eval_steps == 0 or args.eval_only) and self.eval_dataloader and len(self.eval_dataloader) > 0:
             self.evaluate(self.eval_dataloader, global_step, args.eval_temperature, args.eval_n_samples_per_prompt)
 
         # save ckpt
@@ -673,9 +792,11 @@ class MultiAgent_PPOTrainer(BasePPOTrainer):
             tag = f"global_step{global_step}"
             refs = []
             for agent_idx, agent in enumerate(getattr(self, "agent_list", [])):
-                refs.extend(agent.actor_model_group.async_run_method(
-                    method_name="save_checkpoint", tag=tag, client_states=client_states
-                ))
+                # Only save checkpoint for agents with actor model (is_tuning=True)
+                if agent.actor_model_group is not None:
+                    refs.extend(agent.actor_model_group.async_run_method(
+                        method_name="save_checkpoint", tag=tag, client_states=client_states
+                    ))
                 if agent.critic_model_group is not None:
                     refs.extend(agent.critic_model_group.async_run_method(method_name="save_checkpoint", tag=tag))
             ray.get(refs)

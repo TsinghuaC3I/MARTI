@@ -1,0 +1,2257 @@
+[
+  {
+    "prompt":"If the Bohr energy levels scale as $Z^{2}$, where $Z$ is the atomic number of the atom (i.e., the charge on the nucleus), estimate the wavelength of a photon that results from a transition from $n=3$ to $n=2$ in Fe, which has $Z=26$. Assume that the Fe atom is completely stripped of all its electrons except for one.  Give your answer in Angstroms, to two significant figures.",
+    "answer":[
+      "9.6\n"
+    ],
+    "source":"minerva",
+    "id":"0"
+  },
+  {
+    "prompt":"Preamble: A very hot star is detected in the galaxy M31 located at a distance of $800 \\mathrm{kpc}$. The star has a temperature $T = 6 \\times 10^{5} K$ and produces a flux of $10^{-12} \\mathrm{erg} \\cdot \\mathrm{s}^{-1} \\mathrm{cm}^{-2}$ at the Earth. Treat the star's surface as a blackbody radiator.\n\nSubproblem 0: Find the luminosity of the star (in units of $\\mathrm{erg} \\cdot \\mathrm{s}^{-1}$).\n\n\nSolution: \\[\n  L=4 \\pi D^{2} \\text { Flux }_{\\text {Earth }}=10^{-12} 4 \\pi\\left(800 \\times 3 \\times 10^{21}\\right)^{2}=\\boxed{7e37} \\mathrm{erg} \\cdot \\mathrm{s}^{-1}\n\\]\n\nFinal answer: The final answer is 7e37. I hope it is correct.\n\nSubproblem 1: Compute the star's radius in centimeters.",
+    "answer":[
+      "8.7 \\times 10^{8}"
+    ],
+    "source":"minerva",
+    "id":"1"
+  },
+  {
+    "prompt":"An extrasolar planet has been observed which passes in front of (i.e., transits) its parent star. If the planet is dark (i.e., contributes essentially no light of its own) and has a surface area that is $2 \\%$ of that of its parent star, find the decrease in magnitude of the system during transits.",
+    "answer":[
+      "0.022\n"
+    ],
+    "source":"minerva",
+    "id":"2"
+  },
+  {
+    "prompt":"If a star cluster is made up of $10^{4}$ stars, each of whose absolute magnitude is $-5$, compute the combined apparent magnitude of the cluster if it is located at a distance of $1 \\mathrm{Mpc}$.",
+    "answer":[
+      "10\n"
+    ],
+    "source":"minerva",
+    "id":"3"
+  },
+  {
+    "prompt":"Preamble: A very hot star is detected in the galaxy M31 located at a distance of $800 \\mathrm{kpc}$. The star has a temperature $T = 6 \\times 10^{5} K$ and produces a flux of $10^{-12} \\mathrm{erg} \\cdot \\mathrm{s}^{-1} \\mathrm{cm}^{-2}$ at the Earth. Treat the star's surface as a blackbody radiator.\n\nFind the luminosity of the star (in units of $\\mathrm{erg} \\cdot \\mathrm{s}^{-1}$).",
+    "answer":[
+      "7 \\times 10^{37}\n"
+    ],
+    "source":"minerva",
+    "id":"4"
+  },
+  {
+    "prompt":"Each of the two Magellan telescopes has a diameter of $6.5 \\mathrm{~m}$. In one configuration the effective focal length is $72 \\mathrm{~m}$. Find the diameter of the image of a planet (in $\\mathrm{cm}$ ) at this focus if the angular diameter of the planet at the time of the observation is $45^{\\prime \\prime}$.",
+    "answer":[
+      "1.6\n"
+    ],
+    "source":"minerva",
+    "id":"5"
+  },
+  {
+    "prompt":"Find the gravitational acceleration due to the Sun at the location of the Earth's orbit (i.e., at a distance of $1 \\mathrm{AU}$ ).  Give your answer in meters per second squared, and express it to one significant figure.",
+    "answer":[
+      "0.006\n"
+    ],
+    "source":"minerva",
+    "id":"6"
+  },
+  {
+    "prompt":"A large ground-based telescope has an effective focal length of 10 meters. Two astronomical objects are separated by 1 arc second in the sky. How far apart will the two corresponding images be in the focal plane, in microns?",
+    "answer":[
+      "50\n"
+    ],
+    "source":"minerva",
+    "id":"7"
+  },
+  {
+    "prompt":"Use the Bohr model of the atom to compute the wavelength of the transition from the $n=100$ to $n=99$ levels, in centimeters. [Uscful relation: the wavelength of $L \\alpha$ ( $\\mathrm{n}=2$ to $\\mathrm{n}=1$ transition) is $1216 \\AA$.]",
+    "answer":[
+      "4.49\n"
+    ],
+    "source":"minerva",
+    "id":"8"
+  },
+  {
+    "prompt":"A white dwarf star has an effective temperature, $T_{e}=50,000$ degrees Kelvin, but its radius, $R_{\\mathrm{WD}}$, is comparable to that of the Earth. Take $R_{\\mathrm{WD}}=10^{4} \\mathrm{~km}\\left(10^{7} \\mathrm{~m}\\right.$ or $\\left.10^{9} \\mathrm{~cm}\\right)$. Compute the luminosity (power output) of the white dwarf. Treat the white dwarf as a blackbody radiator. Give  your answer in units of ergs per second, to two significant figures.",
+    "answer":[
+      "4.5e33\n"
+    ],
+    "source":"minerva",
+    "id":"9"
+  },
+  {
+    "prompt":"Preamble: A radio interferometer, operating at a wavelength of $1 \\mathrm{~cm}$, consists of 100 small dishes, each $1 \\mathrm{~m}$ in diameter, distributed randomly within a $1 \\mathrm{~km}$ diameter circle. \n\nWhat is the angular resolution of a single dish, in radians?",
+    "answer":[
+      "0.01\n",
+      "0.02\n"
+    ],
+    "source":"minerva",
+    "id":"10"
+  },
+  {
+    "prompt":"Find the theoretical limiting angular resolution (in arcsec) of a commercial 8-inch (diameter) optical telescope being used in the visible spectrum (at $\\lambda=5000 \\AA=500 \\mathrm{~nm}=5 \\times 10^{-5} \\mathrm{~cm}=5 \\times 10^{-7} \\mathrm{~m}$).  Answer in arcseconds to two significant figures.",
+    "answer":[
+      "0.49\n"
+    ],
+    "source":"minerva",
+    "id":"11"
+  },
+  {
+    "prompt":"Subproblem 0: A particular star has an absolute magnitude $M=-7$. If this star is observed in a galaxy that is at a distance of $3 \\mathrm{Mpc}$, what will its apparent magnitude be? \n\n\nSolution: \\[\n\\text { Given: } M=-7 \\text { and } d=3 \\mathrm{Mpc}\n\\]\n\\[\n\\begin{aligned}\n  & \\text { Apparent Magnitude: } m=M+5 \\log \\left[\\frac{d}{10 \\mathrm{pc}}\\right]=-7+5 \\log \\left[\\frac{3 \\times 10^{6}}{10}\\right]=\\boxed{20.39} \\\\\n\\end{aligned}\n\\]\n\nFinal answer: The final answer is 20.39. I hope it is correct.\n\nSubproblem 1: What is the distance modulus to this galaxy?",
+    "answer":[
+      "27.39\n"
+    ],
+    "source":"minerva",
+    "id":"12"
+  },
+  {
+    "prompt":"Find the distance modulus to the Andromeda galaxy (M31). Take the distance to Andromeda to be $750 \\mathrm{kpc}$, and answer to three significant figures.",
+    "answer":[
+      "24.4"
+    ],
+    "source":"minerva",
+    "id":"13"
+  },
+  {
+    "prompt":"A particular star has an absolute magnitude $M=-7$. If this star is observed in a galaxy that is at a distance of $3 \\mathrm{Mpc}$, what will its apparent magnitude be?",
+    "answer":[
+      "20.39\n"
+    ],
+    "source":"minerva",
+    "id":"14"
+  },
+  {
+    "prompt":"If the Sun's absolute magnitude is $+5$, find the luminosity of a star of magnitude $0$ in ergs/s. A useful constant: the luminosity of the sun is $3.83 \\times 10^{33}$ ergs/s.",
+    "answer":[
+      "3.83 \\times 10^{35}\n"
+    ],
+    "source":"minerva",
+    "id":"15"
+  },
+  {
+    "prompt":"A star is at a distance from the Earth of $300 \\mathrm{pc}$. Find its parallax angle, $\\pi$, in arcseconds to one significant figure.",
+    "answer":[
+      "0.003^{\\prime \\prime}\n"
+    ],
+    "source":"minerva",
+    "id":"16"
+  },
+  {
+    "prompt":"A galaxy moves directly away from us with a speed of $3000 \\mathrm{~km} \\mathrm{~s}^{-1}$. Find the wavelength of the $\\mathrm{H} \\alpha$ line observed at the Earth, in Angstroms. The rest wavelength of $\\mathrm{H} \\alpha$ is $6565 \\AA$.  Take the speed of light to be $3\\times 10^8$ meters per second.",
+    "answer":[
+      "6630.65\n",
+      "6630\n"
+    ],
+    "source":"minerva",
+    "id":"17"
+  },
+  {
+    "prompt":"A star has a measured parallax of $0.01^{\\prime \\prime}$, that is, $0.01$ arcseconds. How far away is it, in parsecs?",
+    "answer":[
+      "100\n"
+    ],
+    "source":"minerva",
+    "id":"18"
+  },
+  {
+    "prompt":"Preamble: A collimated light beam propagating in water is incident on the surface (air/water interface) at an angle $\\theta_w$ with respect to the surface normal.\n\nSubproblem 0: If the index of refraction of water is $n=1.3$, find an expression for the angle of the light once it emerges from the water into the air, $\\theta_a$, in terms of $\\theta_w$.\n\n\nSolution: Using Snell's law, $1.3 \\sin{\\theta_w} = \\sin{\\theta_a}$. So $\\theta_a = \\boxed{\\arcsin{1.3 \\sin{\\theta_w}}}$.\n\nFinal answer: The final answer is \\arcsin{1.3 \\sin{\\theta_w}}. I hope it is correct.\n\nSubproblem 1: What is the critical angle, i.e., the critical value of $\\theta_w$ such that the light will not emerge from the water?  Leave your answer in terms of inverse trigonometric functions; i.e., do not evaluate the function.",
+    "answer":[
+      "\\arcsin{\\frac{1}{1.3}}",
+      "\\arcsin{\\frac{10}{13}}\n"
+    ],
+    "source":"minerva",
+    "id":"19"
+  },
+  {
+    "prompt":"Preamble: Orbital Dynamics: A binary system consists of two stars in circular orbit about a common center of mass, with an orbital period, $P_{\\text {orb }}=10$ days. Star 1 is observed in the visible band, and Doppler measurements show that its orbital speed is $v_{1}=20 \\mathrm{~km} \\mathrm{~s}^{-1}$. Star 2 is an X-ray pulsar and its orbital radius about the center of mass is $r_{2}=3 \\times 10^{12} \\mathrm{~cm}=3 \\times 10^{10} \\mathrm{~m}$.\n\nSubproblem 0: Find the orbital radius, $r_{1}$, of the optical star (Star 1) about the center of mass, in centimeters.\n\n\nSolution: \\[\n\\begin{gathered}\nv_{1}=\\frac{2 \\pi r_{1}}{P_{\\text {orb }}} \\\\\nr_{1}=\\frac{P_{\\text {orb }} v_{1}}{2 \\pi}=\\boxed{2.75e11} \\mathrm{~cm}\n\\end{gathered}\n\\]\n\nFinal answer: The final answer is 2.75e11. I hope it is correct.\n\nSubproblem 1: What is the total orbital separation between the two stars, $r=r_{1}+r_{2}$ (in centimeters)?",
+    "answer":[
+      "3.3e12\n"
+    ],
+    "source":"minerva",
+    "id":"20"
+  },
+  {
+    "prompt":"The Very Large Array (VLA) telescope has an effective diameter of $36 \\mathrm{~km}$, and a typical wavelength used for observation at this facility might be $6 \\mathrm{~cm}$.  Based on this information, compute an estimate for the angular resolution of the VLA in arcseconds",
+    "answer":[
+      "0.33\n"
+    ],
+    "source":"minerva",
+    "id":"21"
+  },
+  {
+    "prompt":"Take the total energy (potential plus thermal) of the Sun to be given by the simple expression:\n\\[\nE \\simeq-\\frac{G M^{2}}{R}\n\\]\nwhere $M$ and $R$ are the mass and radius, respectively. Suppose that the energy generation in the Sun were suddenly turned off and the Sun began to slowly contract. During this contraction its mass, $M$, would remain constant and, to a fair approximation, its surface temperature would also remain constant at $\\sim 5800 \\mathrm{~K}$. Assume that the total energy of the Sun is always given by the above expression, even as $R$ gets smaller. By writing down a simple (differential) equation relating the power radiated at Sun's surface with the change in its total energy (using the above expression), integrate this equation to find the time (in years) for the Sun to shrink to $1 / 2$ its present radius.  Answer in units of years.",
+    "answer":[
+      "7.5 \\times 10^7",
+      "7.5 \\times 10^7\n"
+    ],
+    "source":"minerva",
+    "id":"22"
+  },
+  {
+    "prompt":"Preamble: A spectrum is taken of a single star (i.e., one not in a binary). Among the observed spectral lines is one from oxygen whose rest wavelength is $5007 \\AA$. The Doppler shifted oxygen line from this star is observed to be at a wavelength of $5012 \\AA$. The star is also observed to have a proper motion, $\\mu$, of 1 arc second per year (which corresponds to $\\sim 1.5 \\times 10^{-13}$ radians per second of time). It is located at a distance of $60 \\mathrm{pc}$ from the Earth. Take the speed of light to be $3 \\times 10^8$ meters per second.\n\nWhat is the component of the star's velocity parallel to its vector to the Earth (in kilometers per second)?",
+    "answer":[
+      "300\n"
+    ],
+    "source":"minerva",
+    "id":"23"
+  },
+  {
+    "prompt":"The equation of state for cold (non-relativistic) matter may be approximated as:\n\\[\nP=a \\rho^{5 / 3}-b \\rho^{4 / 3}\n\\]\nwhere $P$ is the pressure, $\\rho$ the density, and $a$ and $b$ are fixed constants. Use a dimensional analysis of the equation of hydrostatic equilibrium to estimate the ``radius-mass'' relation for planets and low-mass white dwarfs whose material follows this equation of state. Specifically, find $R(M)$ in terms of $G$ and the constants $a$ and $b$. You should set all constants of order unity (e.g., $4, \\pi, 3$, etc.) to $1.0$. [Hint: solve for $R(M)$ rather than $M(R)$ ]. You can check your answer by showing that for higher masses, $R \\propto M^{-1 / 3}$, while for the lower-masses $R \\propto M^{+1 / 3}$.",
+    "answer":[
+      "\\frac{a M^{1/3}}{G M^{2/3}+b}\n",
+      "\\frac{a M^{1/3}}{G M^{2/3} + b}"
+    ],
+    "source":"minerva",
+    "id":"24"
+  },
+  {
+    "prompt":"Preamble: A prism is constructed from glass and has sides that form a right triangle with the other two angles equal to $45^{\\circ}$. The sides are $L, L$, and $H$, where $L$ is a leg and $H$ is the hypotenuse. A parallel light beam enters side $L$ normal to the surface, passes into the glass, and then strikes $H$ internally. The index of refraction of the glass is $n=1.5$.\n\nCompute the critical angle for the light to be internally reflected at $H$.  Give your answer in degrees to 3 significant figures.",
+    "answer":[
+      "41.8^\\circ\n",
+      "41.8^{\\circ}\n"
+    ],
+    "source":"minerva",
+    "id":"25"
+  },
+  {
+    "prompt":"It has long been suspected that there is a massive black hole near the center of our Galaxy. Recently, a group of astronmers determined the parameters of a star that is orbiting the suspected black hole. The orbital period is 15 years, and the orbital radius is $0.12$ seconds of arc (as seen from the Earth). Take the distance to the Galactic center to be $8 \\mathrm{kpc}$. Compute the mass of the black hole, starting from $F=m a$. Express your answer in units of the Sun's mass; i.e., answer the question `what is the ratio of masses between this black hole and our Sun'? Give your answer to 1 significant figure. (Assume that Newton's law of gravity is applicable for orbits sufficiently far from a black hole, and that the orbiting star satisfies this condition.)",
+    "answer":[
+      "3 \\times 10^6"
+    ],
+    "source":"minerva",
+    "id":"26"
+  },
+  {
+    "prompt":"Preamble: Once a star like the Sun starts to ascend the giant branch its luminosity, to a good approximation, is given by:\n\\[\nL=\\frac{10^{5} L_{\\odot}}{M_{\\odot}^{6}} M_{\\text {core }}^{6}\n\\]\nwhere the symbol $\\odot$ stands for the solar value, and $M_{\\text {core }}$ is the mass of the He core of the star. Further, assume that as more hydrogen is burned to helium - and becomes added to the core - the conversion efficiency between rest mass and energy is:\n\\[\n\\Delta E=0.007 \\Delta M_{\\text {core }} c^{2} .\n\\]\n\nUse these two expressions to write down a differential equation, in time, for $M_{\\text {core }}$.  For ease of writing, simply use the variable $M$ to stand for $M_{\\text {core }}$.  Leave your answer in terms of $c$, $M_{\\odot}$, and $L_{\\odot}$.",
+    "answer":[
+      "\\frac{dM}{dt}=\\frac{10^{5} L_{\\odot}}{0.007 c^{2} M_{\\odot}^{6}} M^{6}\n"
+    ],
+    "source":"minerva",
+    "id":"27"
+  },
+  {
+    "prompt":"An eclipsing binary consists of two stars of different radii and effective temperatures. Star 1 has radius $R_{1}$ and $T_{1}$, and Star 2 has $R_{2}=0.5 R_{1}$ and $T_{2}=2 T_{1}$. Find the change in bolometric magnitude of the binary, $\\Delta m_{\\text {bol }}$, when the smaller star is behind the larger star. (Consider only bolometric magnitudes so you don't have to worry about color differences.)",
+    "answer":[
+      "1.75\n"
+    ],
+    "source":"minerva",
+    "id":"28"
+  },
+  {
+    "prompt":"The Spitzer Space Telescope has an effective diameter of $85 \\mathrm{cm}$, and a typical wavelength used for observation of $5 \\mu \\mathrm{m}$, or 5 microns. Based on this information, compute an estimate for the angular resolution of the Spitzer Space telescope in arcseconds.",
+    "answer":[
+      "1.2\n"
+    ],
+    "source":"minerva",
+    "id":"29"
+  },
+  {
+    "prompt":"The Sun's effective temperature, $T_{e}$, is 5800 Kelvin, and its radius is $7 \\times 10^{10} \\mathrm{~cm}\\left(7 \\times 10^{8}\\right.$ m). Compute the luminosity (power output) of the Sun in erg/s. Treat the Sun as a blackbody radiator, and give your answer to one significant figure.",
+    "answer":[
+      "4 \\times 10^{33}\n"
+    ],
+    "source":"minerva",
+    "id":"30"
+  },
+  {
+    "prompt":"A galaxy moves directly away from us with speed $v$, and the wavelength of its $\\mathrm{H} \\alpha$ line is observed to be $6784 \\AA$. The rest wavelength of $\\mathrm{H} \\alpha$ is $6565 \\AA$. Find $v/c$.",
+    "answer":[
+      "0.033\n"
+    ],
+    "source":"minerva",
+    "id":"31"
+  },
+  {
+    "prompt":"Preamble: It has been suggested that our Galaxy has a spherically symmetric dark-matter halo with a density distribution, $\\rho_{\\text {dark }}(r)$, given by:\n\\[\n\\rho_{\\text {dark }}(r)=\\rho_{0}\\left(\\frac{r_{0}}{r}\\right)^{2},\n\\]\nwhere $\\rho_{0}$ and $r_{0}$ are constants, and $r$ is the radial distance from the center of the galaxy. For star orbits far out in the halo you can ignore the gravitational contribution of the ordinary matter in the Galaxy.\n\nCompute the rotation curve of the Galaxy (at large distances), i.e., find $v(r)$ for circular orbits.",
+    "answer":[
+      "\\sqrt{4 \\pi G \\rho_{0} r_{0}^{2}}",
+      "\\sqrt{4 \\pi G \\rho_{0} r_{0}^{2}}\n"
+    ],
+    "source":"minerva",
+    "id":"32"
+  },
+  {
+    "prompt":"The Hubble Space telescope has an effective diameter of $2.5 \\mathrm{~m}$, and a typical wavelength used for observation by the Hubble might be $0.6 \\mu \\mathrm{m}$, or 600 nanometers (typical optical wavelength). Based on this information, compute an estimate for the angular resolution of the Hubble Space telescope in arcseconds.",
+    "answer":[
+      "0.05\n"
+    ],
+    "source":"minerva",
+    "id":"33"
+  },
+  {
+    "prompt":"A star of radius, $R$, and mass, $M$, has an atmosphere that obeys a polytropic equation of state:\n\\[\nP=K \\rho^{5 / 3} \\text {, }\n\\]\nwhere $P$ is the gas pressure, $\\rho$ is the gas density (mass per unit volume), and $K$ is a constant throughout the atmosphere. Assume that the atmosphere is sufficiently thin (compared to $R$ ) that the gravitational acceleration can be taken to be a constant.\nUse the equation of hydrostatic equilibrium to derive the pressure as a function of height $z$ above the surface of the planet. Take the pressure at the surface to be $P_{0}$.",
+    "answer":[
+      "\\left[P_{0}^{2 / 5}-\\frac{2}{5} g K^{-3 / 5} z\\right]^{5 / 2}"
+    ],
+    "source":"minerva",
+    "id":"34"
+  },
+  {
+    "prompt":"The differential luminosity from a star, $\\Delta L$, with an approximate blackbody spectrum, is given by:\n\\[\n\\Delta L=\\frac{8 \\pi^{2} c^{2} R^{2}}{\\lambda^{5}\\left[e^{h c /(\\lambda k T)}-1\\right]} \\Delta \\lambda\n\\]\nwhere $R$ is the radius of the star, $T$ is its effective surface temperature, and $\\lambda$ is the wavelength. $\\Delta L$ is the power emitted by the star between wavelengths $\\lambda$ and $\\lambda+\\Delta \\lambda$ (assume $\\Delta \\lambda \\ll \\lambda)$. The star is at distance $d$. Find the star's spectral intensity $I(\\lambda)$ at the Earth, where $I(\\lambda)$ is defined as the power per unit area per unit wavelength interval.",
+    "answer":[
+      "\\frac{2 \\pi c^{2} R^{2}}{d^{2} \\lambda^{5} \\left(e^{\\frac{hc}{\\lambda k T}} - 1\\right)}\n",
+      "\\frac{2 \\pi c^{2} R^{2}}{d^2 \\lambda^5 \\left(e^{\\frac{hc}{\\lambda k T}} - 1\\right)}\n"
+    ],
+    "source":"minerva",
+    "id":"35"
+  },
+  {
+    "prompt":"Unfortunately, a mutant gene can turn box people into triangles late in life. A laboratory test has been developed which can spot the gene early so that the dreaded triangle transformation can be prevented by medications. This test is 95 percent accurate at spotting the gene when it is there. However, the test gives a \"false positive\" $0.4$ percent of the time, falsely indicating that a healthy box person has the mutant gene. If $0.1$ percent (be careful - that's one-tenth of one percent) of the box people have the mutant gene, what's the probability that a box person actually has the mutant gene if the test indicates that he or she does?",
+    "answer":[
+      "0.192\n"
+    ],
+    "source":"minerva",
+    "id":"36"
+  },
+  {
+    "prompt":"If a star cluster is made up of $10^{6}$ stars whose absolute magnitude is the same as that of the Sun (+5), compute the combined magnitude of the cluster if it is located at a distance of $10 \\mathrm{pc}$.",
+    "answer":[
+      "-10\n"
+    ],
+    "source":"minerva",
+    "id":"37"
+  },
+  {
+    "prompt":"Suppose air molecules have a collision cross section of $10^{-16} \\mathrm{~cm}^{2}$. If the (number) density of air molecules is $10^{19} \\mathrm{~cm}^{-3}$, what is the collision mean free path in cm? Answer to one significant figure.",
+    "answer":[
+      "1 \\times 10^{-3}",
+      "10^{-3}\n"
+    ],
+    "source":"minerva",
+    "id":"38"
+  },
+  {
+    "prompt":"A globular cluster has $10^{6}$ stars each of apparent magnitude $+8$. What is the combined apparent magnitude of the entire cluster?",
+    "answer":[
+      "-7"
+    ],
+    "source":"minerva",
+    "id":"39"
+  },
+  {
+    "prompt":"A certain red giant has a radius that is 500 times that of the Sun, and a temperature that is $1 / 2$ that of the Sun's temperature. Find its bolometric (total) luminosity in units of the bolometric luminosity of the Sun.",
+    "answer":[
+      "15625\n"
+    ],
+    "source":"minerva",
+    "id":"40"
+  },
+  {
+    "prompt":"Preamble: A population of 100 ferrets is introduced to a large island in the beginning of 1990 . Ferrets have an intrinsic growth rate, $r_{\\max }$ of $1.3 \\mathrm{yr}^{-1}$.\n\nSubproblem 0: Assuming unlimited resources-i.e., there are enough resources on this island to last the ferrets for hundreds of years-how many ferrets will there be on the island in the year 2000? (Show your work!)\n\n\nSolution: $N_o = 100$ (in 1990)\n\\\\\n$N = ?$ (in 2000)\n\\\\\n$t = 10$ yr\n\\\\\n$r = 1.3 \\text{yr}^{-1}$\n\\\\\n$N = N_{o}e^{rt} = 100*e^{(1.3/\\text{yr})(10 \\text{yr})} = 4.4 x 10^7$ ferrets\n\\\\\nThere will be \\boxed{4.4e7} ferrets on the island in the year 2000. \n\nFinal answer: The final answer is 4.4e7. I hope it is correct.\n\nSubproblem 1: What is the doubling time of the ferret population? (Show your work!)",
+    "answer":[
+      "4.4e7\n",
+      "4.4 \\times 10^7\n"
+    ],
+    "source":"minerva",
+    "id":"41"
+  },
+  {
+    "prompt":"Preamble: A very hot star is detected in the galaxy M31 located at a distance of $800 \\mathrm{kpc}$. The star has a temperature $T = 6 \\times 10^{5} K$ and produces a flux of $10^{-12} \\mathrm{erg} \\cdot \\mathrm{s}^{-1} \\mathrm{cm}^{-2}$ at the Earth. Treat the star's surface as a blackbody radiator.\n\nSubproblem 0: Find the luminosity of the star (in units of $\\mathrm{erg} \\cdot \\mathrm{s}^{-1}$).\n\n\nSolution: \\[\n  L=4 \\pi D^{2} \\text { Flux }_{\\text {Earth }}=10^{-12} 4 \\pi\\left(800 \\times 3 \\times 10^{21}\\right)^{2}=\\boxed{7e37} \\mathrm{erg} \\cdot \\mathrm{s}^{-1}\n\\]\n\nFinal answer: The final answer is 7e37. I hope it is correct.\n\nSubproblem 1: Compute the star's radius in centimeters.\n\n\nSolution: \\[\n  R=\\left(L / 4 \\pi \\sigma T^{4}\\right)^{1 / 2}=\\boxed{8.7e8} \\mathrm{~cm}=0.012 R_{\\odot}\n\\]\n\nFinal answer: The final answer is 8.7e8. I hope it is correct.\n\nSubproblem 2: At what wavelength is the peak of the emitted radiation? Answer in $\\AA$.",
+    "answer":[
+      "48\n"
+    ],
+    "source":"minerva",
+    "id":"42"
+  },
+  {
+    "prompt":"Consider the following \"mixing problem.\" A tank holds $V$ liters of salt water. Suppose that a saline solution with concentration of $c \\mathrm{gm} /$ liter is added at the rate of $r$ liters/minute. A mixer keeps the salt essentially uniformly distributed in the tank. A pipe lets solution out of the tank at the same rate of $r$ liters/minute. The differential equation for the amount of salt in the tank is given by \n\\[\nx^{\\prime}+\\frac{r}{V} x-r c=0 .\n\\]\nSuppose that the out-flow from this tank leads into another tank, also of volume 1 , and that at time $t=1$ the water in it has no salt in it. Again there is a mixer and an outflow. Write down a differential equation for the amount of salt in this second tank, as a function of time, assuming the amount of salt in the second tank at moment $t$ is given by $y(t)$, and the amount of salt in the first tank at moment $t$ is given by $x(t)$.",
+    "answer":[
+      "y^{\\prime}+ry-rx(t)=0\n"
+    ],
+    "source":"minerva",
+    "id":"43"
+  },
+  {
+    "prompt":"What is the slope of a $\\log N(>F)$ vs. $\\log F$ curve for a homogeneous distribution of objects, each of luminosity, $L$, where $F$ is the flux at the observer, and $N$ is the number of objects observed per square degree on the sky?",
+    "answer":[
+      "-3/2\n"
+    ],
+    "source":"minerva",
+    "id":"44"
+  },
+  {
+    "prompt":"Preamble: The density of stars in a particular globular star cluster is $10^{6} \\mathrm{pc}^{-3}$. Take the stars to have the same radius as the Sun, and to have an average speed of $10 \\mathrm{~km} \\mathrm{sec}^{-1}$.\n\nFind the mean free path for collisions among stars.  Express your answer in centimeters, to a single significant figure.",
+    "answer":[
+      "2 \\times 10^{27}\n"
+    ],
+    "source":"minerva",
+    "id":"45"
+  },
+  {
+    "prompt":"Preamble: Given the following data from an Experimental Forest, answer the following questions. Show your work and units.\n$\\begin{array}{ll}\\text { Total vegetative biomass } & 80,000 \\mathrm{kcal} \\mathrm{m}^{-2} \\\\ \\text { Detritus and organic matter in soil } & 120,000 \\mathrm{kcal } \\mathrm{m}^{-2} \\\\ \\text { Total Gross Primary Productivity } & 20,000 \\mathrm{kcal } \\mathrm{m}^{-2} \\mathrm{yr}^{-1} \\\\ \\text { Total Plant Respiration } & 5,000 \\mathrm{kcal} \\mathrm{m}^{-2} \\mathrm{yr}^{-1} \\\\ \\text { Total Community Respiration } & 9,000 \\mathrm{kcal} \\mathrm{m}^{-2} \\mathrm{yr}^{-1}\\end{array}$\n\nSubproblem 0: What is the net primary productivity of the forest?\n\n\nSolution: NPP $=$ GPP $-R_{A}=20,000-5,000=\\boxed{15000} \\mathrm{kcal} \\mathrm{m}^{-2} \\mathrm{yr}^{-1}$\n\nFinal answer: The final answer is 15000. I hope it is correct.\n\nSubproblem 1: What is the net community production?",
+    "answer":[
+      "11000\n",
+      "11000"
+    ],
+    "source":"minerva",
+    "id":"46"
+  },
+  {
+    "prompt":"Preamble: Comparison of Radio and Optical Telescopes.\n\nThe Very Large Array (VLA) is used to make an interferometric map of the Orion Nebula at a wavelength of $10 \\mathrm{~cm}$. What is the best angular resolution of the radio image that can be produced, in radians? Note that the maximum separation of two antennae in the VLA is $36 \\mathrm{~km}$.",
+    "answer":[
+      "2.7778 \\times 10^{-6}\n"
+    ],
+    "source":"minerva",
+    "id":"47"
+  },
+  {
+    "prompt":"Preamble: The following subproblems refer to a circuit with the following parameters. Denote by $I(t)$ the current (where the positive direction is, say, clockwise) in the circuit and by $V(t)$ the voltage increase across the voltage source, at time $t$. Denote by $R$ the resistance of the resistor and $C$ the capacitance of the capacitor (in units which we will not specify)-both positive numbers. Then\n\\[\nR \\dot{I}+\\frac{1}{C} I=\\dot{V}\n\\]\n\nSubproblem 0: Suppose that $V$ is constant, $V(t)=V_{0}$. Solve for $I(t)$, with initial condition $I(0)$.\n\n\nSolution: When $V$ is constant, the equation becomes $R \\dot{I}+\\frac{1}{C} I=0$, which is separable. Solving gives us\n\\[\nI(t)=\\boxed{I(0) e^{-\\frac{t}{R C}}\n}\\]. \n\nFinal answer: The final answer is I(0) e^{-\\frac{t}{R C}}\n. I hope it is correct.\n\nSubproblem 1: It is common to write the solution to the previous subproblem in the form $c e^{-t / \\tau}$. What is $c$ in this case?",
+    "answer":[
+      "I(0)e^{-\\frac{t}{RC}}\n"
+    ],
+    "source":"minerva",
+    "id":"48"
+  },
+  {
+    "prompt":"Preamble: In the following problems, take $a = \\ln 2$ and $b = \\pi / 3$. \n\nGiven $a = \\ln 2$ and $b = \\pi / 3$, rewrite $e^{a+b i}$ in the form $x + yi$, where $x, y$ are real numbers.",
+    "answer":[
+      "1 + i\\sqrt{3}\n",
+      "1 + i \\sqrt{3}\n"
+    ],
+    "source":"minerva",
+    "id":"49"
+  },
+  {
+    "prompt":"For a gas supported by degenerate electron pressure, the pressure is given by:\n\\[\nP=K \\rho^{5 / 3}\n\\]\nwhere $K$ is a constant and $\\rho$ is the mass density. If a star is totally supported by degenerate electron pressure, use a dimensional analysis of the equation of hydrostatic equilibrium:\n\\[\n\\frac{d P}{d r}=-g \\rho\n\\]\nto determine how the radius of such a star depends on its mass, $M$.  Specifically, you will find that $R$ is proportional to some power of $M$; what is that power?",
+    "answer":[
+      "-\\frac{1}{3}\n",
+      "-1/3\n"
+    ],
+    "source":"minerva",
+    "id":"50"
+  },
+  {
+    "prompt":"A candle has a power in the visual band of roughly $3$ Watts. When this candle is placed at a distance of $3 \\mathrm{~km}$ it has the same apparent brightness as a certain star. Assume that this star has the same luminosity as the Sun in the visual band $\\left(\\sim 10^{26}\\right.$ Watts $)$. How far away is the star (in pc)?",
+    "answer":[
+      "0.5613\n"
+    ],
+    "source":"minerva",
+    "id":"51"
+  },
+  {
+    "prompt":"What fraction of the rest mass energy is released (in the form of radiation) when a mass $\\Delta M$ is dropped from infinity onto the surface of a neutron star with $M=1 M_{\\odot}$ and $R=10$ $\\mathrm{km}$ ?",
+    "answer":[
+      "0.15\n"
+    ],
+    "source":"minerva",
+    "id":"52"
+  },
+  {
+    "prompt":"In the polar representation $(r, \\theta)$ of the complex number $z=1+\\sqrt{3} i$, what is $r$?",
+    "answer":[
+      "2\n",
+      "2"
+    ],
+    "source":"minerva",
+    "id":"53"
+  },
+  {
+    "prompt":"A Boolean function $F(A, B)$ is said to be universal if any arbitrary boolean function can be constructed by using nested $F(A, B)$ functions. A universal function is useful, since using it we can build any function we wish out of a single part. For example, when implementing boolean logic on a computer chip a universal function (called a 'gate' in logic-speak) can simplify design enormously. We would like to find a universal boolean function. In this problem we will denote the two boolean inputs $A$ and $B$ and the one boolean output as $C$. \nFirst, to help us organize our thoughts, let's enumerate all of the functions we'd like to be able to construct. How many different possible one-output boolean functions of two variables are there? I.e., how many functions are there of the form $F(A, B)=C ?$",
+    "answer":[
+      "16"
+    ],
+    "source":"minerva",
+    "id":"54"
+  },
+  {
+    "prompt":"Subproblem 0: Find the general solution of the differential equation $\\dot{x}+2 x=e^{t}$, using $c$ for the arbitrary constant of integration which will occur.\n\n\nSolution: We can use integrating factors to get $(u x)^{\\prime}=u e^{t}$ for $u=e^{2 t}$. Integrating yields $e^{2 t} x=e^{3 t} / 3+c$, or $x=\\boxed{\\frac{e^{t}} {3}+c e^{-2 t}}$. \n\nFinal answer: The final answer is \\frac{e^{t}} {3}+c e^{-2 t}. I hope it is correct.\n\nSubproblem 1: Find a solution of the differential equation $\\dot{x}+2 x=e^{t}$ of the form $w e^{t}$, where $w$ is a constant (which you should find).",
+    "answer":[
+      "\\frac{e^{t}} {3}+c e^{-2 t}\n",
+      "\\frac{e^{t}}{3}+ce^{-2t}\n"
+    ],
+    "source":"minerva",
+    "id":"55"
+  },
+  {
+    "prompt":"Find the complex number $a+b i$ with the smallest possible positive $b$ such that $e^{a+b i}=1+\\sqrt{3} i$.",
+    "answer":[
+      "\\ln 2 + i\\frac{\\pi}{3}\n",
+      "\\ln 2 + \\frac{i\\pi}{3}\n"
+    ],
+    "source":"minerva",
+    "id":"56"
+  },
+  {
+    "prompt":"Preamble: The following subproblems relate to applying Euler's Method (a first-order numerical procedure for solving ordinary differential equations with a given initial value) onto $y^{\\prime}=y^{2}-x^{2}=F(x, y)$ at $y(0)=-1$, with $h=0.5$. Recall the notation \\[x_{0}=0, y_{0}=-1, x_{n+1}=x_{h}+h, y_{n+1}=y_{n}+m_{n} h, m_{n}=F\\left(x_{n}, y_{n}\\right)\\]. \n\nUse Euler's method to estimate the value at $x=1.5$.",
+    "answer":[
+      "-0.875\n"
+    ],
+    "source":"minerva",
+    "id":"57"
+  },
+  {
+    "prompt":"Preamble: Orbital Dynamics: A binary system consists of two stars in circular orbit about a common center of mass, with an orbital period, $P_{\\text {orb }}=10$ days. Star 1 is observed in the visible band, and Doppler measurements show that its orbital speed is $v_{1}=20 \\mathrm{~km} \\mathrm{~s}^{-1}$. Star 2 is an X-ray pulsar and its orbital radius about the center of mass is $r_{2}=3 \\times 10^{12} \\mathrm{~cm}=3 \\times 10^{10} \\mathrm{~m}$.\n\nFind the orbital radius, $r_{1}$, of the optical star (Star 1) about the center of mass, in centimeters.",
+    "answer":[
+      "2.75 \\times 10^{11}\n"
+    ],
+    "source":"minerva",
+    "id":"58"
+  },
+  {
+    "prompt":"Preamble: A collimated light beam propagating in water is incident on the surface (air/water interface) at an angle $\\theta_w$ with respect to the surface normal.\n\nIf the index of refraction of water is $n=1.3$, find an expression for the angle of the light once it emerges from the water into the air, $\\theta_a$, in terms of $\\theta_w$.",
+    "answer":[
+      "\\arcsin(1.3\\sin(\\theta_w))\n",
+      "\\arcsin(1.3\\sin\\theta_w)\n"
+    ],
+    "source":"minerva",
+    "id":"59"
+  },
+  {
+    "prompt":"Subproblem 0: Find the general solution of the differential equation $y^{\\prime}=x-2 y$ analytically using integrating factors, solving for $y$. Note that a function $u(t)$ such that $u \\dot{x}+u p x=\\frac{d}{d t}(u x)$ is an integrating factor. Additionally, note that a general solution to a differential equation has the form $x=x_{p}+c x_{h}$ where $x_{h}$ is a nonzero solution of the homogeneous equation $\\dot{x}+p x=0$.\n\n\nSolution: In standard form, $y^{\\prime}+2 y=x$, so $u=C e^{2 x}$. Then $y=u^{-1} \\int u x d x=e^{-2 x} \\int x e^{2 x} d x$. Integrating by parts yields $\\int x e^{2 x} d x=$ $\\frac{x}{2} e^{2 x}-\\frac{1}{2} \\int e^{2 x} d x=\\frac{x}{2} e^{2 x}-\\frac{1}{4} e^{2 x}+c$. Therefore, $y=\\boxed{x / 2-1 / 4+c e^{-2 x}}$.\n\nFinal answer: The final answer is x / 2-1 / 4+c e^{-2 x}. I hope it is correct.\n\nSubproblem 1: For what value of $c$ does the straight line solution occur?",
+    "answer":[
+      "\\frac{x}{2} - \\frac{1}{4} + ce^{-2x}",
+      "\\frac{x}{2} - \\frac{1}{4} + ce^{-2x}\n"
+    ],
+    "source":"minerva",
+    "id":"60"
+  },
+  {
+    "prompt":"An African government is trying to come up with good policy regarding the hunting of oryx. They are using the following model: the oryx population has a natural growth rate of $k$, and we suppose a constant harvesting rate of $a$ oryxes per year.\nWrite down an ordinary differential equation describing the evolution of the oryx population given the dynamics above, using $x(t)$ to denote the oryx population (the number of individual oryx(es)) at time $t$, measured in years.",
+    "answer":[
+      "\\frac{dx}{dt} = kx - a"
+    ],
+    "source":"minerva",
+    "id":"61"
+  },
+  {
+    "prompt":"If the complex number $z$ is given by $z = 1+\\sqrt{3} i$, what is the magnitude of $z^2$?",
+    "answer":[
+      "4",
+      "4\n"
+    ],
+    "source":"minerva",
+    "id":"62"
+  },
+  {
+    "prompt":"Preamble: Given the following data from an Experimental Forest, answer the following questions. Show your work and units.\n$\\begin{array}{ll}\\text { Total vegetative biomass } & 80,000 \\mathrm{kcal} \\mathrm{m}^{-2} \\\\ \\text { Detritus and organic matter in soil } & 120,000 \\mathrm{kcal } \\mathrm{m}^{-2} \\\\ \\text { Total Gross Primary Productivity } & 20,000 \\mathrm{kcal } \\mathrm{m}^{-2} \\mathrm{yr}^{-1} \\\\ \\text { Total Plant Respiration } & 5,000 \\mathrm{kcal} \\mathrm{m}^{-2} \\mathrm{yr}^{-1} \\\\ \\text { Total Community Respiration } & 9,000 \\mathrm{kcal} \\mathrm{m}^{-2} \\mathrm{yr}^{-1}\\end{array}$\n\nWhat is the net primary productivity of the forest?",
+    "answer":[
+      "15000 \\text{ kcal m}^{-2} \\text{yr}^{-1}\n",
+      "15000\n"
+    ],
+    "source":"minerva",
+    "id":"63"
+  },
+  {
+    "prompt":"Given the ordinary differential equation $\\ddot{x}-a^{2} x=0$, where $a$ is a nonzero real-valued constant, find a solution $x(t)$ to this equation such that $x(0) = 0$ and $\\dot{x}(0)=1$.",
+    "answer":[
+      "\\frac{e^{at}-e^{-at}}{2a}\n"
+    ],
+    "source":"minerva",
+    "id":"64"
+  },
+  {
+    "prompt":"Find a solution to the differential equation $\\ddot{x}+\\omega^{2} x=0$ satisfying the initial conditions $x(0)=x_{0}$ and $\\dot{x}(0)=\\dot{x}_{0}$.",
+    "answer":[
+      "x_{0} \\cos (\\omega t)+\\frac{\\dot{x}_{0}}{\\omega} \\sin (\\omega t)\n"
+    ],
+    "source":"minerva",
+    "id":"65"
+  },
+  {
+    "prompt":"Preamble: A radio interferometer, operating at a wavelength of $1 \\mathrm{~cm}$, consists of 100 small dishes, each $1 \\mathrm{~m}$ in diameter, distributed randomly within a $1 \\mathrm{~km}$ diameter circle. \n\nSubproblem 0: What is the angular resolution of a single dish, in radians?\n\n\nSolution: The angular resolution of a single dish is roughly given by the wavelength over its radius, in this case $\\boxed{0.01}$ radians.\n\nFinal answer: The final answer is 0.01. I hope it is correct.\n\nSubproblem 1: What is the angular resolution of the interferometer array for a source directly overhead, in radians?",
+    "answer":[
+      "1e-5\n"
+    ],
+    "source":"minerva",
+    "id":"66"
+  },
+  {
+    "prompt":"Preamble: The density of stars in a particular globular star cluster is $10^{6} \\mathrm{pc}^{-3}$. Take the stars to have the same radius as the Sun, and to have an average speed of $10 \\mathrm{~km} \\mathrm{sec}^{-1}$.\n\nSubproblem 0: Find the mean free path for collisions among stars.  Express your answer in centimeters, to a single significant figure.\n\n\nSolution: \\[\n\\begin{gathered}\n\\ell \\simeq \\frac{1}{n \\sigma}=\\frac{1}{10^{6} \\mathrm{pc}^{-3} \\pi R^{2}} \\\\\n\\ell \\simeq \\frac{1}{3 \\times 10^{-50} \\mathrm{~cm}^{-3} \\times 1.5 \\times 10^{22} \\mathrm{~cm}^{2}} \\simeq \\boxed{2e27} \\mathrm{~cm}\n\\end{gathered}\n\\]\n\nFinal answer: The final answer is 2e27. I hope it is correct.\n\nSubproblem 1: Find the corresponding mean time between collisions. (Assume that the stars move in straight-line paths, i.e., are not deflected by gravitational interactions.)  Answer in units of years, to a single significant figure.",
+    "answer":[
+      "6e13\n"
+    ],
+    "source":"minerva",
+    "id":"67"
+  },
+  {
+    "prompt":"Two stars have the same surface temperature. Star 1 has a radius that is $2.5$ times larger than the radius of star 2. Star 1 is ten times farther away than star 2. What is the absolute value of the difference in apparent magnitude between the two stars, rounded to the nearest integer?",
+    "answer":[
+      "3\n"
+    ],
+    "source":"minerva",
+    "id":"68"
+  },
+  {
+    "prompt":"Preamble: A galaxy is found to have a rotation curve, $v(r)$, given by\n\\[\nv(r)=\\frac{\\left(\\frac{r}{r_{0}}\\right)}{\\left(1+\\frac{r}{r_{0}}\\right)^{3 / 2}} v_{0}\n\\]\nwhere $r$ is the radial distance from the center of the galaxy, $r_{0}$ is a constant with the dimension of length, and $v_{0}$ is another constant with the dimension of speed. The rotation curve is defined as the orbital speed of test stars in circular orbit at radius $r$.\n\nFind an expression for $\\omega(r)$, where $\\omega$ is the angular velocity.  The constants $v_{0}$ and $r_{0}$ will appear in your answer.",
+    "answer":[
+      "\\frac{v_{0}}{r_{0}} \\frac{1}{\\left(1+r / r_{0}\\right)^{3 / 2}}\n",
+      "\\frac{v_{0}}{r_{0}} \\frac{1}{\\left(1+\\frac{r}{r_{0}}\\right)^{3 / 2}}\n",
+      "\\frac{v_{0}}{r_{0}} \\frac{1}{\\left(1 + \\frac{r}{r_{0}}\\right)^{3/2}}\n"
+    ],
+    "source":"minerva",
+    "id":"69"
+  },
+  {
+    "prompt":"Rewrite the function $f(t) = \\cos (2 t)+\\sin (2 t)$ in the form $A \\cos (\\omega t-\\phi)$. It may help to begin by drawing a right triangle with sides $a$ and $b$.",
+    "answer":[
+      "\\sqrt{2} \\cos (2 t-\\pi / 4)\n"
+    ],
+    "source":"minerva",
+    "id":"70"
+  },
+  {
+    "prompt":"Subproblem 0: Find a purely exponential solution of $\\frac{d^{4} x}{d t^{4}}-x=e^{-2 t}$.\n\n\nSolution: The characteristic polynomial of the homogeneous equation is given by $p(s)=$ $s^{4}-1$. Since $p(-2)=15 \\neq 0$, the exponential response formula gives the solution $\\frac{e^{-2 t}}{p(-2)}=\\boxed{\\frac{e^{-2 t}}{15}}$.\n\nFinal answer: The final answer is \\frac{e^{-2 t}}{15}. I hope it is correct.\n\nSubproblem 1: Find the general solution to $\\frac{d^{4} x}{d t^{4}}-x=e^{-2 t}$, denoting constants as $C_{1}, C_{2}, C_{3}, C_{4}$.",
+    "answer":[
+      "\\frac{e^{-2t}}{15}\n"
+    ],
+    "source":"minerva",
+    "id":"71"
+  },
+  {
+    "prompt":"Buzz, the hot new dining spot on campus, emphasizes simplicity. It only has two items on the menu, burgers and zucchini. Customers make a choice as they enter (they are not allowed to order both), and inform the cooks in the back room by shouting out either \"B\" or \"Z\". Unfortunately the two letters sound similar so $8 \\%$ of the time the cooks misinterpret what was said. The marketing experts who designed the restaurant guess that $90 \\%$ of the orders will be for burgers and $10 \\%$ for zucchini.\nThe cooks can hear one order per second. The customers arrive at the rate of one per second. One of the chefs says that this system will never work because customers can only send one bit per second, the rate at which orders can be accepted, so you could barely keep up even if there were no noise in the channel. You are hired as an outside consultant to deal with the problem.\nWhat is the channel capacity $\\mathrm{C}$ of this communication channel in bits per second?",
+    "answer":[
+      "0.5978\n"
+    ],
+    "source":"minerva",
+    "id":"72"
+  },
+  {
+    "prompt":"Preamble: Consider the differential equation $\\ddot{x}+\\omega^{2} x=0$. \\\\\n\nA differential equation $m \\ddot{x}+b \\dot{x}+k x=0$ (where $m, b$, and $k$ are real constants, and $m \\neq 0$ ) has corresponding characteristic polynomial $p(s)=m s^{2}+b s+k$.\\\\\nWhat is the characteristic polynomial $p(s)$ of $\\ddot{x}+\\omega^{2} x=0$?",
+    "answer":[
+      "s^{2}+\\omega^{2}\n"
+    ],
+    "source":"minerva",
+    "id":"73"
+  },
+  {
+    "prompt":"Preamble: The following subproblems refer to the differential equation. $\\ddot{x}+4 x=\\sin (3 t)$\n\nFind $A$ so that $A \\sin (3 t)$ is a solution of $\\ddot{x}+4 x=\\sin (3 t)$.",
+    "answer":[
+      "-0.2\n",
+      "-0.2"
+    ],
+    "source":"minerva",
+    "id":"74"
+  },
+  {
+    "prompt":"Find the general solution of the differential equation $y^{\\prime}=x-2 y$ analytically using integrating factors, solving for $y$. Note that a function $u(t)$ such that $u \\dot{x}+u p x=\\frac{d}{d t}(u x)$ is an integrating factor. Additionally, note that a general solution to a differential equation has the form $x=x_{p}+c x_{h}$ where $x_{h}$ is a nonzero solution of the homogeneous equation $\\dot{x}+p x=0$.",
+    "answer":[
+      "\\frac{x}{2} - \\frac{1}{4} + ce^{-2x}\n"
+    ],
+    "source":"minerva",
+    "id":"75"
+  },
+  {
+    "prompt":"Preamble: The Peak District Moorlands in the United Kingdom store 20 million tonnes of carbon, almost half of the carbon stored in the soils of the entire United Kingdom (the Moorlands are only $8 \\%$ of the land area). In pristine condition, these peatlands can store an additional 13,000 tonnes of carbon per year.\n\nGiven this rate of productivity, how long did it take for the Peatlands to sequester this much carbon?",
+    "answer":[
+      "1538\n"
+    ],
+    "source":"minerva",
+    "id":"76"
+  },
+  {
+    "prompt":"Preamble: A population of 100 ferrets is introduced to a large island in the beginning of 1990 . Ferrets have an intrinsic growth rate, $r_{\\max }$ of $1.3 \\mathrm{yr}^{-1}$.\n\nAssuming unlimited resources-i.e., there are enough resources on this island to last the ferrets for hundreds of years-how many ferrets will there be on the island in the year 2000? (Show your work!)",
+    "answer":[
+      "4.4 \\times 10^7",
+      "4.4 \\times 10^7\n"
+    ],
+    "source":"minerva",
+    "id":"77"
+  },
+  {
+    "prompt":"Preamble: The following subproblems refer to the following \"mixing problem\": A tank holds $V$ liters of salt water. Suppose that a saline solution with concentration of $c \\mathrm{gm} /$ liter is added at the rate of $r$ liters/minute. A mixer keeps the salt essentially uniformly distributed in the tank. A pipe lets solution out of the tank at the same rate of $r$ liters/minute. \n\nWrite down the differential equation for the amount of salt in the tank in standard linear form. [Not the concentration!] Use the notation $x(t)$ for the number of grams of salt in the tank at time $t$.",
+    "answer":[
+      "x' + \\frac{r}{V}x - rc = 0",
+      "x' + \\frac{r}{V}x - rc = 0\n"
+    ],
+    "source":"minerva",
+    "id":"78"
+  },
+  {
+    "prompt":"Rewrite the function $\\cos (\\pi t)-\\sqrt{3} \\sin (\\pi t)$ in the form $A \\cos (\\omega t-\\phi)$. It may help to begin by drawing a right triangle with sides $a$ and $b$.",
+    "answer":[
+      "2 \\cos (\\pi t+\\pi / 3)\n"
+    ],
+    "source":"minerva",
+    "id":"79"
+  },
+  {
+    "prompt":"Preamble: In the following problems, take $a = \\ln 2$ and $b = \\pi / 3$. \n\nSubproblem 0: Given $a = \\ln 2$ and $b = \\pi / 3$, rewrite $e^{a+b i}$ in the form $x + yi$, where $x, y$ are real numbers. \n\n\nSolution: Using Euler's formula, we find that the answer is $\\boxed{1+\\sqrt{3} i}$.\n\nFinal answer: The final answer is 1+\\sqrt{3} i. I hope it is correct.\n\nSubproblem 1: Given $a = \\ln 2$ and $b = \\pi / 3$, rewrite $e^{2(a+b i)}$ in the form $x + yi$, where $x, y$ are real numbers.",
+    "answer":[
+      "1+\\sqrt{3}i\n"
+    ],
+    "source":"minerva",
+    "id":"80"
+  },
+  {
+    "prompt":"Preamble: The following subproblems refer to the exponential function $e^{-t / 2} \\cos (3 t)$, which we will assume is a solution of the differential equation $m \\ddot{x}+b \\dot{x}+k x=0$. \n\nWhat is $b$ in terms of $m$? Write $b$ as a constant times a function of $m$.",
+    "answer":[
+      "m\n"
+    ],
+    "source":"minerva",
+    "id":"81"
+  },
+  {
+    "prompt":"If the complex number $z$ is given by $z = 1+\\sqrt{3} i$, what is the real part of $z^2$?",
+    "answer":[
+      "-2"
+    ],
+    "source":"minerva",
+    "id":"82"
+  },
+  {
+    "prompt":"Find a purely sinusoidal solution of $\\frac{d^{4} x}{d t^{4}}-x=\\cos (2 t)$.",
+    "answer":[
+      "\\frac{\\cos(2t)}{15}\n"
+    ],
+    "source":"minerva",
+    "id":"83"
+  },
+  {
+    "prompt":"Preamble: The following subproblems refer to the differential equation. $\\ddot{x}+4 x=\\sin (3 t)$\n\nSubproblem 0: Find $A$ so that $A \\sin (3 t)$ is a solution of $\\ddot{x}+4 x=\\sin (3 t)$.\n\n\nSolution: We can find this by brute force. If $x=A \\sin (3 t)$, then $\\ddot{x}=-9 A \\sin (3 t)$, so $\\ddot{x}+4 x=-5 A \\sin (3 t)$. Therefore, when $A=\\boxed{-0.2}, x_{p}(t)=-\\sin (3 t) / 5$ is a solution of the given equation.\n\nFinal answer: The final answer is -0.2. I hope it is correct.\n\nSubproblem 1: What is the general solution, in the form $f_0(t) + C_1f_1(t) + C_2f_2(t)$, where $C_1, C_2$ denote arbitrary constants?",
+    "answer":[
+      "-0.2\n"
+    ],
+    "source":"minerva",
+    "id":"84"
+  },
+  {
+    "prompt":"Find a solution to $\\dot{x}+2 x=\\cos (2 t)$ in the form $k_0\\left[f(k_1t) + g(k_2t)\\right]$, where $f, g$ are trigonometric functions.  Do not include homogeneous solutions to this ODE in your solution.",
+    "answer":[
+      "\\frac{\\cos(2t) + \\sin(2t)}{4}\n",
+      "\\frac{\\cos(2t)+\\sin(2t)}{4}\n"
+    ],
+    "source":"minerva",
+    "id":"85"
+  },
+  {
+    "prompt":"Find the general solution of $x^{2} y^{\\prime}+2 x y=\\sin (2 x)$, solving for $y$. Note that a general solution to a differential equation has the form $x=x_{p}+c x_{h}$ where $x_{h}$ is a nonzero solution of the homogeneous equation $\\dot{x}+p x=0$. Additionally, note that the left hand side is the derivative of a product.",
+    "answer":[
+      "cx^{-2} - \\frac{\\cos(2x)}{2x^2}\n",
+      "y=cx^{-2}-\\frac{\\cos(2x)}{2x^{2}}\n"
+    ],
+    "source":"minerva",
+    "id":"86"
+  },
+  {
+    "prompt":"Preamble: The following subproblems refer to the damped sinusoid $x(t)=A e^{-a t} \\cos (\\omega t)$.\n\nWhat is the spacing between successive maxima of $x(t)$? Assume that $\\omega \\neq 0$.",
+    "answer":[
+      "\\frac{2\\pi}{\\omega}\n"
+    ],
+    "source":"minerva",
+    "id":"87"
+  },
+  {
+    "prompt":"Subproblem 0: Find a purely sinusoidal solution of $\\frac{d^{4} x}{d t^{4}}-x=\\cos (2 t)$.\n\n\nSolution: We choose an exponential input function whose real part is $\\cos (2 t)$, namely $e^{2 i t}$. Since $p(s)=s^{4}-1$ and $p(2 i)=15 \\neq 0$, the exponential response formula yields the solution $\\frac{e^{2 i t}}{15}$. A sinusoidal solution to the original equation is given by the real part: $\\boxed{\\frac{\\cos (2 t)}{15}}$. \n\nFinal answer: The final answer is \\frac{\\cos (2 t)}{15}. I hope it is correct.\n\nSubproblem 1: Find the general solution to $\\frac{d^{4} x}{d t^{4}}-x=\\cos (2 t)$, denoting constants as $C_{1}, C_{2}, C_{3}, C_{4}$.",
+    "answer":[
+      "\\frac{\\cos (2 t)}{15}\n",
+      "\\frac{\\cos (2 t)}{15}+C_{1} e^{t}+C_{2} e^{-t}+C_{3} \\cos (t)+C_{4} \\sin (t)\n"
+    ],
+    "source":"minerva",
+    "id":"88"
+  },
+  {
+    "prompt":"Find a solution of $\\ddot{x}+4 x=\\cos (2 t)$, solving for $x(t)$, by using the ERF on a complex replacement. The ERF (Exponential Response Formula) states that a solution to $p(D) x=A e^{r t}$ is given by $x_{p}=A \\frac{e^{r t}}{p(r)}$, as long as $\\left.p (r\\right) \\neq 0$). The ERF with resonance assumes that $p(r)=0$ and states that a solution to $p(D) x=A e^{r t}$ is given by $x_{p}=A \\frac{t e^{r t}}{p^{\\prime}(r)}$, as long as $\\left.p^{\\prime} ( r\\right) \\neq 0$.",
+    "answer":[
+      "\\frac{t}{4}\\sin(2t)\n"
+    ],
+    "source":"minerva",
+    "id":"89"
+  },
+  {
+    "prompt":"Preamble: The following subproblems refer to a spring/mass/dashpot system driven through the spring modeled by the equation $m \\ddot{x}+b \\dot{x}+k x=k y$. Here $x$ measures the position of the mass, $y$ measures the position of the other end of the spring, and $x=y$ when the spring is relaxed.\n\nIn this system, regard $y(t)$ as the input signal and $x(t)$ as the system response. Take $m=1, b=3, k=4, y(t)=A \\cos t$. Replace the input signal by a complex exponential $y_{c x}(t)$ of which it is the real part, and compute the exponential (\"steady state\") system response $z_p(t)$; leave your answer in terms of complex exponentials, i.e. do not take the real part.",
+    "answer":[
+      "\\frac{4A}{3+3i}e^{it}\n"
+    ],
+    "source":"minerva",
+    "id":"90"
+  },
+  {
+    "prompt":"Preamble: The following subproblems refer to a circuit with the following parameters. Denote by $I(t)$ the current (where the positive direction is, say, clockwise) in the circuit and by $V(t)$ the voltage increase across the voltage source, at time $t$. Denote by $R$ the resistance of the resistor and $C$ the capacitance of the capacitor (in units which we will not specify)-both positive numbers. Then\n\\[\nR \\dot{I}+\\frac{1}{C} I=\\dot{V}\n\\]\n\nSuppose that $V$ is constant, $V(t)=V_{0}$. Solve for $I(t)$, with initial condition $I(0)$.",
+    "answer":[
+      "I(0)e^{-\\frac{t}{RC}}\n",
+      "I(0) e^{-\\frac{t}{R C}}\n"
+    ],
+    "source":"minerva",
+    "id":"91"
+  },
+  {
+    "prompt":"For $\\omega \\geq 0$, find $A$ such that $A \\cos (\\omega t)$ is a solution of $\\ddot{x}+4 x=\\cos (\\omega t)$.",
+    "answer":[
+      "\\frac{1}{4-\\omega^{2}}\n",
+      "\\frac{1}{4-\\omega^2}\n"
+    ],
+    "source":"minerva",
+    "id":"92"
+  },
+  {
+    "prompt":"Find the general (complex-valued) solution of the differential equation $\\dot{z}+2 z=e^{2 i t}$, using $C$ to stand for any complex-valued integration constants which may arise.",
+    "answer":[
+      "\\frac{e^{2it}}{2+2i} + Ce^{-2t}\n"
+    ],
+    "source":"minerva",
+    "id":"93"
+  },
+  {
+    "prompt":"Subproblem 0: For $\\omega \\geq 0$, find $A$ such that $A \\cos (\\omega t)$ is a solution of $\\ddot{x}+4 x=\\cos (\\omega t)$.\n\n\nSolution: If $x=A \\cos (\\omega t)$, then taking derivatives gives us $\\ddot{x}=-\\omega^{2} A \\cos (\\omega t)$, and $\\ddot{x}+4 x=\\left(4-\\omega^{2}\\right) A \\cos (\\omega t)$. Then $A=\\boxed{\\frac{1}{4-\\omega^{2}}}$. \n\nFinal answer: The final answer is \\frac{1}{4-\\omega^{2}}. I hope it is correct.\n\nSubproblem 1: For what value of $\\omega$ does resonance occur?",
+    "answer":[
+      "\\frac{1}{4-\\omega^{2}}\n"
+    ],
+    "source":"minerva",
+    "id":"94"
+  },
+  {
+    "prompt":"Find a solution of $\\ddot{x}+3 \\dot{x}+2 x=t e^{-t}$ in the form $x(t)=u(t) e^{-t}$ for some function $u(t)$.  Use $C$ for an arbitrary constant, should it arise.",
+    "answer":[
+      "\\left(\\frac{t^{2}}{2} - t + C\\right) e^{-t}\n",
+      "\\left(\\frac{t^{2}}{2} - t + C\\right)e^{-t}\n"
+    ],
+    "source":"minerva",
+    "id":"95"
+  },
+  {
+    "prompt":"Subproblem 0: Find the general (complex-valued) solution of the differential equation $\\dot{z}+2 z=e^{2 i t}$, using $C$ to stand for any complex-valued integration constants which may arise.\n\n\nSolution: Using integrating factors, we get $e^{2 t} z=e^{(2+2 i) t} /(2+2 i)+C$, or $z=\\boxed{\\frac{e^{2 i t}}{(2+2 i)}+C e^{-2 t}}$, where $C$ is any complex number.\n\nFinal answer: The final answer is \\frac{e^{2 i t}}{(2+2 i)}+C e^{-2 t}. I hope it is correct.\n\nSubproblem 1: Find a solution of the differential equation $\\dot{z}+2 z=e^{2 i t}$ in the form $w e^{t}$, where $w$ is a constant (which you should find).",
+    "answer":[
+      "\\frac{e^{2it}}{2+2i} + Ce^{-2t}\n",
+      "\\frac{e^{2it}}{2+2i}+Ce^{-2t}\n"
+    ],
+    "source":"minerva",
+    "id":"96"
+  },
+  {
+    "prompt":"Preamble: In the following problems, take $a = \\ln 2$ and $b = \\pi / 3$. \n\nSubproblem 0: Given $a = \\ln 2$ and $b = \\pi / 3$, rewrite $e^{a+b i}$ in the form $x + yi$, where $x, y$ are real numbers. \n\n\nSolution: Using Euler's formula, we find that the answer is $\\boxed{1+\\sqrt{3} i}$.\n\nFinal answer: The final answer is 1+\\sqrt{3} i. I hope it is correct.\n\nSubproblem 1: Given $a = \\ln 2$ and $b = \\pi / 3$, rewrite $e^{2(a+b i)}$ in the form $x + yi$, where $x, y$ are real numbers.\n\n\nSolution: $e^{n(a+b i)}=(1+\\sqrt{3} i)^{n}$, so the answer is $\\boxed{-2+2 \\sqrt{3} i}$.\n\nFinal answer: The final answer is -2+2 \\sqrt{3} i. I hope it is correct.\n\nSubproblem 2: Rewrite $e^{3(a+b i)}$ in the form $x + yi$, where $x, y$ are real numbers.",
+    "answer":[
+      "-8"
+    ],
+    "source":"minerva",
+    "id":"97"
+  },
+  {
+    "prompt":"Find the polynomial solution of $\\ddot{x}-x=t^{2}+t+1$, solving for $x(t)$.",
+    "answer":[
+      "-t^2-t-3\n"
+    ],
+    "source":"minerva",
+    "id":"98"
+  },
+  {
+    "prompt":"Preamble: The following subproblems consider a second order mass/spring/dashpot system driven by a force $F_{\\text {ext }}$ acting directly on the mass: $m \\ddot{x}+b \\dot{x}+k x=F_{\\text {ext }}$. So the input signal is $F_{\\text {ext }}$ and the system response is $x$. We're interested in sinusoidal input signal, $F_{\\text {ext }}(t)=A \\cos (\\omega t)$, and in the steady state, sinusoidal system response, $x_{p}(t)=g A \\cos (\\omega t-\\phi)$. Here $g$ is the gain of the system and $\\phi$ is the phase lag. Both depend upon $\\omega$, and we will consider how that is the case. \\\\\nTake $A=1$, so the amplitude of the system response equals the gain, and take $m=1, b=\\frac{1}{4}$, and $k=2$.\\\\\n\nCompute the complex gain $H(\\omega)$ of this system. (This means: make the complex replacement $F_{\\mathrm{cx}}=e^{i \\omega t}$, and express the exponential system response $z_{p}$ as a complex multiple of $F_{\\mathrm{cx}}, i.e. z_{p}=H(\\omega) F_{\\mathrm{cx}}$).",
+    "answer":[
+      "\\frac{2-\\omega^{2}-\\frac{\\omega i}{4}}{\\omega^{4}-\\frac{63}{16} \\omega^{2}+4}\n",
+      "\\frac{2-\\omega^{2}-\\frac{\\omega}{4} i}{\\omega^{4}-\\frac{63}{16} \\omega^{2}+4}\n"
+    ],
+    "source":"minerva",
+    "id":"99"
+  },
+  {
+    "prompt":"Preamble: You are given an equation of motion of the form:\n\\[\n\\dot{y}+5 y=10 u\n\\]\n\nSubproblem 0: What is the time constant for this system?\n\n\nSolution: We find the homogenous solution, solving:\n\\[\n\\dot{y}+5 y=0\n\\]\nby trying a solution of the form $y=A \\cdot e^{s, t}$.\nCalculation:\n\\[\n\\dot{y}=A \\cdot s \\cdot e^{s \\cdot t} \\mid \\Rightarrow A \\cdot s \\cdot e^{s t}+5 A \\cdot e^{s t}=0\n\\]\nyields that $s=-5$, meaning the solution is $y=A \\cdot e^{-5 \\cdot t}=A \\cdot e^{-t / \\tau}$, meaning $\\tau = \\boxed{0.2}$.\n\nFinal answer: The final answer is 0.2. I hope it is correct.\n\nSubproblem 1: If \\(u=10\\), what is the final or steady-state value for \\(y(t)\\)?",
+    "answer":[
+      "0.2\n"
+    ],
+    "source":"minerva",
+    "id":"100"
+  },
+  {
+    "prompt":"Preamble: Consider the first-order system\n\\[\n\\tau \\dot{y}+y=u\n\\]\ndriven with a unit step from zero initial conditions. The input to this system is \\(u\\) and the output is \\(y\\). \n\nDerive and expression for the settling time \\(t_{s}\\), where the settling is to within an error \\(\\pm \\Delta\\) from the final value of 1.",
+    "answer":[
+      "-\\tau \\ln \\Delta",
+      "-\\tau \\ln \\Delta\n"
+    ],
+    "source":"minerva",
+    "id":"101"
+  },
+  {
+    "prompt":"Preamble: For each of the functions $y(t)$, find the Laplace Transform $Y(s)$ :\n\n$y(t)=e^{-a t}$",
+    "answer":[
+      "\\frac{1}{s+a}\n"
+    ],
+    "source":"minerva",
+    "id":"102"
+  },
+  {
+    "prompt":"Preamble: The following subproblems refer to the differential equation $\\ddot{x}+b \\dot{x}+x=0$.\\\\\n\nSubproblem 0: What is the characteristic polynomial $p(s)$ of $\\ddot{x}+b \\dot{x}+x=0$?\n\n\nSolution: The characteristic polynomial is $p(s)=\\boxed{s^{2}+b s+1}$.\n\nFinal answer: The final answer is s^{2}+b s+1. I hope it is correct.\n\nSubproblem 1: For what value of $b$ does $\\ddot{x}+b \\dot{x}+x=0$ exhibit critical damping?",
+    "answer":[
+      "2\n"
+    ],
+    "source":"minerva",
+    "id":"103"
+  },
+  {
+    "prompt":"Preamble: Consider the first-order system\n\\[\n\\tau \\dot{y}+y=u\n\\]\ndriven with a unit step from zero initial conditions. The input to this system is \\(u\\) and the output is \\(y\\). \n\nSubproblem 0: Derive and expression for the settling time \\(t_{s}\\), where the settling is to within an error \\(\\pm \\Delta\\) from the final value of 1.\n\n\nSolution: Rise and Settling Times.  We are given the first-order transfer function\n\\[\nH(s)=\\frac{1}{\\tau s+1}\n\\]\nThe response to a unit step with zero initial conditions will be \\(y(t)=1-e^{-t / \\tau}\\). To determine the amount of time it take \\(y\\) to settle to within \\(\\Delta\\) of its final value, we want to find the time \\(t_{s}\\) such that \\(y\\left(t_{s}\\right)=1-\\Delta\\). Thus, we obtain\n\\[\n\\begin{aligned}\n&\\Delta=e^{-t_{s} / \\tau} \\\\\n&t_{s}=\\boxed{-\\tau \\ln \\Delta}\n\\end{aligned}\n\\]\n\nFinal answer: The final answer is -\\tau \\ln \\Delta. I hope it is correct.\n\nSubproblem 1: Derive an expression for the \\(10-90 \\%\\) rise time \\(t_{r}\\) in terms of $\\tau$.",
+    "answer":[
+      "-\\tau \\ln \\Delta\n"
+    ],
+    "source":"minerva",
+    "id":"104"
+  },
+  {
+    "prompt":"Preamble: In the following problems, take $a = \\ln 2$ and $b = \\pi / 3$. \n\nSubproblem 0: Given $a = \\ln 2$ and $b = \\pi / 3$, rewrite $e^{a+b i}$ in the form $x + yi$, where $x, y$ are real numbers. \n\n\nSolution: Using Euler's formula, we find that the answer is $\\boxed{1+\\sqrt{3} i}$.\n\nFinal answer: The final answer is 1+\\sqrt{3} i. I hope it is correct.\n\nSubproblem 1: Given $a = \\ln 2$ and $b = \\pi / 3$, rewrite $e^{2(a+b i)}$ in the form $x + yi$, where $x, y$ are real numbers.\n\n\nSolution: $e^{n(a+b i)}=(1+\\sqrt{3} i)^{n}$, so the answer is $\\boxed{-2+2 \\sqrt{3} i}$.\n\nFinal answer: The final answer is -2+2 \\sqrt{3} i. I hope it is correct.\n\nSubproblem 2: Rewrite $e^{3(a+b i)}$ in the form $x + yi$, where $x, y$ are real numbers. \n\n\nSolution: $e^{n(a+b i)}=(1+\\sqrt{3} i)^{n}$, so the answer is $\\boxed{-8}$.\n\nFinal answer: The final answer is -8. I hope it is correct.\n\nSubproblem 3: Rewrite $e^{4(a+b i)}$ in the form $x + yi$, where $x, y$ are real numbers.",
+    "answer":[
+      "-8-8\\sqrt{3}i\n",
+      "-8-8\\sqrt{3}i",
+      "-8-8 \\sqrt{3} i"
+    ],
+    "source":"minerva",
+    "id":"105"
+  },
+  {
+    "prompt":"Preamble: The following subproblems refer to the exponential function $e^{-t / 2} \\cos (3 t)$, which we will assume is a solution of the differential equation $m \\ddot{x}+b \\dot{x}+k x=0$. \n\nSubproblem 0: What is $b$ in terms of $m$? Write $b$ as a constant times a function of $m$.\n\n\nSolution: We can write $e^{-t / 2} \\cos (3 t)=\\operatorname{Re} e^{(-1 / 2 \\pm 3 i) t}$, so $p(s)=m s^{2}+b s+k$ has solutions $-\\frac{1}{2} \\pm 3 i$. This means $p(s)=m(s+1 / 2-3 i)(s+1 / 2+3 i)=m\\left(s^{2}+s+\\frac{37}{4}\\right)$. Then $b=\\boxed{m}$, \n\nFinal answer: The final answer is m. I hope it is correct.\n\nSubproblem 1: What is $k$ in terms of $m$? Write $k$ as a constant times a function of $m$.",
+    "answer":[
+      "m\n"
+    ],
+    "source":"minerva",
+    "id":"106"
+  },
+  {
+    "prompt":"What is the smallest possible positive $k$ such that all functions $x(t)=A \\cos (\\omega t-\\phi)$---where $\\phi$ is an odd multiple of $k$---satisfy $x(0)=0$? \\\\",
+    "answer":[
+      "\\frac{\\pi}{2}\n"
+    ],
+    "source":"minerva",
+    "id":"107"
+  },
+  {
+    "prompt":"Find a purely exponential solution of $\\frac{d^{4} x}{d t^{4}}-x=e^{-2 t}$.",
+    "answer":[
+      "\\frac{e^{-2t}}{15}\n"
+    ],
+    "source":"minerva",
+    "id":"108"
+  },
+  {
+    "prompt":"Given the ordinary differential equation $\\ddot{x}-a^{2} x=0$, where $a$ is a nonzero real-valued constant, find a solution $x(t)$ to this equation such that $x(0) = 1$ and $\\dot{x}(0)=0$.",
+    "answer":[
+      "\\frac{1}{2}(e^{at} + e^{-at})\n",
+      "\\frac{1}{2} (e^{at} + e^{-at})\n"
+    ],
+    "source":"minerva",
+    "id":"109"
+  },
+  {
+    "prompt":"Preamble: For each of the functions $y(t)$, find the Laplace Transform $Y(s)$ :\n\nSubproblem 0: $y(t)=e^{-a t}$\n\n\nSolution: This function is one of the most widely used in dynamic systems, so we memorize its transform!\n\\[\nY(s)=\\boxed{\\frac{1}{s+a}}\n\\]\n\nFinal answer: The final answer is \\frac{1}{s+a}. I hope it is correct.\n\nSubproblem 1: $y(t)=e^{-\\sigma t} \\sin \\omega_{d} t$\n\n\nSolution: \\[\nY(s)=\\boxed{\\frac{\\omega_{d}}{(s+\\sigma)^{2}+\\omega_{d}^{2}}}\n\\]\n\nFinal answer: The final answer is \\frac{\\omega_{d}}{(s+\\sigma)^{2}+\\omega_{d}^{2}}. I hope it is correct.\n\nSubproblem 2: $y(t)=e^{-\\sigma t} \\cos \\omega_{d} t$",
+    "answer":[
+      "\\frac{s+\\sigma}{(s+\\sigma)^{2}+\\omega_{d}^{2}}\n"
+    ],
+    "source":"minerva",
+    "id":"110"
+  },
+  {
+    "prompt":"Find the general solution of the differential equation $\\dot{x}+2 x=e^{t}$, using $c$ for the arbitrary constant of integration which will occur.",
+    "answer":[
+      "x = \\frac{e^{t}}{3} + ce^{-2t}\n",
+      "\\frac{e^{t}}{3} + c e^{-2t}\n"
+    ],
+    "source":"minerva",
+    "id":"111"
+  },
+  {
+    "prompt":"Preamble: Consider the mass \\(m\\) sliding horizontally under the influence of the applied force \\(f\\) and a friction force which can be approximated by a linear friction element with coefficient \\(b\\). \n\nSubproblem 0: Formulate the state-determined equation of motion for the velocity \\(v\\) as output and the force \\(f\\) as input.\n\n\nSolution: The equation of motion is\n\\[\n\\boxed{m \\frac{d v}{d t}+b v=f} \\quad \\text { or } \\quad \\frac{d v}{d t}=-\\frac{b}{m} v+\\frac{1}{m} f\n\\]\n\nFinal answer: The final answer is m \\frac{d v}{d t}+b v=f. I hope it is correct.\n\nSubproblem 1: Consider the case where:\n\\[\n\\begin{aligned}\nm &=1000 \\mathrm{~kg} \\\\\nb &=100 \\mathrm{~N} / \\mathrm{m} / \\mathrm{s}\n\\end{aligned}\n\\]\nWhat is the steady-state velocity \\(v_{s s}\\) when the input is a constant force of 10 Newtons? Answer in meters per second.",
+    "answer":[
+      "0.10\n"
+    ],
+    "source":"minerva",
+    "id":"112"
+  },
+  {
+    "prompt":"Rewrite the function $\\operatorname{Re} \\frac{e^{i t}}{2+2 i}$ in the form $A \\cos (\\omega t-\\phi)$. It may help to begin by drawing a right triangle with sides $a$ and $b$.",
+    "answer":[
+      "\\frac{\\sqrt{2}}{4} \\cos (t-\\pi / 4)\n"
+    ],
+    "source":"minerva",
+    "id":"113"
+  },
+  {
+    "prompt":"Preamble: The following subproblems refer to the differential equation $\\ddot{x}+b \\dot{x}+x=0$.\\\\\n\nWhat is the characteristic polynomial $p(s)$ of $\\ddot{x}+b \\dot{x}+x=0$?",
+    "answer":[
+      "s^{2}+b s+1\n",
+      "s^2 + bs + 1",
+      "s^{2}+bs+1\n"
+    ],
+    "source":"minerva",
+    "id":"114"
+  },
+  {
+    "prompt":"Obtain the inverse Laplace transform of the following frequency-domain expression: $F(s) = -\\frac{(4 s-10)}{s(s+2)(s+5)}$.\nUse $u(t)$ to denote the unit step function.",
+    "answer":[
+      "(1 - 3e^{-2t} + 2e^{-5t}) u(t)\n"
+    ],
+    "source":"minerva",
+    "id":"115"
+  },
+  {
+    "prompt":"Preamble: Consider the mass \\(m\\) sliding horizontally under the influence of the applied force \\(f\\) and a friction force which can be approximated by a linear friction element with coefficient \\(b\\). \n\nFormulate the state-determined equation of motion for the velocity \\(v\\) as output and the force \\(f\\) as input.",
+    "answer":[
+      "m \\frac{d v}{d t}+b v=f",
+      "m \\frac{d v}{d t}+b v=f\n"
+    ],
+    "source":"minerva",
+    "id":"116"
+  },
+  {
+    "prompt":"Preamble: Here we consider a system described by the differential equation\n\\[\n\\ddot{y}+10 \\dot{y}+10000 y=0 .\n\\]\n\nWhat is the value of the natural frequency \\(\\omega_{n}\\) in radians per second?",
+    "answer":[
+      "100\n"
+    ],
+    "source":"minerva",
+    "id":"117"
+  },
+  {
+    "prompt":"A signal has a Laplace transform\n\\[\nX(s)=b+\\frac{a}{s(s+a)}\n\\]\nwhere \\(a, b>0\\), and with a region of convergence of \\(|s|>0\\). Find \\(x(t), t>0\\).",
+    "answer":[
+      "b \\delta(t)+1-e^{-at}\n",
+      "b \\delta(t) + 1 - e^{-at}\n"
+    ],
+    "source":"minerva",
+    "id":"118"
+  },
+  {
+    "prompt":"Preamble: Assume that we apply a unit step in force separately to a mass \\(m\\), a dashpot \\(c\\), and a spring \\(k\\). The mass moves in inertial space. The spring and dashpot have one end connected to inertial space (reference velocity \\(=0\\) ), and the force is applied to the other end.  Assume zero initial velocity and position for the elements.\nRecall that the unit step function \\(u_{S}(t)\\) is defined as \\(u_{S}(t)=0 ; t<0\\) and \\(u_{S}(t)=1 ; t \\geq 0\\). We will also find it useful to introduce the unit impulse function \\(\\delta(t)\\) which can be defined via\n\\[\nu_{S}(t)=\\int_{-\\infty}^{t} \\delta(\\tau) d \\tau\n\\]\nThis means that we can also view the unit impulse as the derivative of the unit step:\n\\[\n\\delta(t)=\\frac{d u_{S}(t)}{d t}\n\\]\n\nSolve for the resulting velocity of the mass.",
+    "answer":[
+      "\\frac{t}{m}\n",
+      "\\frac{1}{m}t\n"
+    ],
+    "source":"minerva",
+    "id":"119"
+  },
+  {
+    "prompt":"A signal \\(w(t)\\) is defined as\n\\[\nw(t)=u_{s}(t)-u_{s}(t-T)\n\\]\nwhere \\(T\\) is a fixed time in seconds and \\(u_{s}(t)\\) is the unit step. Compute the Laplace transform \\(W(s)\\) of \\(w(t)\\). Show your work.",
+    "answer":[
+      "\\frac{1}{s}-\\frac{1}{s} e^{-s T}\n"
+    ],
+    "source":"minerva",
+    "id":"120"
+  },
+  {
+    "prompt":"Preamble: Consider the rotor with moment of inertia \\(I\\) rotating under the influence of an applied torque \\(T\\) and the frictional torques from two bearings, each of which can be approximated by a linear frictional element with coefficient \\(B\\).\n\nFormulate the state-determined equation of motion for the angular velocity $\\omega$ as output and the torque $T$ as input.",
+    "answer":[
+      "I \\frac{d \\omega}{d t}+2 B \\omega=T\n",
+      "I \\frac{d \\omega}{d t}+2 B \\omega=T"
+    ],
+    "source":"minerva",
+    "id":"121"
+  },
+  {
+    "prompt":"Preamble: For each Laplace Transform \\(Y(s)\\), find the function \\(y(t)\\) :\n\nSubproblem 0: \\[\nY(s)=\\boxed{\\frac{1}{(s+a)(s+b)}}\n\\]\n\n\nSolution: We can simplify with partial fractions:\n\\[\nY(s)=\\frac{1}{(s+a)(s+b)}=\\frac{C}{s+a}+\\frac{D}{s+b}\n\\]\nfind the constants \\(C\\) and \\(D\\) by setting \\(s=-a\\) and \\(s=-b\\)\n\\[\n\\begin{aligned}\n\\frac{1}{(s+a)(s+b)} &=\\frac{C}{s+a}+\\frac{D}{s+b} \\\\\n1 &=C(s+b)+D(s+a) \\\\\nC &=\\frac{1}{b-a} \\\\\nD &=\\frac{1}{a-b}\n\\end{aligned}\n\\]\ntherefore\n\\[\nY(s)=\\frac{1}{b-a} \\frac{1}{s+a}-\\frac{1}{b-a} \\frac{1}{s+b}\n\\]\nBy looking up the inverse Laplace Transform of \\(\\frac{1}{s+b}\\), we find the total solution \\(y(t)\\)\n\\[\ny(t)=\\boxed{\\frac{1}{b-a}\\left(e^{-a t}-e^{-b t}\\right)}\n\\]\n\nFinal answer: The final answer is \\frac{1}{b-a}\\left(e^{-a t}-e^{-b t}\\right). I hope it is correct.\n\nSubproblem 1: \\[\nY(s)=\\frac{s}{\\frac{s^{2}}{\\omega_{n}^{2}}+\\frac{2 \\zeta}{\\omega_{n}} s+1}\n\\]\nYou may assume that $\\zeta < 1$.",
+    "answer":[
+      "\\frac{1}{b-a}\\left(e^{-at}-e^{-bt}\\right)\n",
+      "\\frac{1}{b-a}\\left(e^{-at}-e^{-bt}\\right)",
+      "\\frac{1}{b-a}\\left(e^{-a t}-e^{-b t}\\right)"
+    ],
+    "source":"minerva",
+    "id":"122"
+  },
+  {
+    "prompt":"Preamble: Here we consider a system described by the differential equation\n\\[\n\\ddot{y}+10 \\dot{y}+10000 y=0 .\n\\]\n\nSubproblem 0: What is the value of the natural frequency \\(\\omega_{n}\\) in radians per second?\n\n\nSolution: $\\omega_{n}=\\sqrt{\\frac{k}{m}}$\nSo\n$\\omega_{n} =\\boxed{100} \\mathrm{rad} / \\mathrm{s}$\n\nFinal answer: The final answer is 100. I hope it is correct.\n\nSubproblem 1: What is the value of the damping ratio \\(\\zeta\\)? \n\n\nSolution: $\\zeta=\\frac{b}{2 \\sqrt{k m}}$\nSo\n$\\zeta =\\boxed{0.05}$\n\nFinal answer: The final answer is 0.05. I hope it is correct.\n\nSubproblem 2: What is the value of the damped natural frequency \\(\\omega_{d}\\) in radians per second? Give your answer to three significant figures.",
+    "answer":[
+      "99.9\n"
+    ],
+    "source":"minerva",
+    "id":"123"
+  },
+  {
+    "prompt":"Preamble: Consider the rotor with moment of inertia \\(I\\) rotating under the influence of an applied torque \\(T\\) and the frictional torques from two bearings, each of which can be approximated by a linear frictional element with coefficient \\(B\\).\n\nSubproblem 0: Formulate the state-determined equation of motion for the angular velocity $\\omega$ as output and the torque $T$ as input.\n\n\nSolution: The equation of motion is\n\\[\n\\boxed{I \\frac{d \\omega}{d t}+2 B \\omega=T} \\quad \\text { or } \\quad \\frac{d \\omega}{d t}=-\\frac{2 B}{I} \\omega+\\frac{1}{I} T\n\\]\n\nFinal answer: The final answer is I \\frac{d \\omega}{d t}+2 B \\omega=T. I hope it is correct.\n\nSubproblem 1: Consider the case where:\n\\[\n\\begin{aligned}\nI &=0.001 \\mathrm{~kg}-\\mathrm{m}^{2} \\\\\nB &=0.005 \\mathrm{~N}-\\mathrm{m} / \\mathrm{r} / \\mathrm{s}\n\\end{aligned}\n\\]\nWhat is the steady-state velocity \\(\\omega_{s s}\\), in radians per second, when the input is a constant torque of 10 Newton-meters?",
+    "answer":[
+      "1000\n"
+    ],
+    "source":"minerva",
+    "id":"124"
+  },
+  {
+    "prompt":"Preamble: In a parallel universe, the Boston baseball team made the playoffs.\n\nManny Relativirez hits the ball and starts running towards first base at speed $\\beta$. How fast is he running, given that he sees third base $45^{\\circ}$ to his left (as opposed to straight to his left before he started running)? Assume that he is still very close to home plate. Give your answer in terms of the speed of light, $c$.",
+    "answer":[
+      "\\frac{1}{\\sqrt{2}}c\n",
+      "\\frac{c}{\\sqrt{2}}\n"
+    ],
+    "source":"minerva",
+    "id":"125"
+  },
+  {
+    "prompt":"Preamble: For each Laplace Transform \\(Y(s)\\), find the function \\(y(t)\\) :\n\n\\[\nY(s)=\\boxed{\\frac{1}{(s+a)(s+b)}}\n\\]",
+    "answer":[
+      "\\frac{1}{b-a}\\left(e^{-a t}-e^{-b t}\\right)\n"
+    ],
+    "source":"minerva",
+    "id":"126"
+  },
+  {
+    "prompt":"Preamble: For each of the functions $y(t)$, find the Laplace Transform $Y(s)$ :\n\nSubproblem 0: $y(t)=e^{-a t}$\n\n\nSolution: This function is one of the most widely used in dynamic systems, so we memorize its transform!\n\\[\nY(s)=\\boxed{\\frac{1}{s+a}}\n\\]\n\nFinal answer: The final answer is \\frac{1}{s+a}. I hope it is correct.\n\nSubproblem 1: $y(t)=e^{-\\sigma t} \\sin \\omega_{d} t$",
+    "answer":[
+      "\\frac{1}{s+a}\n"
+    ],
+    "source":"minerva",
+    "id":"127"
+  },
+  {
+    "prompt":"Preamble: This problem considers the simple RLC circuit, in which a voltage source $v_{i}$ is in series with a resistor $R$, inductor $L$, and capacitor $C$.  We measure the voltage $v_{o}$ across the capacitor.  $v_{i}$ and $v_{o}$ share a ground reference.\n\nSubproblem 0: Calculate the transfer function \\(V_{o}(s) / V_{i}(s)\\).\n\n\nSolution: Using the voltage divider relationship:\n\\[\n\\begin{aligned}\nV_{o}(s) &=\\frac{Z_{e q}}{Z_{\\text {total }}}V_{i}(s)=\\frac{\\frac{1}{C s}}{R+L s+\\frac{1}{C s}} V_{i}(s) \\\\\n\\frac{V_{o}(s)}{V_{i}(s)} &=\\boxed{\\frac{1}{L C s^{2}+R C s+1}}\n\\end{aligned}\n\\]\n\nFinal answer: The final answer is \\frac{1}{L C s^{2}+R C s+1}. I hope it is correct.\n\nSubproblem 1: Let \\(L=0.01 \\mathrm{H}\\). Choose the value of $C$ such that \\(\\omega_{n}=10^{5}\\) and \\(\\zeta=0.05\\).  Give your answer in Farads.",
+    "answer":[
+      "\\frac{1}{L C s^{2}+R C s+1}\n"
+    ],
+    "source":"minerva",
+    "id":"128"
+  },
+  {
+    "prompt":"Obtain the inverse Laplace transform of the following frequency-domain expression: $F(s) = \\frac{4}{s^2(s^2+4)}$.\nUse $u(t)$ to denote the unit step function.",
+    "answer":[
+      "(t - \\frac{1}{2}\\sin(2t))u(t)\n"
+    ],
+    "source":"minerva",
+    "id":"129"
+  },
+  {
+    "prompt":"What is the speed of light in meters/second to 1 significant figure? Use the format $a \\times 10^{b}$ where a and b are numbers.",
+    "answer":[
+      "3 \\times 10^{8}\n"
+    ],
+    "source":"minerva",
+    "id":"130"
+  },
+  {
+    "prompt":"Preamble: Here we consider a system described by the differential equation\n\\[\n\\ddot{y}+10 \\dot{y}+10000 y=0 .\n\\]\n\nSubproblem 0: What is the value of the natural frequency \\(\\omega_{n}\\) in radians per second?\n\n\nSolution: $\\omega_{n}=\\sqrt{\\frac{k}{m}}$\nSo\n$\\omega_{n} =\\boxed{100} \\mathrm{rad} / \\mathrm{s}$\n\nFinal answer: The final answer is 100. I hope it is correct.\n\nSubproblem 1: What is the value of the damping ratio \\(\\zeta\\)?",
+    "answer":[
+      "100\n"
+    ],
+    "source":"minerva",
+    "id":"131"
+  },
+  {
+    "prompt":"Preamble: Give each of the following quantities to the nearest power of 10 and in the units requested. \n\nSubproblem 0: Age of our universe when most He nuclei were formed in minutes: \n\n\nSolution: \\boxed{1} minute.\n\nFinal answer: The final answer is 1. I hope it is correct.\n\nSubproblem 1: Age of our universe when hydrogen atoms formed in years:\n\n\nSolution: \\boxed{400000} years.\n\nFinal answer: The final answer is 400000. I hope it is correct.\n\nSubproblem 2: Age of our universe today in Gyr:\n\n\nSolution: \\boxed{10} Gyr.\n\nFinal answer: The final answer is 10. I hope it is correct.\n\nSubproblem 3: Number of stars in our Galaxy: (Please format your answer as 'xen' representing $x * 10^n$)",
+    "answer":[
+      "1e11\n"
+    ],
+    "source":"minerva",
+    "id":"132"
+  },
+  {
+    "prompt":"How many up quarks does a tritium ($H^3$) nucleus contain?",
+    "answer":[
+      "4\n",
+      "4"
+    ],
+    "source":"minerva",
+    "id":"133"
+  },
+  {
+    "prompt":"Preamble: You are given an equation of motion of the form:\n\\[\n\\dot{y}+5 y=10 u\n\\]\n\nWhat is the time constant for this system?",
+    "answer":[
+      "0.2\n"
+    ],
+    "source":"minerva",
+    "id":"134"
+  },
+  {
+    "prompt":"Preamble: Give each of the following quantities to the nearest power of 10 and in the units requested. \n\nSubproblem 0: Age of our universe when most He nuclei were formed in minutes: \n\n\nSolution: \\boxed{1} minute.\n\nFinal answer: The final answer is 1. I hope it is correct.\n\nSubproblem 1: Age of our universe when hydrogen atoms formed in years:\n\n\nSolution: \\boxed{400000} years.\n\nFinal answer: The final answer is 400000. I hope it is correct.\n\nSubproblem 2: Age of our universe today in Gyr:",
+    "answer":[
+      "10\n"
+    ],
+    "source":"minerva",
+    "id":"135"
+  },
+  {
+    "prompt":"How many down quarks does a tritium ($H^3$) nucleus contain?",
+    "answer":[
+      "5"
+    ],
+    "source":"minerva",
+    "id":"136"
+  },
+  {
+    "prompt":"Preamble: This problem considers the simple RLC circuit, in which a voltage source $v_{i}$ is in series with a resistor $R$, inductor $L$, and capacitor $C$.  We measure the voltage $v_{o}$ across the capacitor.  $v_{i}$ and $v_{o}$ share a ground reference.\n\nCalculate the transfer function \\(V_{o}(s) / V_{i}(s)\\).",
+    "answer":[
+      "\\frac{1}{LCs^2 + RCs + 1}\n"
+    ],
+    "source":"minerva",
+    "id":"137"
+  },
+  {
+    "prompt":"Preamble: Give each of the following quantities to the nearest power of 10 and in the units requested. \n\nSubproblem 0: Age of our universe when most He nuclei were formed in minutes: \n\n\nSolution: \\boxed{1} minute.\n\nFinal answer: The final answer is 1. I hope it is correct.\n\nSubproblem 1: Age of our universe when hydrogen atoms formed in years:",
+    "answer":[
+      "1\n"
+    ],
+    "source":"minerva",
+    "id":"138"
+  },
+  {
+    "prompt":"Preamble: Give each of the following quantities to the nearest power of 10 and in the units requested. \n\nSubproblem 0: Age of our universe when most He nuclei were formed in minutes: \n\n\nSolution: \\boxed{1} minute.\n\nFinal answer: The final answer is 1. I hope it is correct.\n\nSubproblem 1: Age of our universe when hydrogen atoms formed in years:\n\n\nSolution: \\boxed{400000} years.\n\nFinal answer: The final answer is 400000. I hope it is correct.\n\nSubproblem 2: Age of our universe today in Gyr:\n\n\nSolution: \\boxed{10} Gyr.\n\nFinal answer: The final answer is 10. I hope it is correct.\n\nSubproblem 3: Number of stars in our Galaxy: (Please format your answer as 'xen' representing $x * 10^n$)\n\n\nSolution: \\boxed{1e11}.\n\nFinal answer: The final answer is 1e11. I hope it is correct.\n\nSubproblem 4: Light travel time to closest star (Sun!:) in minutes. (Please format your answer as an integer.)",
+    "answer":[
+      "8\n"
+    ],
+    "source":"minerva",
+    "id":"139"
+  },
+  {
+    "prompt":"Preamble: Give each of the following quantities to the nearest power of 10 and in the units requested. \n\nAge of our universe when most He nuclei were formed in minutes:",
+    "answer":[
+      "1\n"
+    ],
+    "source":"minerva",
+    "id":"140"
+  },
+  {
+    "prompt":"Preamble: Consider a circuit in which a voltage source of voltage in $v_{i}(t)$ is connected in series with an inductor $L$ and capacitor $C$.  We consider the voltage across the capacitor $v_{o}(t)$ to be the output of the system.\nBoth $v_{i}(t)$ and $v_{o}(t)$ share ground reference.\n\nWrite the governing differential equation for this circuit.",
+    "answer":[
+      "\\frac{d^{2} v_{o}}{d t^{2}}+\\frac{v_{o}}{L C}=\\frac{v_{i}}{L C}\n"
+    ],
+    "source":"minerva",
+    "id":"141"
+  },
+  {
+    "prompt":"Preamble: In a parallel universe, the Boston baseball team made the playoffs.\n\nSubproblem 0: Manny Relativirez hits the ball and starts running towards first base at speed $\\beta$. How fast is he running, given that he sees third base $45^{\\circ}$ to his left (as opposed to straight to his left before he started running)? Assume that he is still very close to home plate. Give your answer in terms of the speed of light, $c$.\n\n\nSolution: Using the aberration formula with $\\cos \\theta^{\\prime}=-1 / \\sqrt{2}, \\beta=1 / \\sqrt{2}$, so $v=\\boxed{\\frac{1}{\\sqrt{2}}c}$.\n\nFinal answer: The final answer is \\frac{1}{\\sqrt{2}}c. I hope it is correct.\n\nSubproblem 1: A player standing on third base is wearing red socks emitting light of wavelength $\\lambda_{\\text {red}}$. What wavelength does Manny see in terms of $\\lambda_{\\text {red}}$?",
+    "answer":[
+      "\\frac{1}{\\sqrt{2}}c\n"
+    ],
+    "source":"minerva",
+    "id":"142"
+  },
+  {
+    "prompt":"Potassium metal can be used as the active surface in a photodiode because electrons are relatively easily removed from a potassium surface. The energy needed is $2.15 \\times 10^{5} J$ per mole of electrons removed ( 1 mole $=6.02 \\times 10^{23}$ electrons). What is the longest wavelength light (in nm) with quanta of sufficient energy to eject electrons from a potassium photodiode surface?",
+    "answer":[
+      "560\n"
+    ],
+    "source":"minerva",
+    "id":"143"
+  },
+  {
+    "prompt":"A signal \\(x(t)\\) is given by\n\\[\nx(t)=\\left(e^{-t}-e^{-1}\\right)\\left(u_{s}(t)-u_{s}(t-1)\\right)\n\\]\nCalculate its Laplace transform \\(X(s)\\). Make sure to clearly show the steps in your calculation.",
+    "answer":[
+      "\\frac{1}{s+1}-\\frac{e^{-1}}{s}-\\frac{e^{-1} e^{-s}}{s+1}+\\frac{e^{-1} e^{-s}}{s}\n"
+    ],
+    "source":"minerva",
+    "id":"144"
+  },
+  {
+    "prompt":"Preamble: In the Sun, one of the processes in the He fusion chain is $p+p+e^{-} \\rightarrow d+\\nu$, where $d$ is a deuteron. Make the approximations that the deuteron rest mass is $2 m_{p}$, and that $m_{e} \\approx 0$ and $m_{\\nu} \\approx 0$, since both the electron and the neutrino have negligible rest mass compared with the proton rest mass $m_{p}$.\n\nIn the lab frame, the two protons have the same energy $\\gamma m_{p}$ and impact angle $\\theta$, and the electron is at rest. Calculate the energy $E_{\\nu}$ of the neutrino in the rest frame of the deuteron in terms of $\\theta, m_{p}$ and $\\gamma$.",
+    "answer":[
+      "m_{p} c^{2}(\\gamma^{2}-1) \\sin ^{2} \\theta"
+    ],
+    "source":"minerva",
+    "id":"145"
+  },
+  {
+    "prompt":"Write (but don't solve) the equation of motion for a pendulum consisting of a mass $m$ attached to a rigid massless rod, suspended from the ceiling and free to rotate in a single vertical plane.  Let the rod (of length $l$) make an angle of $\\theta$ with the vertical.  Gravity ($mg$) acts directly downward, the system input is a horizontal external force $f(t)$, and the system output is the angle $\\theta(t)$.  \nNote: Do NOT make the small-angle approximation in your equation.",
+    "answer":[
+      "ml\\ddot{\\theta}(t) - mg\\sin\\theta(t) = f(t)\\cos\\theta(t)\n"
+    ],
+    "source":"minerva",
+    "id":"146"
+  },
+  {
+    "prompt":"Determine the atomic weight of ${He}^{++}$ in amu to 5 decimal places from the values of its constituents.",
+    "answer":[
+      "4.03188\n"
+    ],
+    "source":"minerva",
+    "id":"147"
+  },
+  {
+    "prompt":"What is the net charge of arginine in a solution of $\\mathrm{pH} \\mathrm{} 1.0$ ? Please format your answer as +n or -n.",
+    "answer":[
+      "+2\n"
+    ],
+    "source":"minerva",
+    "id":"148"
+  },
+  {
+    "prompt":"Preamble: For red light of wavelength $(\\lambda) 6.7102 \\times 10^{-5} cm$, emitted by excited lithium atoms, calculate:\n\nSubproblem 0: the frequency $(v)$ in Hz, to 4 decimal places. \n\n\nSolution: $c=\\lambda v$ and $v=c / \\lambda$ where $v$ is the frequency of radiation (number of waves/s).\nFor: $\\quad \\lambda=6.7102 \\times 10^{-5} cm=6.7102 \\times 10^{-7} m$\n\\[\nv=\\frac{2.9979 \\times 10^{8} {ms}^{-1}}{6.7102 \\times 10^{-7} m}=4.4677 \\times 10^{14} {s}^{-1}= \\boxed{4.4677} Hz\n\\]\n\nFinal answer: The final answer is 4.4677. I hope it is correct.\n\nSubproblem 1: the wave number $(\\bar{v})$ in ${cm}^{-1}$. Please format your answer as $n \\times 10^x$, where $n$ is to 4 decimal places. \n\n\nSolution: $\\bar{v}=\\frac{1}{\\lambda}=\\frac{1}{6.7102 \\times 10^{-7} m}=1.4903 \\times 10^{6} m^{-1}= \\boxed{1.4903e4} {cm}^{-1}$\n\nFinal answer: The final answer is 1.4903e4. I hope it is correct.\n\nSubproblem 2: the wavelength $(\\lambda)$ in nm, to 2 decimal places.",
+    "answer":[
+      "671.02\n"
+    ],
+    "source":"minerva",
+    "id":"149"
+  },
+  {
+    "prompt":"Determine the wavelength of radiation emitted by hydrogen atoms in angstroms upon electron transitions from $n=6$ to $n=2$.",
+    "answer":[
+      "4100\n"
+    ],
+    "source":"minerva",
+    "id":"150"
+  },
+  {
+    "prompt":"Preamble: Determine the following values from a standard radio dial. \n\nSubproblem 0: What is the minimum wavelength in m for broadcasts on the AM band? Format your answer as an integer. \n\n\nSolution: \\[\n\\mathrm{c}=v \\lambda, \\therefore \\lambda_{\\min }=\\frac{\\mathrm{c}}{v_{\\max }} ; \\lambda_{\\max }=\\frac{\\mathrm{c}}{v_{\\min }}\n\\]\n$\\lambda_{\\min }=\\frac{3 \\times 10^{8} m / s}{1600 \\times 10^{3} Hz}=\\boxed{188} m$\n\nFinal answer: The final answer is 188. I hope it is correct.\n\nSubproblem 1: What is the maximum wavelength in m for broadcasts on the AM band? Format your answer as an integer. \n\n\nSolution: \\[\n\\mathrm{c}=v \\lambda, \\therefore \\lambda_{\\min }=\\frac{\\mathrm{c}}{v_{\\max }} ; \\lambda_{\\max }=\\frac{\\mathrm{c}}{v_{\\min }}\n\\]\n\\[\n\\lambda_{\\max }=\\frac{3 \\times 10^{8}}{530 \\times 10^{3}}=\\boxed{566} m\n\\]\n\nFinal answer: The final answer is 566. I hope it is correct.\n\nSubproblem 2: What is the minimum wavelength in m (to 2 decimal places) for broadcasts on the FM band?",
+    "answer":[
+      "2.78\n"
+    ],
+    "source":"minerva",
+    "id":"151"
+  },
+  {
+    "prompt":"Preamble: For red light of wavelength $(\\lambda) 6.7102 \\times 10^{-5} cm$, emitted by excited lithium atoms, calculate:\n\nSubproblem 0: the frequency $(v)$ in Hz, to 4 decimal places. \n\n\nSolution: $c=\\lambda v$ and $v=c / \\lambda$ where $v$ is the frequency of radiation (number of waves/s).\nFor: $\\quad \\lambda=6.7102 \\times 10^{-5} cm=6.7102 \\times 10^{-7} m$\n\\[\nv=\\frac{2.9979 \\times 10^{8} {ms}^{-1}}{6.7102 \\times 10^{-7} m}=4.4677 \\times 10^{14} {s}^{-1}= \\boxed{4.4677} Hz\n\\]\n\nFinal answer: The final answer is 4.4677. I hope it is correct.\n\nSubproblem 1: the wave number $(\\bar{v})$ in ${cm}^{-1}$. Please format your answer as $n \\times 10^x$, where $n$ is to 4 decimal places.",
+    "answer":[
+      "4.4677 \\times 10^{14}\n"
+    ],
+    "source":"minerva",
+    "id":"152"
+  },
+  {
+    "prompt":"Preamble: Determine the following values from a standard radio dial. \n\nSubproblem 0: What is the minimum wavelength in m for broadcasts on the AM band? Format your answer as an integer. \n\n\nSolution: \\[\n\\mathrm{c}=v \\lambda, \\therefore \\lambda_{\\min }=\\frac{\\mathrm{c}}{v_{\\max }} ; \\lambda_{\\max }=\\frac{\\mathrm{c}}{v_{\\min }}\n\\]\n$\\lambda_{\\min }=\\frac{3 \\times 10^{8} m / s}{1600 \\times 10^{3} Hz}=\\boxed{188} m$\n\nFinal answer: The final answer is 188. I hope it is correct.\n\nSubproblem 1: What is the maximum wavelength in m for broadcasts on the AM band? Format your answer as an integer.",
+    "answer":[
+      "188",
+      "188\n"
+    ],
+    "source":"minerva",
+    "id":"153"
+  },
+  {
+    "prompt":"Preamble: A pure crystalline material (no impurities or dopants are present) appears red in transmitted light.\n\nSubproblem 0: Is this material a conductor, semiconductor or insulator? Give the reasons for your answer.\n\n\nSolution: If the material is pure (no impurity states present), then it must be classified as a \\boxed{semiconductor} since it exhibits a finite \"band gap\" - i.e. to activate charge carriers, photons with energies in excess of \"red\" radiation are required.\n\nFinal answer: The final answer is semiconductor. I hope it is correct.\n\nSubproblem 1: What is the approximate band gap $\\left(\\mathrm{E}_{g}\\right)$ for this material in eV? Please round your answer to 1 decimal place.",
+    "answer":[
+      "1.9\n",
+      "1.9"
+    ],
+    "source":"minerva",
+    "id":"154"
+  },
+  {
+    "prompt":"Calculate the minimum potential $(V)$ in volts (to 1 decimal place) which must be applied to a free electron so that it has enough energy to excite, upon impact, the electron in a hydrogen atom from its ground state to a state of $n=5$.",
+    "answer":[
+      "13.1\n"
+    ],
+    "source":"minerva",
+    "id":"155"
+  },
+  {
+    "prompt":"Calculate the \"Bohr radius\" in angstroms to 3 decimal places for ${He}^{+}$.",
+    "answer":[
+      "0.265\n"
+    ],
+    "source":"minerva",
+    "id":"156"
+  },
+  {
+    "prompt":"Electromagnetic radiation of frequency $3.091 \\times 10^{14} \\mathrm{~Hz}$ illuminates a crystal of germanium (Ge). Calculate the wavelength of photoemission in meters generated by this interaction. Germanium is an elemental semiconductor with a band gap, $E_{g}$, of $0.7 \\mathrm{eV}$. Please format your answer as $n \\times 10^x$ where $n$ is to 2 decimal places.",
+    "answer":[
+      "1.77 \\times 10^{-6}"
+    ],
+    "source":"minerva",
+    "id":"157"
+  },
+  {
+    "prompt":"Preamble: For red light of wavelength $(\\lambda) 6.7102 \\times 10^{-5} cm$, emitted by excited lithium atoms, calculate:\n\nthe frequency $(v)$ in Hz, to 4 decimal places.",
+    "answer":[
+      "4.4677 \\times 10^{14} Hz\n",
+      "4.4677 \\times 10^{14}\n"
+    ],
+    "source":"minerva",
+    "id":"158"
+  },
+  {
+    "prompt":"What is the energy gap (in eV, to 1 decimal place) between the electronic states $n=3$ and $n=8$ in a hydrogen atom?",
+    "answer":[
+      "1.3\n"
+    ],
+    "source":"minerva",
+    "id":"159"
+  },
+  {
+    "prompt":"Preamble: For light with a wavelength $(\\lambda)$ of $408 \\mathrm{~nm}$ determine:\n\nSubproblem 0: the frequency in $s^{-1}$. Please format your answer as $n \\times 10^x$, where $n$ is to 3 decimal places. \n\n\nSolution: To solve this problem we must know the following relationships:\n\\[\n\\begin{aligned}\nv \\lambda &=c\n\\end{aligned}\n\\]\n$v$ (frequency) $=\\frac{c}{\\lambda}=\\frac{3 \\times 10^{8} m / s}{408 \\times 10^{-9} m}= \\boxed{7.353e14} s^{-1}$\n\nFinal answer: The final answer is 7.353e14. I hope it is correct.\n\nSubproblem 1: the wave number in $m^{-1}$. Please format your answer as $n \\times 10^x$, where $n$ is to 2 decimal places.\n\n\nSolution: To solve this problem we must know the following relationships:\n\\[\n\\begin{aligned}\n1 / \\lambda=\\bar{v} \n\\end{aligned}\n\\]\n$\\bar{v}$ (wavenumber) $=\\frac{1}{\\lambda}=\\frac{1}{408 \\times 10^{-9} m}=\\boxed{2.45e6} m^{-1}$\n\nFinal answer: The final answer is 2.45e6. I hope it is correct.\n\nSubproblem 2: the wavelength in angstroms.",
+    "answer":[
+      "4080\n",
+      "4080"
+    ],
+    "source":"minerva",
+    "id":"160"
+  },
+  {
+    "prompt":"Light of wavelength $\\lambda=4.28 \\times 10^{-7} {~m}$ interacts with a \"motionless\" hydrogen atom. During this interaction it transfers all its energy to the orbiting electron of the hydrogen. What is the velocity in m/s of this electron after interaction? Please format your answer as $n \\times 10^x$ where $n$ is to 2 decimal places.",
+    "answer":[
+      "2.19 \\times 10^6",
+      "2.19 \\times 10^{6}"
+    ],
+    "source":"minerva",
+    "id":"161"
+  },
+  {
+    "prompt":"Determine the frequency (in $s^{-1}$ of radiation capable of generating, in atomic hydrogen, free electrons which have a velocity of $1.3 \\times 10^{6} {~ms}^{-1}$. Please format your answer as $n \\times 10^x$ where $n$ is to 2 decimal places.",
+    "answer":[
+      "4.45 \\times 10^{15}\n"
+    ],
+    "source":"minerva",
+    "id":"162"
+  },
+  {
+    "prompt":"Preamble: Reference the information below to solve the following problems. \n$\\begin{array}{llll}\\text { Element } & \\text { Ionization Potential }  & \\text { Element } & \\text { Ionization Potential } \\\\ {Na} & 5.14 & {Ca} & 6.11 \\\\ {Mg} & 7.64 & {Sc} & 6.54 \\\\ {Al} & 5.98 & {Ti} & 6.82 \\\\ {Si} & 8.15 & {~V} & 6.74 \\\\ {P} & 10.48 & {Cr} & 6.76 \\\\ {~S} & 10.36 & {Mn} & 7.43 \\\\ {Cl} & 13.01 & {Fe} & 7.9 \\\\ {Ar} & 15.75 & {Co} & 7.86 \\\\ & & {Ni} & 7.63 \\\\ & & {Cu} & 7.72\\end{array}$\n\nSubproblem 0: What is the first ionization energy (in J, to 3 decimal places) for Na?\n\n\nSolution: The required data can be obtained by multiplying the ionization potentials (listed in the Periodic Table) with the electronic charge ( ${e}^{-}=1.6 \\times 10^{-19}$ C).\n\\boxed{0.822} J.\n\nFinal answer: The final answer is 0.822. I hope it is correct.\n\nSubproblem 1: What is the first ionization energy (in J, to 2 decimal places) for Mg?",
+    "answer":[
+      "0.822",
+      "0.822\n"
+    ],
+    "source":"minerva",
+    "id":"163"
+  },
+  {
+    "prompt":"Determine for hydrogen the velocity in m/s of an electron in an ${n}=4$ state. Please format your answer as $n \\times 10^x$ where $n$ is to 2 decimal places.",
+    "answer":[
+      "5.47 \\times 10^5",
+      "5.47 \\times 10^5\n"
+    ],
+    "source":"minerva",
+    "id":"164"
+  },
+  {
+    "prompt":"Subproblem 0: In the balanced equation for the reaction between $\\mathrm{CO}$ and $\\mathrm{O}_{2}$ to form $\\mathrm{CO}_{2}$, what is the coefficient of $\\mathrm{CO}$?\n\n\nSolution: \\boxed{1}.\n\nFinal answer: The final answer is 1. I hope it is correct.\n\nSubproblem 1: In the balanced equation for the reaction between $\\mathrm{CO}$ and $\\mathrm{O}_{2}$ to form $\\mathrm{CO}_{2}$, what is the coefficient of $\\mathrm{O}_{2}$ (in decimal form)?",
+    "answer":[
+      "1\n"
+    ],
+    "source":"minerva",
+    "id":"165"
+  },
+  {
+    "prompt":"Determine for barium (Ba) the linear density of atoms along the $<110>$ directions, in atoms/m.",
+    "answer":[
+      "1.39 \\times 10^9\n",
+      "1.39 \\times 10^{9}\n"
+    ],
+    "source":"minerva",
+    "id":"166"
+  },
+  {
+    "prompt":"Determine the minimum potential in V (to 2 decimal places) that must be applied to an $\\alpha$-particle so that on interaction with a hydrogen atom, a ground state electron will be excited to $n$ $=6$.",
+    "answer":[
+      "6.62\n"
+    ],
+    "source":"minerva",
+    "id":"167"
+  },
+  {
+    "prompt":"Preamble: Reference the information below to solve the following problems. \n$\\begin{array}{llll}\\text { Element } & \\text { Ionization Potential }  & \\text { Element } & \\text { Ionization Potential } \\\\ {Na} & 5.14 & {Ca} & 6.11 \\\\ {Mg} & 7.64 & {Sc} & 6.54 \\\\ {Al} & 5.98 & {Ti} & 6.82 \\\\ {Si} & 8.15 & {~V} & 6.74 \\\\ {P} & 10.48 & {Cr} & 6.76 \\\\ {~S} & 10.36 & {Mn} & 7.43 \\\\ {Cl} & 13.01 & {Fe} & 7.9 \\\\ {Ar} & 15.75 & {Co} & 7.86 \\\\ & & {Ni} & 7.63 \\\\ & & {Cu} & 7.72\\end{array}$\n\nWhat is the first ionization energy (in J, to 3 decimal places) for Na?",
+    "answer":[
+      "8.224 \\times 10^{-19}",
+      "8.224 \\times 10^{-19}\n"
+    ],
+    "source":"minerva",
+    "id":"168"
+  },
+  {
+    "prompt":"Preamble: For \"yellow radiation\" (frequency, $v,=5.09 \\times 10^{14} s^{-1}$ ) emitted by activated sodium, determine:\n\nSubproblem 0: the wavelength $(\\lambda)$ in m. Please format your answer as $n \\times 10^x$, where n is to 2 decimal places.\n\n\nSolution: The equation relating $v$ and $\\lambda$ is $c=v \\lambda$ where $c$ is the speed of light $=3.00 \\times 10^{8} \\mathrm{~m}$.\n\\[\n\\lambda=\\frac{c}{v}=\\frac{3.00 \\times 10^{8} m / s}{5.09 \\times 10^{14} s^{-1}}=\\boxed{5.89e-7} m\n\\]\n\nFinal answer: The final answer is 5.89e-7. I hope it is correct.\n\nSubproblem 1: the wave number $(\\bar{v})$ in ${cm}^{-1}$. Please format your answer as $n \\times 10^x$, where n is to 2 decimal places.",
+    "answer":[
+      "1.70e4\n"
+    ],
+    "source":"minerva",
+    "id":"169"
+  },
+  {
+    "prompt":"In the balanced equation for the reaction between $\\mathrm{CO}$ and $\\mathrm{O}_{2}$ to form $\\mathrm{CO}_{2}$, what is the coefficient of $\\mathrm{CO}$?",
+    "answer":[
+      "2\n"
+    ],
+    "source":"minerva",
+    "id":"170"
+  },
+  {
+    "prompt":"Preamble: Two lasers generate radiation of (1) $9.5 \\mu {m}$ and (2) $0.1 \\mu {m}$ respectively.\n\nDetermine the photon energy (in eV, to two decimal places) of the laser generating radiation of $9.5 \\mu {m}$.",
+    "answer":[
+      "0.13\n"
+    ],
+    "source":"minerva",
+    "id":"171"
+  },
+  {
+    "prompt":"At $100^{\\circ} \\mathrm{C}$ copper $(\\mathrm{Cu})$ has a lattice constant of $3.655 \\AA$. What is its density in $g/cm^3$ at this temperature? Please round your answer to 2 decimal places.",
+    "answer":[
+      "8.64\n"
+    ],
+    "source":"minerva",
+    "id":"172"
+  },
+  {
+    "prompt":"Preamble: For \"yellow radiation\" (frequency, $v,=5.09 \\times 10^{14} s^{-1}$ ) emitted by activated sodium, determine:\n\nthe wavelength $(\\lambda)$ in m. Please format your answer as $n \\times 10^x$, where n is to 2 decimal places.",
+    "answer":[
+      "5.89 \\times 10^{-7}\n"
+    ],
+    "source":"minerva",
+    "id":"173"
+  },
+  {
+    "prompt":"Subproblem 0: In the balanced equation for the reaction between $\\mathrm{CO}$ and $\\mathrm{O}_{2}$ to form $\\mathrm{CO}_{2}$, what is the coefficient of $\\mathrm{CO}$?\n\n\nSolution: \\boxed{1}.\n\nFinal answer: The final answer is 1. I hope it is correct.\n\nSubproblem 1: In the balanced equation for the reaction between $\\mathrm{CO}$ and $\\mathrm{O}_{2}$ to form $\\mathrm{CO}_{2}$, what is the coefficient of $\\mathrm{O}_{2}$ (in decimal form)?\n\n\nSolution: \\boxed{0.5}. \n\nFinal answer: The final answer is 0.5. I hope it is correct.\n\nSubproblem 2: In the balanced equation for the reaction between $\\mathrm{CO}$ and $\\mathrm{O}_{2}$ to form $\\mathrm{CO}_{2}$, what is the coefficient of $\\mathrm{CO}_{2}$ (in decimal form)?",
+    "answer":[
+      "1\n",
+      "1"
+    ],
+    "source":"minerva",
+    "id":"174"
+  },
+  {
+    "prompt":"Preamble: Determine the following values from a standard radio dial. \n\nWhat is the minimum wavelength in m for broadcasts on the AM band? Format your answer as an integer.",
+    "answer":[
+      "188\n"
+    ],
+    "source":"minerva",
+    "id":"175"
+  },
+  {
+    "prompt":"Preamble: Calculate the molecular weight in g/mole (to 2 decimal places) of each of the substances listed below.\n\n$\\mathrm{NH}_{4} \\mathrm{OH}$",
+    "answer":[
+      "35.06\n"
+    ],
+    "source":"minerva",
+    "id":"176"
+  },
+  {
+    "prompt":"Preamble: Electrons are accelerated by a potential of 10 Volts.\n\nDetermine their velocity in m/s. Please format your answer as $n \\times 10^x$, where $n$ is to 2 decimal places.",
+    "answer":[
+      "1.87 \\times 10^6\n",
+      "1.87 \\times 10^6"
+    ],
+    "source":"minerva",
+    "id":"177"
+  },
+  {
+    "prompt":"A photon with a wavelength $(\\lambda)$ of $3.091 \\times 10^{-7} {~m}$ strikes an atom of hydrogen. Determine the velocity in m/s of an electron ejected from the excited state, $n=3$. Please format your answer as $n \\times 10^x$ where $n$ is to 2 decimal places.",
+    "answer":[
+      "9.35 \\times 10^5"
+    ],
+    "source":"minerva",
+    "id":"178"
+  },
+  {
+    "prompt":"Magnesium (Mg) has the following isotopic distribution:\n\\[\n\\begin{array}{ll}\n24_{\\mathrm{Mg}} & 23.985 \\mathrm{amu} \\text { at } 0.7870 \\text { fractional abundance } \\\\\n25_{\\mathrm{Mg}} & 24.986 \\mathrm{amu} \\text { at } 0.1013 \\text { fractional abundance } \\\\\n26_{\\mathrm{Mg}} & 25.983 \\mathrm{amu} \\text { at } 0.1117 \\text { fractional abundance }\n\\end{array}\n\\]\nWhat is the atomic weight of magnesium (Mg) (to 3 decimal places) according to these data?",
+    "answer":[
+      "24.310\n"
+    ],
+    "source":"minerva",
+    "id":"179"
+  },
+  {
+    "prompt":"Determine in units of eV (to 2 decimal places) the energy of a photon ( $h v)$ with the wavelength of $800$ nm.",
+    "answer":[
+      "1.55\n"
+    ],
+    "source":"minerva",
+    "id":"180"
+  },
+  {
+    "prompt":"Consider a (111) plane in an FCC structure. How many different [110]-type directions lie in this (111) plane?",
+    "answer":[
+      "6"
+    ],
+    "source":"minerva",
+    "id":"181"
+  },
+  {
+    "prompt":"In a diffractometer experiment a specimen of thorium (Th) is irradiated with tungsten (W) $L_{\\alpha}$ radiation. Calculate the angle, $\\theta$, of the $4^{\\text {th }}$ reflection. Round your answer (in degrees) to 2 decimal places.",
+    "answer":[
+      "28.71^{\\circ}\n",
+      "28.71^\\circ\n"
+    ],
+    "source":"minerva",
+    "id":"182"
+  },
+  {
+    "prompt":"Preamble: Electrons are accelerated by a potential of 10 Volts.\n\nSubproblem 0: Determine their velocity in m/s. Please format your answer as $n \\times 10^x$, where $n$ is to 2 decimal places. \n\n\nSolution: The definition of an ${eV}$ is the energy gained by an electron when it is accelerated through a potential of $1 {~V}$, so an electron accelerated by a potential of $10 {~V}$ would have an energy of $10 {eV}$.\\\\\n${E}=\\frac{1}{2} m {v}^{2} \\rightarrow {v}=\\sqrt{2 {E} / {m}}$\n\\[\nE=10 {eV}=1.60 \\times 10^{-18} {~J}\n\\]\n\\[\n\\begin{aligned}\n& {m}=\\text { mass of electron }=9.11 \\times 10^{-31} {~kg} \\\\\n& v=\\sqrt{\\frac{2 \\times 1.6 \\times 10^{-18} {~J}}{9.11 \\times 10^{-31} {~kg}}}= \\boxed{1.87e6} {~m} / {s} \n\\end{aligned}\n\\]\n\nFinal answer: The final answer is 1.87e6. I hope it is correct.\n\nSubproblem 1: Determine their deBroglie wavelength $\\left(\\lambda_{p}\\right)$ in m. Please format your answer as $n \\times 10^x$, where $n$ is to 2 decimal places.",
+    "answer":[
+      "3.89e-10\n",
+      "3.89e-10"
+    ],
+    "source":"minerva",
+    "id":"183"
+  },
+  {
+    "prompt":"A line of the Lyman series of the spectrum of hydrogen has a wavelength of $9.50 \\times 10^{-8} {~m}$. What was the \"upper\" quantum state $\\left({n}_{{i}}\\right)$ involved in the associated electron transition?",
+    "answer":[
+      "5"
+    ],
+    "source":"minerva",
+    "id":"184"
+  },
+  {
+    "prompt":"Preamble: Calculate the molecular weight in g/mole (to 2 decimal places) of each of the substances listed below.\n\nSubproblem 0: $\\mathrm{NH}_{4} \\mathrm{OH}$\n\n\nSolution: $\\mathrm{NH}_{4} \\mathrm{OH}$ :\n$5 \\times 1.01=5.05(\\mathrm{H})$\n$1 \\times 14.01=14.01(\\mathrm{~N})$\n$1 \\times 16.00=16.00(\\mathrm{O})$\n$\\mathrm{NH}_{4} \\mathrm{OH}= \\boxed{35.06}$ g/mole\n\nFinal answer: The final answer is 35.06. I hope it is correct.\n\nSubproblem 1: $\\mathrm{NaHCO}_{3}$\n\n\nSolution: $\\mathrm{NaHCO}_{3}: 3 \\times 16.00=48.00(\\mathrm{O})$\n$1 \\times 22.99=22.99(\\mathrm{Na})$\n$1 \\times 1.01=1.01$ (H)\n$1 \\times 12.01=12.01$ (C)\n$\\mathrm{NaHCO}_{3}= \\boxed{84.01}$ g/mole\n\nFinal answer: The final answer is 84.01. I hope it is correct.\n\nSubproblem 2: $\\mathrm{CH}_{3} \\mathrm{CH}_{2} \\mathrm{OH}$",
+    "answer":[
+      "46.08\n",
+      "46.08"
+    ],
+    "source":"minerva",
+    "id":"185"
+  },
+  {
+    "prompt":"Subproblem 0: In the balanced equation for the reaction between $\\mathrm{CO}$ and $\\mathrm{O}_{2}$ to form $\\mathrm{CO}_{2}$, what is the coefficient of $\\mathrm{CO}$?\n\n\nSolution: \\boxed{1}.\n\nFinal answer: The final answer is 1. I hope it is correct.\n\nSubproblem 1: In the balanced equation for the reaction between $\\mathrm{CO}$ and $\\mathrm{O}_{2}$ to form $\\mathrm{CO}_{2}$, what is the coefficient of $\\mathrm{O}_{2}$ (in decimal form)?\n\n\nSolution: \\boxed{0.5}. \n\nFinal answer: The final answer is 0.5. I hope it is correct.\n\nSubproblem 2: In the balanced equation for the reaction between $\\mathrm{CO}$ and $\\mathrm{O}_{2}$ to form $\\mathrm{CO}_{2}$, what is the coefficient of $\\mathrm{CO}_{2}$ (in decimal form)?\n\n\nSolution: \\boxed{1}.\n\nFinal answer: The final answer is 1. I hope it is correct.\n\nSubproblem 3: If $32.0 \\mathrm{~g}$ of oxygen react with $\\mathrm{CO}$ to form carbon dioxide $\\left(\\mathrm{CO}_{2}\\right)$, how much CO was consumed in this reaction (to 1 decimal place)?",
+    "answer":[
+      "56.0\n"
+    ],
+    "source":"minerva",
+    "id":"186"
+  },
+  {
+    "prompt":"Preamble: In all likelihood, the Soviet Union and the United States together in the past exploded about ten hydrogen devices underground per year.\n\nIf each explosion converted about $10 \\mathrm{~g}$ of matter into an equivalent amount of energy (a conservative estimate), how many $k J$ of energy were released per device? Please format your answer as $n \\times 10^{x}$.",
+    "answer":[
+      "9 \\times 10^{11}\n"
+    ],
+    "source":"minerva",
+    "id":"187"
+  },
+  {
+    "prompt":"Preamble: One mole of electromagnetic radiation (light, consisting of energy packages called photons) has an energy of $171 \\mathrm{~kJ} /$ mole photons.\n\nDetermine the wavelength of this light in nm.",
+    "answer":[
+      "700\n"
+    ],
+    "source":"minerva",
+    "id":"188"
+  },
+  {
+    "prompt":"Preamble: For the element copper (Cu) determine:\n\nthe distance of second nearest neighbors (in meters). Please format your answer as $n \\times 10^x$ where $n$ is to 2 decimal places.",
+    "answer":[
+      "3.61 \\times 10^{-10}\n",
+      "3.61 \\times 10^{-10}"
+    ],
+    "source":"minerva",
+    "id":"189"
+  },
+  {
+    "prompt":"For a proton which has been subjected to an accelerating potential (V) of 15 Volts, determine its deBroglie wavelength in m. Please format your answer as $n \\times 10^x$, where $n$ is to 1 decimal place.",
+    "answer":[
+      "7.4 \\times 10^{-12}\n",
+      "7.4 \\times 10^{-12}"
+    ],
+    "source":"minerva",
+    "id":"190"
+  },
+  {
+    "prompt":"Preamble: For light with a wavelength $(\\lambda)$ of $408 \\mathrm{~nm}$ determine:\n\nthe frequency in $s^{-1}$. Please format your answer as $n \\times 10^x$, where $n$ is to 3 decimal places.",
+    "answer":[
+      "7.353 \\times 10^{14}"
+    ],
+    "source":"minerva",
+    "id":"191"
+  },
+  {
+    "prompt":"Determine the velocity of an electron (in $\\mathrm{m} / \\mathrm{s}$ ) that has been subjected to an accelerating potential $V$ of 150 Volt. Please format your answer as $n \\times 10^x$, where $n$ is to 2 decimal places. \n(The energy imparted to an electron by an accelerating potential of one Volt is $1.6 \\times 10^{-19}$ J oules; dimensional analysis shows that the dimensions of charge $x$ potential correspond to those of energy; thus: 1 electron Volt $(1 \\mathrm{eV})=1.6 \\times 10^{-19}$ Coulomb $\\times 1$ Volt $=1.6 \\times 10^{-19}$ Joules.)",
+    "answer":[
+      "7.26 \\times 10^6"
+    ],
+    "source":"minerva",
+    "id":"192"
+  },
+  {
+    "prompt":"Determine the second-nearest neighbor distance (in pm) for nickel (Ni) at $100^{\\circ} \\mathrm{C}$ if its density at that temperature is $8.83 \\mathrm{~g} / \\mathrm{cm}^{3}$. Please format your answer as $n \\times 10^x$ where $n$ is to 2 decimal places.",
+    "answer":[
+      "3.53 \\times 10^2",
+      "3.52 \\times 10^2"
+    ],
+    "source":"minerva",
+    "id":"193"
+  },
+  {
+    "prompt":"What acceleration potential $V$ must be applied to electrons to cause electron diffraction on $\\{220\\}$ planes of gold $(\\mathrm{Au})$ at $\\theta=5^{\\circ}$ ? Format your answer as an integer, in Volts.",
+    "answer":[
+      "2415\n"
+    ],
+    "source":"minerva",
+    "id":"194"
+  },
+  {
+    "prompt":"Determine the total void volume $(\\mathrm{cm}^{3} / mole)$ for gold (Au) at $27^{\\circ} \\mathrm{C}$; make the hard-sphere approximation in your calculation. Note that the molar volume of gold (Au) is $10.3 \\mathrm{~cm}^{3} / \\mathrm{mole}$. Please round your answer to 2 decimal places.",
+    "answer":[
+      "2.68\n"
+    ],
+    "source":"minerva",
+    "id":"195"
+  },
+  {
+    "prompt":"Determine the wavelength of $\\lambda_{K_{\\alpha}}$ for molybdenum (Mo). Please format your answer as $n \\times 10^x$ where $n$ is to 2 decimal places, in meters.",
+    "answer":[
+      "7.25 \\times 10^{-11}\n"
+    ],
+    "source":"minerva",
+    "id":"196"
+  },
+  {
+    "prompt":"Preamble: For aluminum at $300 \\mathrm{~K}$, \n\nCalculate the planar packing fraction (fractional area occupied by atoms) of the ( 110 ) plane. Please round your answer to 3 decimal places.",
+    "answer":[
+      "0.554"
+    ],
+    "source":"minerva",
+    "id":"197"
+  },
+  {
+    "prompt":"Determine the diffusivity $\\mathrm{D}$ of lithium ( $\\mathrm{Li}$ ) in silicon (Si) at $1200^{\\circ} \\mathrm{C}$, knowing that $D_{1100^{\\circ} \\mathrm{C}}=10^{-5} \\mathrm{~cm}^{2} / \\mathrm{s}$ and $\\mathrm{D}_{695^{\\circ} \\mathrm{C}}=10^{-6} \\mathrm{~cm}^{2} / \\mathrm{s}$. Please format your answer as $n \\times 10^x$ where $n$ is to 2 decimal places, in $\\mathrm{~cm}^2/\\mathrm{sec}$.",
+    "answer":[
+      "1.45 \\times 10^{-5}\n",
+      "1.45 \\times 10^{-5}"
+    ],
+    "source":"minerva",
+    "id":"198"
+  },
+  {
+    "prompt":"In iridium (Ir), the vacancy fraction, $n_{v} / \\mathrm{N}$, is $3.091 \\times 10^{-5}$ at $12340^{\\circ} \\mathrm{C}$ and $5.26 \\times 10^{-3}$ at the melting point. Calculate the enthalpy of vacancy formation, $\\Delta \\mathrm{H}_{\\mathrm{v}}$. Round your answer to 1 decimal place.",
+    "answer":[
+      "1.5\n"
+    ],
+    "source":"minerva",
+    "id":"199"
+  },
+  {
+    "prompt":"By planar diffusion of antimony (Sb) into p-type germanium (Ge), a p-n junction is obtained at a depth of $3 \\times 10^{-3} \\mathrm{~cm}$ below the surface. What is the donor concentration in the bulk germanium if diffusion is carried out for three hours at $790^{\\circ} \\mathrm{C}$? Please format your answer as $n \\times 10^x$ where $n$ is to 2 decimal places, and express it in units of $1/\\mathrm{cm}^3$. The surface concentration of antimony is held constant at a value of $8 \\times 10^{18}$ $\\mathrm{cm}^{-3} ; D_{790^{\\circ} \\mathrm{C}}=4.8 \\times 10^{-11} \\mathrm{~cm}^{2} / \\mathrm{s}$.",
+    "answer":[
+      "2.88 \\times 10^{16}\n",
+      "2.88 \\times 10^{16}"
+    ],
+    "source":"minerva",
+    "id":"200"
+  },
+  {
+    "prompt":"Preamble: Calculate the vacancy fraction in copper (Cu) in $\\mathrm{~cm}^{-3}$ at the following temperatures. Measurements have determined the values of the enthalpy of vacancy formation, $\\Delta \\mathrm{H}_{\\mathrm{V}}$, to be $1.03 \\mathrm{eV}$ and the entropic prefactor, A, to be 1.1. Please format your answers as $n \\times 10^x$ where $n$ is to 2 decimal places.\n\n$20^{\\circ} \\mathrm{C}$.",
+    "answer":[
+      "1.85 \\times 10^{5}\n"
+    ],
+    "source":"minerva",
+    "id":"201"
+  },
+  {
+    "prompt":"Preamble: For the element copper (Cu) determine:\n\nSubproblem 0: the distance of second nearest neighbors (in meters). Please format your answer as $n \\times 10^x$ where $n$ is to 2 decimal places.\n\n\nSolution: The answer can be found by looking at a unit cell of $\\mathrm{Cu}$ (FCC).\n\\includegraphics[scale=0.5]{set_23_img_00.jpg}\n\\nonessentialimage\nNearest neighbor distance is observed along $<110>$; second-nearest along $<100>$. The second-nearest neighbor distance is found to be \"a\".\nCu: atomic volume $=7.1 \\times 10^{-6} \\mathrm{~m}^{3} /$ mole $=\\frac{\\mathrm{N}_{\\mathrm{A}}}{4} \\mathrm{a}^{3}$ ( $\\mathrm{Cu}: \\mathrm{FCC} ; 4$ atoms/unit cell) $a=\\sqrt[3]{\\frac{7.1 \\times 10^{-6} \\times 4}{6.02 \\times 10^{23}}}= \\boxed{3.61e-10} \\mathrm{~m}$\n\nFinal answer: The final answer is 3.61e-10. I hope it is correct.\n\nSubproblem 1: the interplanar spacing of $\\{110\\}$ planes (in meters). Please format your answer as $n \\times 10^x$ where $n$ is to 2 decimal places.",
+    "answer":[
+      "3.61e-10"
+    ],
+    "source":"minerva",
+    "id":"202"
+  },
+  {
+    "prompt":"Preamble: A first-order chemical reaction is found to have an activation energy $\\left(E_{A}\\right)$ of 250 $\\mathrm{kJ} /$ mole and a pre-exponential (A) of $1.7 \\times 10^{14} \\mathrm{~s}^{-1}$.\n\nDetermine the rate constant at $\\mathrm{T}=750^{\\circ} \\mathrm{C}$. Round your answer to 1 decimal place, in units of $\\mathrm{s}^{-1}$.",
+    "answer":[
+      "28.8\n"
+    ],
+    "source":"minerva",
+    "id":"203"
+  },
+  {
+    "prompt":"A metal is found to have BCC structure, a lattice constant of $3.31 \\AA$, and a density of $16.6 \\mathrm{~g} / \\mathrm{cm}^{3}$. Determine the atomic weight of this element in g/mole, and round your answer to 1 decimal place.",
+    "answer":[
+      "181.3\n"
+    ],
+    "source":"minerva",
+    "id":"204"
+  },
+  {
+    "prompt":"Determine the atomic (metallic) radius of Mo in meters. Do not give the value listed in the periodic table; calculate it from the fact that Mo's atomic weight is $=95.94 \\mathrm{~g} /$ mole and $\\rho=10.2 \\mathrm{~g} / \\mathrm{cm}^{3}$. Please format your answer as $n \\times 10^x$ where $n$ is to 2 decimal places.",
+    "answer":[
+      "1.39 \\times 10^{-10}\n"
+    ],
+    "source":"minerva",
+    "id":"205"
+  },
+  {
+    "prompt":"Subproblem 0: What is the working temperature for silica glass in Celsius?\n\n\nSolution: \\boxed{1950}.\n\nFinal answer: The final answer is 1950. I hope it is correct.\n\nSubproblem 1: What is the softening temperature for silica glass in Celsius?\n\n\nSolution: \\boxed{1700}.\n\nFinal answer: The final answer is 1700. I hope it is correct.\n\nSubproblem 2: What is the working temperature for Pyrex in Celsius?\n\n\nSolution: \\boxed{1200}.\n\nFinal answer: The final answer is 1200. I hope it is correct.\n\nSubproblem 3: What is the softening temperature for Pyrex in Celsius?\n\n\nSolution: \\boxed{800}.\n\nFinal answer: The final answer is 800. I hope it is correct.\n\nSubproblem 4: What is the working temperature for soda-lime glass in Celsius?\n\n\nSolution: \\boxed{900}.\n\nFinal answer: The final answer is 900. I hope it is correct.\n\nSubproblem 5: What is the softening temperature for soda-lime glass in Celsius?",
+    "answer":[
+      "700\n"
+    ],
+    "source":"minerva",
+    "id":"206"
+  },
+  {
+    "prompt":"What is the maximum wavelength $(\\lambda)$ (in meters) of radiation capable of second order diffraction in platinum (Pt)? Please format your answer as $n \\times 10^x$ where $n$ is to 2 decimal places.",
+    "answer":[
+      "2.26 \\times 10^{-10}"
+    ],
+    "source":"minerva",
+    "id":"207"
+  },
+  {
+    "prompt":"What is the activation energy of a process which is observed to increase by a factor of three when the temperature is increased from room temperature $\\left(20^{\\circ} \\mathrm{C}\\right)$ to $40^{\\circ} \\mathrm{C}$ ? Round your answer to 1 decimal place, and express it in $\\mathrm{~kJ} / \\mathrm{mole}$.",
+    "answer":[
+      "41.9\n"
+    ],
+    "source":"minerva",
+    "id":"208"
+  },
+  {
+    "prompt":"Preamble: Iron $\\left(\\rho=7.86 \\mathrm{~g} / \\mathrm{cm}^{3}\\right.$ ) crystallizes in a BCC unit cell at room temperature.\n\nCalculate the radius in cm of an iron atom in this crystal. Please format your answer as $n \\times 10^x$ where $n$ is to 2 decimal places.",
+    "answer":[
+      "1.24 \\times 10^{-8}\n"
+    ],
+    "source":"minerva",
+    "id":"209"
+  },
+  {
+    "prompt":"Preamble: A formation energy of $2.0 \\mathrm{eV}$ is required to create a vacancy in a particular metal. At $800^{\\circ} \\mathrm{C}$ there is one vacancy for every 10,000 atoms.\n\nAt what temperature (in Celsius) will there be one vacancy for every 1,000 atoms? Format your answer as an integer.",
+    "answer":[
+      "928"
+    ],
+    "source":"minerva",
+    "id":"210"
+  },
+  {
+    "prompt":"A cubic metal $(r=0.77 \\AA$ ) exhibits plastic deformation by slip along $<111>$ directions. Determine its planar packing density (atoms $/ \\mathrm{m}^{2}$) for its densest family of planes. Please format your answer as $n \\times 10^x$ where $n$ is to 2 decimal places.",
+    "answer":[
+      "4.46 \\times 10^{19}\n"
+    ],
+    "source":"minerva",
+    "id":"211"
+  },
+  {
+    "prompt":"If no electron-hole pairs were produced in germanium (Ge) until the temperature reached the value corresponding to the energy gap, at what temperature (Celsius)  would Ge become conductive? Please format your answer as $n \\times 10^x$ where n is to 1 decimal place. $\\left(\\mathrm{E}_{\\mathrm{th}}=3 / 2 \\mathrm{kT}\\right)$",
+    "answer":[
+      "5.3 \\times 10^{3}\n"
+    ],
+    "source":"minerva",
+    "id":"212"
+  },
+  {
+    "prompt":"For $\\mathrm{NaF}$ the repulsive (Born) exponent, $\\mathrm{n}$, is 8.7. Making use of data given in your Periodic Table, calculate the crystal energy ( $\\left.\\Delta \\mathrm{E}_{\\text {cryst }}\\right)$ in kJ/mole, to 1 decimal place.",
+    "answer":[
+      "927.5\n"
+    ],
+    "source":"minerva",
+    "id":"213"
+  },
+  {
+    "prompt":"Determine the inter-ionic equilibrium distance in meters between the sodium and chlorine ions in a sodium chloride molecule knowing that the bond energy is $3.84 \\mathrm{eV}$ and that the repulsive exponent is 8. Please format your answer as $n \\times 10^x$ where $n$ is to 1 decimal place.",
+    "answer":[
+      "3.3 \\times 10^{-10}\n"
+    ],
+    "source":"minerva",
+    "id":"214"
+  },
+  {
+    "prompt":"Preamble: Calculate the molecular weight in g/mole (to 2 decimal places) of each of the substances listed below.\n\nSubproblem 0: $\\mathrm{NH}_{4} \\mathrm{OH}$\n\n\nSolution: $\\mathrm{NH}_{4} \\mathrm{OH}$ :\n$5 \\times 1.01=5.05(\\mathrm{H})$\n$1 \\times 14.01=14.01(\\mathrm{~N})$\n$1 \\times 16.00=16.00(\\mathrm{O})$\n$\\mathrm{NH}_{4} \\mathrm{OH}= \\boxed{35.06}$ g/mole\n\nFinal answer: The final answer is 35.06. I hope it is correct.\n\nSubproblem 1: $\\mathrm{NaHCO}_{3}$",
+    "answer":[
+      "35.06\n"
+    ],
+    "source":"minerva",
+    "id":"215"
+  },
+  {
+    "prompt":"Subproblem 0: What is the working temperature for silica glass in Celsius?\n\n\nSolution: \\boxed{1950}.\n\nFinal answer: The final answer is 1950. I hope it is correct.\n\nSubproblem 1: What is the softening temperature for silica glass in Celsius?\n\n\nSolution: \\boxed{1700}.\n\nFinal answer: The final answer is 1700. I hope it is correct.\n\nSubproblem 2: What is the working temperature for Pyrex in Celsius?\n\n\nSolution: \\boxed{1200}.\n\nFinal answer: The final answer is 1200. I hope it is correct.\n\nSubproblem 3: What is the softening temperature for Pyrex in Celsius?\n\n\nSolution: \\boxed{800}.\n\nFinal answer: The final answer is 800. I hope it is correct.\n\nSubproblem 4: What is the working temperature for soda-lime glass in Celsius?",
+    "answer":[
+      "900\n"
+    ],
+    "source":"minerva",
+    "id":"216"
+  },
+  {
+    "prompt":"Determine the differences in relative electronegativity $(\\Delta x$ in $e V)$ for the systems ${H}-{F}$ and ${C}-{F}$ given the following data:\n$\\begin{array}{cl}\\text { Bond Energy } & {kJ} / \\text { mole } \\\\ {H}_{2} & 436 \\\\ {~F}_{2} & 172 \\\\ {C}-{C} & 335 \\\\ {H}-{F} & 565 \\\\ {C}-{H} & 410\\end{array}$\n\\\\\nPlease format your answer to 2 decimal places.",
+    "answer":[
+      "0.54",
+      "0.54\n"
+    ],
+    "source":"minerva",
+    "id":"217"
+  },
+  {
+    "prompt":"Preamble: Moldavia is a small country that currently trades freely in the world barley market. Demand and supply for barley in Moldavia is governed by the following schedules:\nDemand: $Q^{D}=4-P$\nSupply: $Q^{S}=P$\nThe world price of barley is $\\$ 1 /$ bushel.\n\nSubproblem 0: Calculate the free trade equilibrium price of barley in Moldavia, in dollars per bushel. \n\n\nSolution: In free trade, Moldavia will import barley because the world price of $\\$ 1 /$ bushel is lower than the autarkic price of $\\$ 2$ /bushel. Free trade equilibrium price will be \\boxed{1} dollar per bushel.\n\nFinal answer: The final answer is 1. I hope it is correct.\n\nSubproblem 1: Calculate the free trade equilibrium quantity of barley in Moldavia (in bushels).",
+    "answer":[
+      "1\n"
+    ],
+    "source":"minerva",
+    "id":"218"
+  },
+  {
+    "prompt":"Preamble: Two lasers generate radiation of (1) $9.5 \\mu {m}$ and (2) $0.1 \\mu {m}$ respectively.\n\nSubproblem 0: Determine the photon energy (in eV, to two decimal places) of the laser generating radiation of $9.5 \\mu {m}$.\n\n\nSolution: \\[\n\\begin{aligned}\n{E} &={h} v=\\frac{{hc}}{\\lambda} {J} \\times \\frac{1 {eV}}{1.6 \\times 10^{-19} {~J}} \\\\\n{E}_{1} &=\\frac{{hc}}{9.5 \\times 10^{-6}} \\times \\frac{1}{1.6 \\times 10^{-19}} {eV}= \\boxed{0.13} {eV}\n\\end{aligned}\n\\]\n\nFinal answer: The final answer is 0.13. I hope it is correct.\n\nSubproblem 1: Determine the photon energy (in eV, to one decimal place) of the laser generating radiation of $0.1 \\mu {m}$.",
+    "answer":[
+      "0.13"
+    ],
+    "source":"minerva",
+    "id":"219"
+  },
+  {
+    "prompt":"Preamble: The decay rate of ${ }^{14} \\mathrm{C}$ in living tissue is $15.3$ disintegrations per minute per gram of carbon. Experimentally, the decay rate can be measured to $\\pm 0.1$ disintegrations per minute per gram of carbon. The half-life of ${ }^{14} \\mathrm{C}$ is 5730 years.\n\nWhat is the maximum age of a sample that can be dated, in years?",
+    "answer":[
+      "41585"
+    ],
+    "source":"minerva",
+    "id":"220"
+  },
+  {
+    "prompt":"Preamble: The number of electron-hole pairs in intrinsic germanium (Ge) is given by:\n\\[\nn_{i}=9.7 \\times 10^{15} \\mathrm{~T}^{3 / 2} \\mathrm{e}^{-\\mathrm{E}_{g} / 2 \\mathrm{KT}}\\left[\\mathrm{cm}^{3}\\right] \\quad\\left(\\mathrm{E}_{\\mathrm{g}}=0.72 \\mathrm{eV}\\right)\n\\]\n\nWhat is the density of pairs at $\\mathrm{T}=20^{\\circ} \\mathrm{C}$, in inverse $\\mathrm{cm}^3$? Please format your answer as $n \\times 10^x$ where n is to 2 decimal places.",
+    "answer":[
+      "3.21 \\times 10^{13}",
+      "3.21 \\times 10^{13}\n"
+    ],
+    "source":"minerva",
+    "id":"221"
+  },
+  {
+    "prompt":"Preamble: For light with a wavelength $(\\lambda)$ of $408 \\mathrm{~nm}$ determine:\n\nSubproblem 0: the frequency in $s^{-1}$. Please format your answer as $n \\times 10^x$, where $n$ is to 3 decimal places. \n\n\nSolution: To solve this problem we must know the following relationships:\n\\[\n\\begin{aligned}\nv \\lambda &=c\n\\end{aligned}\n\\]\n$v$ (frequency) $=\\frac{c}{\\lambda}=\\frac{3 \\times 10^{8} m / s}{408 \\times 10^{-9} m}= \\boxed{7.353e14} s^{-1}$\n\nFinal answer: The final answer is 7.353e14. I hope it is correct.\n\nSubproblem 1: the wave number in $m^{-1}$. Please format your answer as $n \\times 10^x$, where $n$ is to 2 decimal places.",
+    "answer":[
+      "7.353 \\times 10^{14}"
+    ],
+    "source":"minerva",
+    "id":"222"
+  },
+  {
+    "prompt":"How much oxygen (in kg, to 3 decimal places) is required to completely convert 1 mole of $\\mathrm{C}_{2} \\mathrm{H}_{6}$ into $\\mathrm{CO}_{2}$ and $\\mathrm{H}_{2} \\mathrm{O}$ ?",
+    "answer":[
+      "0.112\n"
+    ],
+    "source":"minerva",
+    "id":"223"
+  },
+  {
+    "prompt":"Determine the highest linear density of atoms (atoms/m) encountered in vanadium (V). Please format your answer as $n \\times 10^x$ where $n$ is to 2 decimal places.",
+    "answer":[
+      "3.75 \\times 10^9",
+      "3.75 \\times 10^{9}"
+    ],
+    "source":"minerva",
+    "id":"224"
+  },
+  {
+    "prompt":"A slab of plate glass containing dissolved helium (He) is placed in a vacuum furnace at a temperature of $400^{\\circ} \\mathrm{C}$ to remove the helium from the glass. Before vacuum treatment, the concentration of helium is constant throughout the glass. After 10 minutes in vacuum at $400^{\\circ} \\mathrm{C}$, at what depth (in $\\mu \\mathrm{m}$) from the surface of the glass has the concentration of helium decreased to $1 / 3$ of its initial value? The diffusion coefficient of helium in the plate glass at the processing temperature has a value of $3.091 \\times 10^{-6} \\mathrm{~cm}^{2} / \\mathrm{s}$.",
+    "answer":[
+      "258"
+    ],
+    "source":"minerva",
+    "id":"225"
+  },
+  {
+    "prompt":"Preamble: $\\mathrm{Bi}_{2} \\mathrm{~S}_{3}$ dissolves in water according to the following reaction:\n\\[\n\\mathrm{Bi}_{2} \\mathrm{~S}_{3}(\\mathrm{~s}) \\Leftrightarrow 2 \\mathrm{Bi}^{3+}(\\mathrm{aq})+3 \\mathrm{~s}^{2-}(\\mathrm{aq})\n\\]\nfor which the solubility product, $\\mathrm{K}_{\\mathrm{sp}}$, has the value of $1.6 \\times 10^{-72}$ at room temperature.\n\nAt room temperature how many moles of $\\mathrm{Bi}_{2} \\mathrm{~S}_{3}$ will dissolve in $3.091 \\times 10^{6}$ liters of water? Please format your answer as $n \\times 10^x$ where $n$ is to 1 decimal place.",
+    "answer":[
+      "5.3 \\times 10^{-9}"
+    ],
+    "source":"minerva",
+    "id":"226"
+  },
+  {
+    "prompt":"Determine the amount (in grams) of boron (B) that, substitutionally incorporated into $1 \\mathrm{~kg}$ of germanium (Ge), will establish a charge carrier density of $3.091 \\mathrm{x}$ $10^{17} / \\mathrm{cm}^{3}$. Please format your answer as $n \\times 10^x$ where $n$ is to 2 decimal places.",
+    "answer":[
+      "1.04 \\times 10^{-3}",
+      "1.04 \\times 10^{-3}\n"
+    ],
+    "source":"minerva",
+    "id":"227"
+  },
+  {
+    "prompt":"Calculate the volume in mL of $0.25 \\mathrm{M} \\mathrm{NaI}$ that would be needed to precipitate all the $\\mathrm{g}^{2+}$ ion from $45 \\mathrm{~mL}$ of a $0.10 \\mathrm{M} \\mathrm{Hg}\\left(\\mathrm{NO}_{3}\\right)_{2}$ solution according to the following reaction:\n\\[\n2 \\mathrm{NaI}(\\mathrm{aq})+\\mathrm{Hg}\\left(\\mathrm{NO}_{3}\\right)_{2}(\\mathrm{aq}) \\rightarrow \\mathrm{HgI}_{2}(\\mathrm{~s})+2 \\mathrm{NaNO}_{3}(\\mathrm{aq})\n\\]",
+    "answer":[
+      "36\n"
+    ],
+    "source":"minerva",
+    "id":"228"
+  },
+  {
+    "prompt":"Subproblem 0: What is the working temperature for silica glass in Celsius?\n\n\nSolution: \\boxed{1950}.\n\nFinal answer: The final answer is 1950. I hope it is correct.\n\nSubproblem 1: What is the softening temperature for silica glass in Celsius?",
+    "answer":[
+      "1950\n"
+    ],
+    "source":"minerva",
+    "id":"229"
+  },
+  {
+    "prompt":"Whiskey, suspected to be of the \"moonshine\" variety, is analyzed for its age by determining its amount of naturally occurring tritium (T) which is a radioactive hydrogen isotope $\\left({ }^{3} \\mathrm{H}\\right)$ with a half-life of $12.5$ years. In this \"shine\" the activity is found to be $6 \\%$ of that encountered in fresh bourbon. What is the age (in years) of the whiskey in question?",
+    "answer":[
+      "50.7\n"
+    ],
+    "source":"minerva",
+    "id":"230"
+  },
+  {
+    "prompt":"Subproblem 0: What is the working temperature for silica glass in Celsius?\n\n\nSolution: \\boxed{1950}.\n\nFinal answer: The final answer is 1950. I hope it is correct.\n\nSubproblem 1: What is the softening temperature for silica glass in Celsius?\n\n\nSolution: \\boxed{1700}.\n\nFinal answer: The final answer is 1700. I hope it is correct.\n\nSubproblem 2: What is the working temperature for Pyrex in Celsius?\n\n\nSolution: \\boxed{1200}.\n\nFinal answer: The final answer is 1200. I hope it is correct.\n\nSubproblem 3: What is the softening temperature for Pyrex in Celsius?",
+    "answer":[
+      "800\n"
+    ],
+    "source":"minerva",
+    "id":"231"
+  },
+  {
+    "prompt":"What is the working temperature for silica glass in Celsius?",
+    "answer":[
+      "1950^\\circ C\n"
+    ],
+    "source":"minerva",
+    "id":"232"
+  },
+  {
+    "prompt":"Subproblem 0: Is an energy level of $-1.362 \\times 10^{-19} {~J}$ an allowed electron energy state in atomic hydrogen?\n\n\nSolution: $E_{e l} =-\\frac{1}{n^{2}} {~K}$ \\\\\n$-1.362 \\times 10^{-19} {~J}=-\\frac{1}{{n}^{2}} \\times 2.18 \\times 10^{-18} {~J}$\\\\\n${n} &=\\sqrt{\\frac{2.18 \\times 10^{-18}}{1.362 \\times 10^{-19}}}=4.00$\\\\\nThe answer is \\boxed{Yes}.\n\nFinal answer: The final answer is Yes. I hope it is correct.\n\nSubproblem 1: If your answer is yes, determine its principal quantum number $(n)$. If your answer is no, determine ${n}$ for the \"nearest allowed state\".",
+    "answer":[
+      "4",
+      "4\n"
+    ],
+    "source":"minerva",
+    "id":"233"
+  },
+  {
+    "prompt":"Determine the energy gap (in eV) between the electronic states $n=7$ and $n=8$ in hydrogen. Please format your answer as $n \\times 10^x$ where $n$ is to 1 decimal place.",
+    "answer":[
+      "6.5 \\times 10^{-2}"
+    ],
+    "source":"minerva",
+    "id":"234"
+  },
+  {
+    "prompt":"To increase its corrosion resistance, chromium $(\\mathrm{Cr})$ is diffused into steel at $980^{\\circ} \\mathrm{C}$. If during diffusion the surface concentration of chromium remains constant at $100 \\%$, how long will it take (in days) to achieve a $\\mathrm{Cr}$ concentration of $1.8 \\%$ at a depth of $0.002 \\mathrm{~cm}$ below the steel surface? Round your answer to 1 decimal place. $\\left(D_{o}=0.54 \\mathrm{~cm}^{2} / \\mathrm{s} ; E_{A}=286 \\mathrm{~kJ} / \\mathrm{mol}\\right.$ )",
+    "answer":[
+      "6.4",
+      "6.4\n"
+    ],
+    "source":"minerva",
+    "id":"235"
+  },
+  {
+    "prompt":"Subproblem 0: Determine the inter-ionic equilibrium distance in meters between the sodium and chlorine ions in a sodium chloride molecule knowing that the bond energy is $3.84 \\mathrm{eV}$ and that the repulsive exponent is 8. Please format your answer as $n \\times 10^x$ where $n$ is to 1 decimal place.\n\n\nSolution: $\\mathrm{E}_{\\mathrm{equ}}=-3.84 \\mathrm{eV}=-3.84 \\times 1.6 \\times 10^{-19} \\mathrm{~J}=-\\frac{\\mathrm{e}^{2}}{4 \\pi \\varepsilon_{0} r_{0}}\\left(1-\\frac{1}{\\mathrm{n}}\\right)$\n\\\\\n$r_{0}=\\frac{\\left(1.6 \\times 10^{-19}\\right)^{2}}{4 \\pi 8.85 \\times 10^{-12} \\times 6.14 \\times 10^{-19}}\\left(1-\\frac{1}{8}\\right)= \n\\boxed{3.3e-10} \\mathrm{~m}$\n\nFinal answer: The final answer is 3.3e-10. I hope it is correct.\n\nSubproblem 1: At the equilibrium distance, how much (in percent) is the contribution to the attractive bond energy by electron shell repulsion?",
+    "answer":[
+      "3.3 \\times 10^{-10}\n",
+      "3.3e-10\n"
+    ],
+    "source":"minerva",
+    "id":"236"
+  },
+  {
+    "prompt":"An electron beam strikes a crystal of cadmium sulfide (CdS). Electrons scattered by the crystal move at a velocity of $4.4 \\times 10^{5} \\mathrm{~m} / \\mathrm{s}$. Calculate the energy of the incident beam. Express your result in eV, and as an integer. CdS is a semiconductor with a band gap, $E_{g}$, of $2.45$ eV.",
+    "answer":[
+      "3\n"
+    ],
+    "source":"minerva",
+    "id":"237"
+  },
+  {
+    "prompt":"Preamble: Consider the market for apple juice. In this market, the supply curve is given by $Q_{S}=$ $10 P_{J}-5 P_{A}$ and the demand curve is given by $Q_{D}=100-15 P_{J}+10 P_{T}$, where $J$ denotes apple juice, $A$ denotes apples, and $T$ denotes tea.\n\nSubproblem 0: Assume that $P_{A}$ is fixed at $\\$ 1$ and $P_{T}=5$. Calculate the equilibrium price in the apple juice market.\n\n\nSolution: We have the system of equations $Q=10 P_{J}-5 \\cdot 1$ and $Q=100-15 P_{J}+10 \\cdot 5$. Solving for $P_{J}$ we get that $P_{J}=\\boxed{6.2}$.\n\nFinal answer: The final answer is 6.2. I hope it is correct.\n\nSubproblem 1: Assume that $P_{A}$ is fixed at $\\$ 1$ and $P_{T}=5$. Calculate the equilibrium quantity in the apple juice market.",
+    "answer":[
+      "6.2\n"
+    ],
+    "source":"minerva",
+    "id":"238"
+  },
+  {
+    "prompt":"Estimate the ionic radius of ${Cs}^{+}$ in Angstroms to 2 decimal places. The lattice energy of $\\mathrm{CsCl}$ is $633 \\mathrm{~kJ} / \\mathrm{mol}$. For $\\mathrm{CsCl}$ the Madelung constant, $\\mathrm{M}$, is $1.763$, and the Born exponent, $\\mathrm{n}$, is 10.7. The ionic radius of $\\mathrm{Cl}^{-}$is known to be $1.81 \\AA$.",
+    "answer":[
+      "1.69\n"
+    ],
+    "source":"minerva",
+    "id":"239"
+  },
+  {
+    "prompt":"Subproblem 0: What is the working temperature for silica glass in Celsius?\n\n\nSolution: \\boxed{1950}.\n\nFinal answer: The final answer is 1950. I hope it is correct.\n\nSubproblem 1: What is the softening temperature for silica glass in Celsius?\n\n\nSolution: \\boxed{1700}.\n\nFinal answer: The final answer is 1700. I hope it is correct.\n\nSubproblem 2: What is the working temperature for Pyrex in Celsius?",
+    "answer":[
+      "1200\n"
+    ],
+    "source":"minerva",
+    "id":"240"
+  },
+  {
+    "prompt":"Preamble: A first-order chemical reaction is found to have an activation energy $\\left(E_{A}\\right)$ of 250 $\\mathrm{kJ} /$ mole and a pre-exponential (A) of $1.7 \\times 10^{14} \\mathrm{~s}^{-1}$.\n\nSubproblem 0: Determine the rate constant at $\\mathrm{T}=750^{\\circ} \\mathrm{C}$. Round your answer to 1 decimal place, in units of $\\mathrm{s}^{-1}$.\n\n\nSolution: $\\mathrm{k}=\\mathrm{Ae} \\mathrm{e}^{-\\frac{\\mathrm{E}_{\\mathrm{A}}}{\\mathrm{RT}}}=1.7 \\times 10^{14} \\times \\mathrm{e}^{-\\frac{2.5 \\times 10^{5}}{8.31 \\times 10^{23}}}= \\boxed{28.8} \\mathrm{~s}^{-1}$\n\nFinal answer: The final answer is 28.8. I hope it is correct.\n\nSubproblem 1: What percent of the reaction will be completed at $600^{\\circ} \\mathrm{C}$ in a period of 10 minutes?",
+    "answer":[
+      "100\n"
+    ],
+    "source":"minerva",
+    "id":"241"
+  },
+  {
+    "prompt":"Preamble: There are two algebraic conditions describing a firm that is at a capital level that minimizes its costs in the long-term.\n\nWrite the condition which involves the SRAC, or short-run average cost?",
+    "answer":[
+      "SRAC=LRAC\n"
+    ],
+    "source":"minerva",
+    "id":"242"
+  },
+  {
+    "prompt":"Given the ionic radii, $\\mathrm{Cs}^{+}=1.67 \\AA, \\mathrm{Cl}^{-}=1.81 \\AA$, and the Madelung constant $\\mathrm{M}(\\mathrm{CsCl})=1.763$, determine to the best of your ability the molar Crystal energy ( $\\Delta \\mathrm{E}_{\\text {cryst }}$ ) for $\\mathrm{CsCl}$. Please format your answer as $n \\times 10^x$ where n is to 2 decimal places; answer in $\\mathrm{J} / \\text{mole}$.",
+    "answer":[
+      "7.02 \\times 10^5"
+    ],
+    "source":"minerva",
+    "id":"243"
+  },
+  {
+    "prompt":"Preamble: Consider the market for apple juice. In this market, the supply curve is given by $Q_{S}=$ $10 P_{J}-5 P_{A}$ and the demand curve is given by $Q_{D}=100-15 P_{J}+10 P_{T}$, where $J$ denotes apple juice, $A$ denotes apples, and $T$ denotes tea.\n\nAssume that $P_{A}$ is fixed at $\\$ 1$ and $P_{T}=5$. Calculate the equilibrium price in the apple juice market.",
+    "answer":[
+      "6.2\n"
+    ],
+    "source":"minerva",
+    "id":"244"
+  },
+  {
+    "prompt":"Preamble: Sebastian owns a coffee factory in Argentina. His production function is:\n\\[\nF(K, L)=(K-1)^{\\frac{1}{4}} L^{\\frac{1}{4}}\n\\]\nConsider the cost of capital to be $r$ and the wage to be $w$. Both inputs are variable, and Sebastian faces no fixed costs.\n\nWhat is the marginal rate of technical substitution of labor for capital?",
+    "answer":[
+      "\\frac{K-1}{L}\n"
+    ],
+    "source":"minerva",
+    "id":"245"
+  },
+  {
+    "prompt":"Preamble: In Cambridge, shoppers can buy apples from two sources: a local orchard, and a store that ships apples from out of state. The orchard can produce up to 50 apples per day at a constant marginal cost of 25 cents per apple. The store can supply any remaining apples demanded, at a constant marginal cost of 75 cents per unit. When apples cost 75 cents per apple, the residents of Cambridge buy 150 apples in a day.\n\nAssume that the city of Cambridge sets the price of apples within its borders. What price should it set, in cents?",
+    "answer":[
+      "75\n"
+    ],
+    "source":"minerva",
+    "id":"246"
+  },
+  {
+    "prompt":"Preamble: You manage a factory that produces cans of peanut butter. The current market price is $\\$ 10 /$ can, and you know the following about your costs (MC stands for marginal cost, and ATC stands for average total cost):\n\\[\n\\begin{array}{l}\nMC(5)=10 \\\\\nATC(5)=6 \\\\\nMC(4)=4 \\\\\nATC(4)=4\n\\end{array}\n\\]\n\nA case of food poisoning breaks out due to your peanut butter, and you lose a lawsuit against your company. As punishment, Judge Judy decides to take away all of your profits, and considers the following two options to be equivalent:\ni. Pay a lump sum in the amount of your profits.\nii. Impose a tax of $\\$\\left[P-A T C\\left(q^{*}\\right)\\right]$ per can since that is your current profit per can, where $q^{*}$ is the profit maximizing output before the lawsuit.\nHow much is the tax, in dollars per can?",
+    "answer":[
+      "4\n"
+    ],
+    "source":"minerva",
+    "id":"247"
+  },
+  {
+    "prompt":"Preamble: A consumer's preferences are representable by the following utility function:\n\\[\n  u(x, y)=x^{\\frac{1}{2}}+y\n\\]\n\nSubproblem 0: Obtain the marginal rate of substitution of the consumer at an arbitrary point $(X,Y)$, where $X>0$ and $Y>0$.\n\n\nSolution: \\[ M R S=-\\frac{\\frac{1}{2} x^{-\\frac{1}{2}}}{1}=\\boxed{-\\frac{1}{2} X^{-\\frac{1}{2}}} \\]\n\nFinal answer: The final answer is -\\frac{1}{2} X^{-\\frac{1}{2}}. I hope it is correct.\n\nSubproblem 1: Suppose the price of the second good $(y)$ is 1 , and the price of the first good $(x)$ is denoted by $p>0$. If the consumer's income is $m>\\frac{1}{4p}$, in the optimal consumption bundle of the consumer (in terms of $m$ and $p$ ), what is the quantity of the first good $(x)$?",
+    "answer":[
+      "\\frac{1}{4p^2}\n"
+    ],
+    "source":"minerva",
+    "id":"248"
+  },
+  {
+    "prompt":"What algebraic condition describes a firm that is at an output level that maximizes its profits, given its capital in the short-term?  Use standard acronyms in your condition.",
+    "answer":[
+      "MR=SRMC\n"
+    ],
+    "source":"minerva",
+    "id":"249"
+  },
+  {
+    "prompt":"Strontium fluoride, $\\mathrm{SrF}_{2}$, has a $\\mathrm{K}_{\\mathrm{sp}}$ value in water of $2.45 \\times 10^{-9}$ at room temperature.\nCalculate the solubility of $\\mathrm{SrF}_{2}$ in water. Express your answer in units of molarity. Please format your answer as $n \\times 10^x$ where $n$ is to 2 decimal places.",
+    "answer":[
+      "8.49 \\times 10^{-4}\n"
+    ],
+    "source":"minerva",
+    "id":"250"
+  },
+  {
+    "prompt":"Preamble: There are two algebraic conditions describing a firm that is at a capital level that minimizes its costs in the long-term.\n\nSubproblem 0: Write the condition which involves the SRAC, or short-run average cost?\n\n\nSolution: \\boxed{SRAC=LRAC}, short-run average cost equals long-run average cost.\n\nFinal answer: The final answer is SRAC=LRAC. I hope it is correct.\n\nSubproblem 1: Write the condition which involves SRMC, or short-run marginal cost?",
+    "answer":[
+      "SRAC=LRAC\n"
+    ],
+    "source":"minerva",
+    "id":"251"
+  },
+  {
+    "prompt":"Preamble: This problem deals with the H\\\"uckel MO theory of $\\pi$-conjugated systems.\nTo answer each question, you will need to construct the H\u00fcckel MOs for each of the molecules pictured, divide them into sets of occupied and unoccupied orbitals, and determine the relevant properties, such as ground state energy, bond order, etc.\nNOTE: For all parts we take $\\alpha=\\alpha_{\\mathrm{C}}=-11.2 \\mathrm{eV}$ and $\\beta=\\beta_{\\mathrm{CC}}=-0.7 \\mathrm{eV}$.\n\nDetermine the ionization potential of benzene (remember, ionization potential $\\left[\\mathrm{IP}=\\mathrm{E}\\left(\\mathrm{B}^{+}\\right)-\\mathrm{E}(\\mathrm{B})\\right]$), in $\\mathrm{eV}$, rounded to one decimal place.  The benzene molecule is shown below:\n\\chemfig{C*6((-H)-C(-H)=C(-H)-C(-H)=C(-H)-C(-H)=)}",
+    "answer":[
+      "11.9\n",
+      "11.9"
+    ],
+    "source":"minerva",
+    "id":"252"
+  },
+  {
+    "prompt":"You wish to dope a single crystal of silicon (Si) with boron (B). The specification reads $5 \\times 10^{16}$ boron atoms/ $\\mathrm{cm}^{3}$ at a depth of $25 \\mu \\mathrm{m}$ from the surface of the silicon. What must be the effective concentration of boron in units of atoms/ $\\mathrm{cm}^{3}$ if you are to meet this specification within a time of 90 minutes? Round your answer to 4 decimal places. Assume that initially the concentration of boron in the silicon crystal is zero. The diffusion coefficient of boron in silicon has a value of $7.23 \\times 10^{-9} \\mathrm{~cm}^{2} / \\mathrm{s}$ at the processing temperature.",
+    "answer":[
+      "6.43 \\times 10^{16}",
+      "6.43 \\times 10^{16} \\text{ cm}^{-3}"
+    ],
+    "source":"minerva",
+    "id":"253"
+  },
+  {
+    "prompt":"Preamble: A consumer's preferences are representable by the following utility function:\n\\[\n  u(x, y)=x^{\\frac{1}{2}}+y\n\\]\n\nObtain the marginal rate of substitution of the consumer at an arbitrary point $(X,Y)$, where $X>0$ and $Y>0$.",
+    "answer":[
+      "-\\frac{1}{2}X^{-\\frac{1}{2}}\n"
+    ],
+    "source":"minerva",
+    "id":"254"
+  },
+  {
+    "prompt":"Preamble: Xiaoyu spends all her income on statistical software $(S)$ and clothes (C). Her preferences can be represented by the utility function: $U(S, C)=4 \\ln (S)+6 \\ln (C)$.\n\nCompute the marginal rate of substitution of software for clothes.",
+    "answer":[
+      "\\frac{2}{3} \\frac{C}{S}\n"
+    ],
+    "source":"minerva",
+    "id":"255"
+  },
+  {
+    "prompt":"Preamble: You have been asked to analyze the market for steel. From public sources, you are able to find that last year's price for steel was $\\$ 20$ per ton. At this price, 100 million tons were sold on the world market. From trade association data you are able to obtain estimates for the own price elasticities of demand and supply on the world markets as $-0.25$ for demand and $0.5$ for supply. Assume that steel has linear demand and supply curves throughout, and that the market is competitive.\n\nSolve for the equations of demand in this market.  Use $P$ to represent the price of steel in dollars per ton, and $X_{d}$ to represent the demand in units of millions of tons.",
+    "answer":[
+      "X_{d}=125-1.25 P"
+    ],
+    "source":"minerva",
+    "id":"256"
+  },
+  {
+    "prompt":"Given that the work function of chromium is $4.40 \\mathrm{eV}$, calculate the kinetic energy of electrons in Joules emitted from a clean chromium surface that is irradiated with ultraviolet radiation of wavelength $200 \\mathrm{~nm}$.",
+    "answer":[
+      "2.88 \\times 10^{-19}\n"
+    ],
+    "source":"minerva",
+    "id":"257"
+  },
+  {
+    "prompt":"Preamble: Suppose, in the short run, the output of widgets is supplied by 100 identical competitive firms, each having a cost function:\n\\[\nc_{s}(y)=\\frac{1}{3} y^{3}+2\n\\]\nThe demand for widgets is given by:\n\\[\ny^{d}(p)=6400 / p^{\\frac{1}{2}}\n\\]\n\nSubproblem 0: Obtain the short run industry supply function for widgets.\n\n\nSolution: Since $P=M C=y^{2}$, the supply function of each firm is given by $y_{i}^{s}=p^{\\frac{1}{2}}$. \nThe industry supply function is $y^{s}(p)=100 y_{i}^{s}(p)=\\boxed{100 p^{\\frac{1}{2}}}$.\n\nFinal answer: The final answer is 100 p^{\\frac{1}{2}}. I hope it is correct.\n\nSubproblem 1: Obtain the short run equilibrium price of widgets.",
+    "answer":[
+      "100p^{\\frac{1}{2}}\n",
+      "100 p^{\\frac{1}{2}}\n"
+    ],
+    "source":"minerva",
+    "id":"258"
+  },
+  {
+    "prompt":"Preamble: Suppose, in the short run, the output of widgets is supplied by 100 identical competitive firms, each having a cost function:\n\\[\nc_{s}(y)=\\frac{1}{3} y^{3}+2\n\\]\nThe demand for widgets is given by:\n\\[\ny^{d}(p)=6400 / p^{\\frac{1}{2}}\n\\]\n\nObtain the short run industry supply function for widgets.",
+    "answer":[
+      "100p^{\\frac{1}{2}}\n"
+    ],
+    "source":"minerva",
+    "id":"259"
+  },
+  {
+    "prompt":"Preamble: Suppose, in the short run, the output of widgets is supplied by 100 identical competitive firms, each having a cost function:\n\\[\nc_{s}(y)=\\frac{1}{3} y^{3}+2\n\\]\nThe demand for widgets is given by:\n\\[\ny^{d}(p)=6400 / p^{\\frac{1}{2}}\n\\]\n\nSubproblem 0: Obtain the short run industry supply function for widgets.\n\n\nSolution: Since $P=M C=y^{2}$, the supply function of each firm is given by $y_{i}^{s}=p^{\\frac{1}{2}}$. \nThe industry supply function is $y^{s}(p)=100 y_{i}^{s}(p)=\\boxed{100 p^{\\frac{1}{2}}}$.\n\nFinal answer: The final answer is 100 p^{\\frac{1}{2}}. I hope it is correct.\n\nSubproblem 1: Obtain the short run equilibrium price of widgets.\n\n\nSolution: $y^{s}=y^{d} \\longrightarrow 100 p^{\\frac{1}{2}}=\\frac{6400}{p^{\\frac{1}{2}}} \\longrightarrow p=\\boxed{64}$. \n\nFinal answer: The final answer is 64. I hope it is correct.\n\nSubproblem 2: Obtain the the output of widgets supplied by each firm.",
+    "answer":[
+      "8\n"
+    ],
+    "source":"minerva",
+    "id":"260"
+  },
+  {
+    "prompt":"Preamble: Moldavia is a small country that currently trades freely in the world barley market. Demand and supply for barley in Moldavia is governed by the following schedules:\nDemand: $Q^{D}=4-P$\nSupply: $Q^{S}=P$\nThe world price of barley is $\\$ 1 /$ bushel.\n\nCalculate the free trade equilibrium price of barley in Moldavia, in dollars per bushel.",
+    "answer":[
+      "1\n"
+    ],
+    "source":"minerva",
+    "id":"261"
+  },
+  {
+    "prompt":"Preamble: Suppose there are exactly two consumers (Albie and Bubbie) who demand strawberries. Suppose that Albie's demand for strawberries is given by\n\\[\nq_{a}(p)=p^{\\alpha} f_{a}\\left(I_{a}\\right)\n\\]\nand Bubbie's demand is given by\n\\[\nq_{b}(p)=p^{\\beta} f_{b}\\left(I_{b}\\right)\n\\]\nwhere $I_{a}$ and $I_{b}$ are Albie and Bubbie's incomes, and $f_{a}(\\cdot)$ and $f_{b}(\\cdot)$ are two unknown functions.\n\nFind Albie's (own-price) elasticity of demand, $\\epsilon_{q_{a}, p}$. Use the sign convention that $\\epsilon_{y, x}=\\frac{\\partial y}{\\partial x} \\frac{x}{y}$.",
+    "answer":[
+      "\\alpha\n"
+    ],
+    "source":"minerva",
+    "id":"262"
+  },
+  {
+    "prompt":"A baseball has diameter $=7.4 \\mathrm{~cm}$. and a mass of $145 \\mathrm{~g}$. Suppose the baseball is moving at $v=1 \\mathrm{~nm} /$ second. What is its de Broglie wavelength\n\\[\n\\lambda=\\frac{h}{p}=\\frac{h}{m \\nu}\n\\]\n?  Give answer in meters.",
+    "answer":[
+      "4.6 \\times 10^{-24}\n"
+    ],
+    "source":"minerva",
+    "id":"263"
+  },
+  {
+    "prompt":"Harmonic Oscillator Subjected to Perturbation by an Electric Field: An electron is connected by a harmonic spring to a fixed point at $x=0$. It is subject to a field-free potential energy\n\\[\nV(x)=\\frac{1}{2} k x^{2} .\n\\]\nThe energy levels and eigenstates are those of a harmonic oscillator where\n\\[\n\\begin{aligned}\n\\omega &=\\left[k / m_{e}\\right]^{1 / 2} \\\\\nE_{v} &=\\hbar \\omega(v+1 / 2) \\\\\n\\psi_{v}(x) &=(v !)^{-1 / 2}\\left(\\hat{\\boldsymbol{a}}^{\\dagger}\\right)^{v} \\psi_{v=0}(x) .\n\\end{aligned}\n\\]\nNow a constant electric field, $E_{0}$, is applied and $V(x)$ becomes\n\\[\nV(x)=\\frac{1}{2} k x^{2}+E_{0} e x \\quad(e>0 \\text { by definition }) .\n\\]\nWrite an expression for the energy levels $E_{v}$ as a function of the strength of the electric field.",
+    "answer":[
+      "\\hbar \\omega(v+1 / 2)-\\frac{E_{0}^{2} e^{2}}{2 m \\omega^{2}}\n",
+      "\\hbar \\omega(v+1 / 2)-\\frac{E_{0}^{2} e^{2}}{2 m \\omega^{2}}"
+    ],
+    "source":"minerva",
+    "id":"264"
+  },
+  {
+    "prompt":"Preamble: The following concern the independent particle model. You may find the following set of Coulomb and exchange integrals useful (energies in $\\mathrm{eV}$):\n$\\mathrm{J}_{1 s 1 s}=17.0 Z$ \n$\\mathrm{~J}_{1 s 2 s}=4.8 Z$ \n$\\mathrm{~K}_{1 s 2 s}=0.9 Z$ \n$\\mathrm{~J}_{2 s 2 s}=3.5 Z$ \n$\\mathrm{J}_{1 s 2 p}=6.6 Z$ \n$\\mathrm{~K}_{1 s 2 p}=0.5 Z$ \n$\\mathrm{~J}_{2 s 2 p}=4.4 Z$ \n$\\mathrm{~K}_{2 s 2 p}=0.8 Z$ \n$\\mathrm{J}_{2 p_{i}, 2 p_{i}}=3.9 Z$\n$\\mathrm{~J}_{2 p_{i}, 2 p_{k}}=3.5 Z$\n$\\mathrm{~K}_{2 p_{i}, 2 p_{k}}=0.2 Z i \\neq k$ \n\nUsing the independent particle model, what is the energy difference between the $1 s^{2} 2 p_{x}^{2}$ configuration and the $1 s^{2} 2 s^{2}$ configuration? Give your answer in eV, in terms of $Z$, and round to a single decimal place.",
+    "answer":[
+      "7.6Z"
+    ],
+    "source":"minerva",
+    "id":"265"
+  },
+  {
+    "prompt":"Preamble: Consider the Particle in an Infinite Box ``superposition state'' wavefunction,\n\\[\n\\psi_{1,2}=(1 / 3)^{1 / 2} \\psi_{1}+(2 / 3)^{1 / 2} \\psi_{2}\n\\]\nwhere $E_{1}$ is the eigen-energy of $\\psi_{1}$ and $E_{2}$ is the eigen-energy of $\\psi_{2}$.\n\nSubproblem 0: Suppose you do one experiment to measure the energy of $\\psi_{1,2}$.  List the possible result(s) of your measurement.\n\n\nSolution: Since the only eigenergies are $E_{1}$ and $E_{2}$, the possible outcomes of the measurement are $\\boxed{E_{1},E_{2}}$.\n\nFinal answer: The final answer is E_{1},E_{2}. I hope it is correct.\n\nSubproblem 1: Suppose you do many identical measurements to measure the energies of identical systems in state $\\psi_{1,2}$. What average energy will you observe?",
+    "answer":[
+      "E_{1},E_{2}\n"
+    ],
+    "source":"minerva",
+    "id":"266"
+  },
+  {
+    "prompt":"Compute the momentum of one $500 \\mathrm{~nm}$ photon using $p_{\\text {photon }}=E_{\\text {photon }} / c$ where $c$ is the speed of light, $c=3 \\times 10^{8} \\mathrm{~m} / \\mathrm{s}$, and $\\nu=c / \\lambda$.  Express your answer in kilogram meters per second, rounding your answer to three decimal places.",
+    "answer":[
+      "1.325 \\times 10^{-27}\n",
+      "1.325 \\times 10^{-27}"
+    ],
+    "source":"minerva",
+    "id":"267"
+  },
+  {
+    "prompt":"Preamble: Evaluate the following integrals for $\\psi_{J M}$ eigenfunctions of $\\mathbf{J}^{2}$ and $\\mathbf{J}_{z}$. \n\n$\\int \\psi_{22}^{*}\\left(\\widehat{\\mathbf{J}}^{+}\\right)^{4} \\psi_{2,-2} d \\tau$",
+    "answer":[
+      "24"
+    ],
+    "source":"minerva",
+    "id":"268"
+  },
+  {
+    "prompt":"Preamble: Consider the 3-level $\\mathbf{H}$ matrix\n\\[\n\\mathbf{H}=\\hbar \\omega\\left(\\begin{array}{ccc}\n10 & 1 & 0 \\\\\n1 & 0 & 2 \\\\\n0 & 2 & -10\n\\end{array}\\right)\n\\]\nLabel the eigen-energies and eigen-functions according to the dominant basis state character. The $\\widetilde{10}$ state is the one dominated by the zero-order state with $E^{(0)}=10, \\tilde{0}$ by $E^{(0)}=0$, and $-\\widetilde{10}$ by $E^{(0)}=-10$ (we will work in units where $\\hbar \\omega = 1$, and can be safely ignored).\n\nUse non-degenerate perturbation theory to derive the energy $E_{\\widetilde{10}}$.  Carry out your calculations to second order in the perturbing Hamiltonian, and round to one decimal place.",
+    "answer":[
+      "10.1\n"
+    ],
+    "source":"minerva",
+    "id":"269"
+  },
+  {
+    "prompt":"Preamble: Consider the Particle in an Infinite Box ``superposition state'' wavefunction,\n\\[\n\\psi_{1,2}=(1 / 3)^{1 / 2} \\psi_{1}+(2 / 3)^{1 / 2} \\psi_{2}\n\\]\nwhere $E_{1}$ is the eigen-energy of $\\psi_{1}$ and $E_{2}$ is the eigen-energy of $\\psi_{2}$.\n\nSuppose you do one experiment to measure the energy of $\\psi_{1,2}$.  List the possible result(s) of your measurement.",
+    "answer":[
+      "E_1, E_2"
+    ],
+    "source":"minerva",
+    "id":"270"
+  },
+  {
+    "prompt":"Preamble: A pulsed Nd:YAG laser is found in many physical chemistry laboratories.\n\nFor a $2.00 \\mathrm{~mJ}$ pulse of laser light, how many photons are there at $1.06 \\mu \\mathrm{m}$ (the Nd:YAG fundamental) in the pulse?  PAnswer to three significant figures.",
+    "answer":[
+      "1.07 \\times 10^{16}\n"
+    ],
+    "source":"minerva",
+    "id":"271"
+  }
+]

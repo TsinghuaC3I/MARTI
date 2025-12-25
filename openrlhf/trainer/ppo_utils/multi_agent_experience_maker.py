@@ -167,18 +167,22 @@ class MultiAgent_RemoteExperienceMaker(RemoteExperienceMaker):
                 actor_group, initial_group = self.agent_list[aid].actor_model_group, self.agent_list[aid].ref_model_group
             except Exception as e:
                 raise ValueError(f"agent id {aid} not found in self.agent_list") from e
+            # if actor_group is None:
+            #     continue
+            if actor_group is not None:
+                actor_action_log_probs_ref_per_agent[aid] = actor_group.async_run_method_batch(
+                    method_name="forward",
+                    sequences=sequences_list,
+                    action_mask=action_mask_list,
+                    attention_mask=attention_mask_list,
+                )
 
-            actor_action_log_probs_ref_per_agent[aid] = actor_group.async_run_method_batch(
-                method_name="forward",
-                sequences=sequences_list,
-                action_mask=action_mask_list,
-                attention_mask=attention_mask_list,
-            )
-
-            # Sync to avoid GPU OOM when colocate models
-            if args.colocate_all_models or args.colocate_actor_ref: 
-                ray.get(actor_action_log_probs_ref_per_agent[aid])
-                ray.get(actor_group.async_run_method(method_name="empty_cache"))
+                # Sync to avoid GPU OOM when colocate models
+                if args.colocate_all_models or args.colocate_actor_ref: 
+                    ray.get(actor_action_log_probs_ref_per_agent[aid])
+                    ray.get(actor_group.async_run_method(method_name="empty_cache"))
+            else:
+                actor_action_log_probs_ref_per_agent[aid] = ray.put([[None]] * len(samples_list))
 
             if initial_group is not None:
                 base_action_log_probs_ref_per_agent[aid] = initial_group.async_run_method_batch(
@@ -244,8 +248,8 @@ class MultiAgent_RemoteExperienceMaker(RemoteExperienceMaker):
             action_log_probs_list[sample_idx] = actor_outputs_per_agent[aid][sample_idx]
             base_action_log_probs_list[sample_idx] = base_outputs_per_agent[aid][sample_idx]
 
-        assert None not in action_log_probs_list, "Some action logprobs missing after per-agent calls"
-        assert None not in base_action_log_probs_list, "Some base action logprobs missing after per-agent calls"
+        # assert None not in action_log_probs_list, "Some action logprobs missing after per-agent calls"
+        # assert None not in base_action_log_probs_list, "Some base action logprobs missing after per-agent calls"
         #logger.warning(f"sample_list_111: {samples_list}")
         if samples_list[0].rewards is not None:
             pass
@@ -266,15 +270,20 @@ class MultiAgent_RemoteExperienceMaker(RemoteExperienceMaker):
         for i, (samples, action_log_probs, base_action_log_probs, value) in enumerate(
             zip(samples_list, action_log_probs_list, base_action_log_probs_list, value_list)
         ):
-            if (base_action_log_probs is not None) and (not args.use_kl_loss):
+            if action_log_probs is None:
+                # Create a zero tensor with the same shape as action_mask instead of a float
+                kl = torch.zeros_like(samples.action_mask, dtype=torch.float32, device=device)
+                kl_mean = 0.0
+            elif (base_action_log_probs is not None) and (not args.use_kl_loss):
                 kl = compute_approx_kl(
                     action_log_probs,
                     base_action_log_probs,
                     kl_estimator=self.strategy.args.kl_estimator,
                 )
+                kl_mean = masked_mean(kl, samples.action_mask, dim=-1)
             else:
                 kl = torch.zeros_like(action_log_probs, dtype=action_log_probs.dtype, device=device)
-            kl_mean = masked_mean(kl, samples.action_mask, dim=-1)
+                kl_mean = masked_mean(kl, samples.action_mask, dim=-1)
 
             if not args.use_kl_loss:
                 base_action_log_probs = None

@@ -1,11 +1,8 @@
 #!/bin/bash
 # gspo + tis + datafilter + overlong
 # set -x
-# source /mnt/shared-storage-user/marti/miniconda3/etc/profile.d/conda.sh
-# conda activate marti_vllm
-# which conda
-# which python
-# cd /mnt/shared-storage-user/marti/OpenRLHF
+ROOT_DIR=""
+cd ROOT_DIR
 
 # basic config
 # set local model path
@@ -20,7 +17,7 @@ MAX_LEN=40000
 ADVANTAGE="group_norm"
 
 # set correct root dir
-ROOT_DIR=""
+
 TASK="CODE"
 PROMPT_DATA="json@${ROOT_DIR}/data/${TASK}"
 
@@ -55,16 +52,6 @@ AGENT0="{
     }
 }"
 
-
-# AGENT2="{
-#     \"agent2\": {
-#         \"role\": \"generator\",
-#         \"pretrain\": \"${PRETRAIN}\",
-#         \"save_path\": \"/mnt/shared-storage-user/marti/OpenRLHF/outputs/final/${SHORT_NAME}-${EXP}-agent2\",
-#         \"ckpt_path\": \"/mnt/shared-storage-user/marti/OpenRLHF/outputs/ckpt/${SHORT_NAME}-${EXP}-agent2\",
-#         \"is_tuning\": true
-#     }
-# }"
 export NCCL_DEBUG=WARN
 
 

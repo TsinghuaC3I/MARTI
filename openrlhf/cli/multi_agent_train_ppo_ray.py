@@ -246,6 +246,8 @@ def init_agent(agent_id, agent_config, global_config, strategy, pg_id, unified_p
         # "eos_token_id": tokenizer.eos_token_id,
     }
 
+    # Initialize pg to None first
+    pg = None
     if agent_config["is_tuning"]:
         pg = unified_pg_list[pg_id]
 
@@ -259,7 +261,7 @@ def init_agent(agent_id, agent_config, global_config, strategy, pg_id, unified_p
                     == agent_config["vllm_num_engines"] * agent_config["vllm_tensor_parallel_size"]
                 ), (
                     f"actor_num_nodes * actor_num_gpus_per_node must be equal to "
-                    f"vllm_num_engines * vllm_tensor_parallel_size, got {agent_config['ctor_num_nodes'] * agent_config['actor_num_gpus_per_node']} "
+                    f"vllm_num_engines * vllm_tensor_parallel_size, got {agent_config['actor_num_nodes'] * agent_config['actor_num_gpus_per_node']} "
                     f"and {agent_config['vllm_num_engines'] * agent_config['vllm_tensor_parallel_size']}"
                 )
 
@@ -443,7 +445,7 @@ if __name__ == "__main__":
     parser.add_argument("--workflow_args", type=json.loads, default={}, help="Workflow arguments (dict)")
     parser.add_argument("--workflow_func_path", type=str, default=None, help="Workflow function script path")
     parser.add_argument("--processor_func_path", type=str, default=None, help="reward shaping processor script path")
-    # parser.add_argument("--evaluate_mcts_methods", type=str, default="agent", help="Workflow function script path")
+    parser.add_argument("--evaluate_mcts_methods", type=str, default="agent", help="Workflow function script path")
 
     # tool args
     parser.add_argument("--tools_config", type=json.loads, default={}, help="tool arguments (dict)")
@@ -747,6 +749,7 @@ if __name__ == "__main__":
     # eval config
     parser.add_argument("--eval_before_training", action="store_true", default=False)
     parser.add_argument("--eval_only", action="store_true", default=False)
+    # parser.add_argument("--eval_save_path", type=str, default=None, help="Path to save evaluation results")
     parser.add_argument("--verify_task", type=str, default="math")
     parser.add_argument("--verify_task_eval", type=str, default="math")
     args = parser.parse_args()

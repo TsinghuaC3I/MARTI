@@ -90,8 +90,8 @@ async def workflow(
         ground_truth = label
     
     # Ensure ground_truth is a list (as expected by CodeProblem)
-    if not isinstance(ground_truth, list):
-        ground_truth = [ground_truth]
+    # if not isinstance(ground_truth, list):
+    #     ground_truth = [ground_truth]
     
     # Parse agents
     assert isinstance(agents, list), f"agents must be list, but got {type(agents)}"
@@ -124,7 +124,7 @@ async def workflow(
         prompt=prompt,
         ground_truth=ground_truth,
         meta_data=metadata,
-        indice=indice,
+        # indice=indice,
     )
     
     # Build the code prompt (add instruction suffix)

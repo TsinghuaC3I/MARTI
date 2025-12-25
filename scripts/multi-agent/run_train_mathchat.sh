@@ -2,17 +2,12 @@
 # gspo + tis + datafilter + overlong
 # Debate workflow with 4 GPUs
 # set -x
-source /mnt/shared-storage-user/marti/miniconda3/etc/profile.d/conda.sh
-conda activate marti_vllm
-which conda
-which python
-# cd /mnt/shared-storage-user/marti/OpenRLHF
+ROOT_DIR=""
+cd ${ROOT_DIR}
 
 # basic config
-# MODEL_DIR="/mnt/public/hf_models/Qwen/"
-MODEL_DIR="/mnt/shared-storage-user/marti/models"
-# SHORT_NAME=${1:-"Qwen2.5-3B-Instruct"}
-SHORT_NAME=${1:-"Qwen3-4B-Instruct-2507"}
+MODEL_DIR="/your_model_path"
+SHORT_NAME=${1:-"Qwen2.5-3B-Instruct"}
 PRETRAIN="${MODEL_DIR}/${SHORT_NAME}"
 PROMPT_MAX_LEN=16384
 GENERATE_MAX_LEN=4096
@@ -22,9 +17,8 @@ MAX_LEN=30000
 ADVANTAGE="reinforce"
 
 # set your root dir
-ROOT_DIR="/mnt/shared-storage-user/marti/MARTI-v2"
 TASK="MATH"
-PROMPT_DATA="json@/mnt/shared-storage-user/marti/lipengfei/MARTI_HSY/data/${TASK}"
+PROMPT_DATA="json@${ROOT_DIR}/data/${TASK}"
 
 # Workflow config
 NUM_TASKS=16
@@ -36,9 +30,19 @@ TENSORBOARD="${ROOT_DIR}/logs/tensorboard/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-
 LOG_DIR=${ROOT_DIR}/logs/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}.log
 
 # port&env
+export DOCKER_HOST=tcp://100.96.26.35:2376
+# 更新 no_proxy/NO_PROXY，添加远程IP 100.103.184.53，避免代理拦截
+export no_proxy=localhost,127.0.0.1,100.96.26.35
+export NO_PROXY=$no_proxy 
 export PYTHONNOUSERSITE=1
 export MASTER_PORT=8266
 export OPENRLHF_ASYNC_NUM_TASKS=${NUM_TASKS}
+
+# check whether sandbox run successfully
+curl 'http://100.96.26.35:8080/run_code' \
+  -H 'Content-Type: application/json' \
+  --noproxy localhost \
+  --data-raw '{"code": "print(\"Hello, world!\")", "language": "python"}'
 
 # default agent config
 DEFAULT_AGENT="{
@@ -68,7 +72,7 @@ TOOL_ARGS="{
             \"enable_rate_limiting\": true,
             \"rate_limit\": 256,
             \"timeout\": 30,
-            \"base_url\": \"http://101.6.64.188:10086/run_code\",
+            \"base_url\": \"http://100.96.26.35:8080/run_code\",
             \"schema_path\": \"examples/schema/code.json\"
         }
     }
@@ -91,8 +95,8 @@ AGENT0="{
     \"0\": {
         \"role\": \"agent_problem_solver\",
         \"pretrain\": \"${PRETRAIN}\",
-        \"save_path\": \"/mnt/shared-storage-user/marti/MARTI-v2/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0\",
-        \"ckpt_path\": \"/mnt/shared-storage-user/marti/MARTI-v2/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0\",
+        \"save_path\": \"${ROOT_DIR}/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0\",
+        \"ckpt_path\": \"${ROOT_DIR}/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0\",
         \"is_tuning\": true,
         \"chat_template\": \"You are Agent Problem Solver, and your role is to collaborate with other agents to address various challenges.\nFor each problem, please follow these steps:\n    1. **Document Your Solution**: Write your solution step by step, ensuring it is independent of the solutions provided by other agents.\n    2. **Engage in Discussion**: Once you have outlined your solution, discuss your approach and findings with the other agents.\n\nProblem: $question\n\nPlease reason step by step, and put your final answer within \\boxed{}.\"
     }
@@ -102,8 +106,8 @@ AGENT1="{
     \"1\": {
         \"role\": \"agent_code_executor\",
         \"pretrain\": \"${PRETRAIN}\",
-        \"save_path\": \"/mnt/shared-storage-user/marti/MARTI-v2/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent1\",
-        \"ckpt_path\": \"/mnt/shared-storage-user/marti/MARTI-v2/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent1\",
+        \"save_path\": \"${ROOT_DIR}/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent1\",
+        \"ckpt_path\": \"${ROOT_DIR}/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent1\",
         \"is_tuning\": true,
         \"code_execution\": true,
         \"chat_template\": \"You are Agent Code Executor. You can solve problems only writing commented Python code.\nFor each problem, please follow these steps:\n    1. **Develop Your Solution**: Write your solution in Python code, detailing each step independently from the solutions provided by other agents.\n    2. **Utilize SymPy**: Feel free to use the SymPy package to facilitate calculations and enhance your code's efficiency.\n    3. **Display Results**: Ensure that you **print the final result at the end of your Python code** (e.g., \`print(_result_)\`).\n    4. **Engage in Discussion**: After obtaining the result from your Python code, discuss your findings with the other agents.\nAlways format your Python code within:\n\`\`\`python\n# your code here\nprint(_result_)\n\`\`\`\n\nProblem: $question\n\nHere is the output from Agent Problem Solver:\n$agent_problem_solver\"
@@ -114,14 +118,14 @@ AGENT2="{
     \"2\": {
         \"role\": \"agent_verifier\",
         \"pretrain\": \"${PRETRAIN}\",
-        \"save_path\": \"/mnt/shared-storage-user/marti/MARTI-v2/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent2\",
-        \"ckpt_path\": \"/mnt/shared-storage-user/marti/MARTI-v2/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent2\",
+        \"save_path\": \"${ROOT_DIR}/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent2\",
+        \"ckpt_path\": \"${ROOT_DIR}/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent2\",
         \"is_tuning\": true,
         \"chat_template\": \"You are Agent Verifier.\nYour role is to critically evaluate the solutions proposed by other agents step by step and provide a final solution.\n    1. **Solution Requirement**: Before making any decisions, ensure you have received solutions from both Agent Code Executor and Agent Problem Solver.\n    2. **Avoid Assumptions**: Pay attention to the variables provided in the original problem statement versus those assumed by the agents. **Assumed values are not valid for the solution** and can lead to inaccuracies. Never base your solution on assumed values. Always base your solution on the explicitly given variables to ensure correctness. If a problem is deemed unsolvable due to missing information, return: **SOLUTION_FOUND \\boxed{'None'}**.\n    3. **Evaluating Conflicting Solutions**: If different answers are presented during the discussion, choose the most appropriate solution based on your evidence or initiate further discussion to clarify.\n    4. **Final Solution Declaration**: When you are confident about the final solution, return it as follows: **SOLUTION_FOUND \\boxed{_solution_value_here_}**. Ensure that only numerical values are placed inside the \\boxed{}; any accompanying text should be outside.\n\nProblem: $question\n\nHere is the output from Agent Problem Solver:\n$agent_problem_solver\n\nHere is the output from Agent Code Executor:\n$agent_code_executor\"
     }
 }"
 
-# WANDB_KEY="6461769bfefb0c4fa60bde38d55799cf3ee3986e"  # your wandb API key
+# WANDB_KEY="your_wandb_key"  # your wandb API key
 # WANDB_PROJECT="openrlhf_math_ppo"
 # # WANDB_ORG="your-wandb-org"  # optional
 # # WANDB_GROUP="${ADVANTAGE}-${SHORT_NAME}-${TASK}"  # optional
@@ -132,15 +136,11 @@ export NCCL_DEBUG=WARN
 mkdir -p "${ROOT_DIR}/logs"
 mkdir -p "${WORKFLOW_SAVE_PATH}"
 mkdir -p "${TENSORBOARD}"
-mkdir -p "/mnt/shared-storage-user/marti/MARTI-v2/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0"
-mkdir -p "/mnt/shared-storage-user/marti/MARTI-v2/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent1"
-mkdir -p "/mnt/shared-storage-user/marti/MARTI-v2/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0"
-mkdir -p "/mnt/shared-storage-user/marti/MARTI-v2/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent1"
+mkdir -p "${ROOT_DIR}/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0"
+mkdir -p "${ROOT_DIR}/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent1"
+mkdir -p "${ROOT_DIR}/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0"
+mkdir -p "${ROOT_DIR}/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent1"
 
-# mkdir -p "/mnt/public/tk/1024/MARTI-Dev-openrlhf-v2/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0"
-# mkdir -p "/mnt/public/tk/1024/MARTI-Dev-openrlhf-v2/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent1"
-# mkdir -p "/mnt/public/tk/1024/MARTI-Dev-openrlhf-v2/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0"
-# mkdir -p "/mnt/public/tk/1024/MARTI-Dev-openrlhf-v2/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent1"
 
 # 128 128 8 
 python3 -m openrlhf.cli.multi_agent_train_ppo_ray \

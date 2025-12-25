@@ -7,19 +7,21 @@ import srsly
 logger = logging.getLogger(__name__)
 logger.setLevel(os.getenv("MARTI_LOGGING_LEVEL", "WARN"))
 
-def apply_template_with_tokenizer(tokenizer, prompt, tools=None):
+def apply_template_with_tokenizer(tokenizer, prompt, tools=None, enable_thinking=False):
     if tools is None:
         return tokenizer.apply_chat_template(
             [{"role": "user", "content": prompt}],
             tokenize=False,
             add_generation_prompt=True,
+            enable_thinking=enable_thinking
         )
     else:
         return tokenizer.apply_chat_template(
             [{"role": "user", "content": prompt}],
             tokenize=False,
             add_generation_prompt=True,
-            tools=tools
+            tools=tools,
+            enable_thinking=enable_thinking
         )
 
 def assign_action_mask(turn):

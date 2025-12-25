@@ -247,6 +247,7 @@ def init_agent(agent_id, agent_config, global_config, strategy, pg_id, unified_p
         # "eos_token_id": tokenizer.eos_token_id,
     }
 
+    pg = None
     if agent_config["is_tuning"]:
         pg = unified_pg_list[pg_id]
 

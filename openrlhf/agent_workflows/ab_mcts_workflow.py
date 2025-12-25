@@ -54,6 +54,7 @@ async def workflow(
     task: str="code",
     **kwargs,
 ):
+    eval_only = os.environ.get("eval_only", "0") == "1"
     start_time = time.time()
     if task == "code":
         problem_cls = CodeProblem
@@ -121,53 +122,76 @@ async def workflow(
             llm_log_dir=llm_log_dir,
             prompt_template=prompt_template,
             tokenizer=agent["tokenizer"],
+            enable_thinking=agent["enable_thinking"]
         )
         for agent in agents
     }
     agents_dict = {agent["agent_id"]: agent for agent in agents}
-    search_tree = algo.init_tree()
-    logger.info("Initialized new search tree")
-    # TODO add checkpoint loading logic
-    # 1. add checkpoint loading logic
-    # try:
-    #     if checkpoint_path.exists() and is_eval:
-    #         with open(checkpoint_path, "rb") as f:
-    #             search_tree = pickle.load(f)
-    #         logger.info(f"Successfully loaded checkpoint from {checkpoint_path}")
-    #         # get cost so far
-    #         # if (save_dir / "cost_summary.json").exists():
-    #         #     with open(save_dir / "cost_summary.json", "r") as f:
-    #         #         cost_summary = json.load(f)
-    #         #         total_cost = cost_summary["total_cost"]
-    #         #         cost_by_model = cost_summary["cost_by_model"]
-    #         # # get time so far if available
-    #         # time_summary_path = save_dir / "time_summary.json"
-    #         # if time_summary_path.exists():
-    #         #     with open(time_summary_path, "r") as f:
-    #         #         time_summary = json.load(f)
-    #         #         total_time = time_summary.get("total_time", 0.0)
-    #         #         time_by_model = time_summary.get("time_by_model", {})
-    #         #         node_times = time_summary.get("node_times", [])
-    #     else:
-    #         search_tree = algo.init_tree()
-    #         logger.info("Initialized new search tree")
-    # except Exception as e:
-    #     logger.warning(f"Failed to load checkpoint: {e}, initializing new tree")
-    #     search_tree = algo.init_tree()
     
-    max_num_nodes = workflow_args["max_num_nodes"] if not is_eval else workflow_args["eval_max_num_nodes"]
+    # ==================== Checkpoint Loading Logic ====================
+    # In eval mode, try to load checkpoint for resume capability
+    checkpoint_loaded = False
+    if eval_only and is_eval and checkpoint_path.exists():
+        try:
+            with open(checkpoint_path, "rb") as f:
+                search_tree = pickle.load(f)
+            checkpoint_loaded = True
+            loaded_nodes = len(algo.get_state_score_pairs(search_tree))
+            logger.info(f"✅ Successfully loaded checkpoint with {loaded_nodes} existing nodes")
+        except Exception as e:
+            logger.warning(f"❌ Failed to load checkpoint: {e}")
+            search_tree = algo.init_tree()
+    else:
+        if eval_only and is_eval:
+            logger.info("No checkpoint found, starting fresh evaluation")
+        search_tree = algo.init_tree()
+
+    # Calculate initial nodes and target nodes
     initial_num_nodes = len(algo.get_state_score_pairs(search_tree))
-    for i in tqdm(range(max_num_nodes - initial_num_nodes), desc=f"MCTS Process"):
+    max_num_nodes = workflow_args["max_num_nodes"] if not is_eval else workflow_args["eval_max_num_nodes"]
+    nodes_to_expand = max_num_nodes - initial_num_nodes
+
+    logger.info(f"📊 Node Statistics:")
+    logger.info(f"  - Initial nodes: {initial_num_nodes}")
+    logger.info(f"  - Target nodes: {max_num_nodes}")
+    logger.info(f"  - Nodes to expand: {nodes_to_expand}")
+    
+    if nodes_to_expand <= 0:
+        logger.warning(f"⚠️  Already reached target nodes ({initial_num_nodes} >= {max_num_nodes}), skipping expansion")
+
+    # ==================== MCTS Search Loop with Periodic Saving ====================
+    # Get checkpoint save interval from config (default: every 2 nodes)
+    checkpoint_interval = workflow_args.get("checkpoint_save_interval", 2)
+    for i in tqdm(range(nodes_to_expand), desc=f"MCTS Process (Prompt {prompt_id})"):
         node_start_time = time.time()
         if is_async:
             search_tree = await algo.step(search_tree, generate_fns)
         else:
             search_tree = algo.step(search_tree, generate_fns)
-        n_answers = len(algo.get_state_score_pairs(search_tree))
 
+        current_nodes = len(algo.get_state_score_pairs(search_tree))
+        
+        # Periodic checkpoint saving in eval mode
+        if eval_only and is_eval and (i + 1) % checkpoint_interval == 0:
+            try:
+                temp_checkpoint_path = save_dir / "checkpoints" / f"checkpoint_temp.pkl"
+                with open(temp_checkpoint_path, "wb") as f:
+                    pickle.dump(search_tree, f)
+                # Atomic rename to avoid corrupted checkpoints
+                temp_checkpoint_path.rename(checkpoint_path)
+                logger.info(f"💾 Checkpoint saved at {current_nodes} nodes (iteration {i+1}/{nodes_to_expand})")
+            except Exception as e:
+                logger.warning(f"Failed to save periodic checkpoint: {e}")
+
+    # ==================== Final Checkpoint Save ====================
     if is_eval:
-        with open(save_dir / "checkpoints" / f"checkpoint_latest.pkl", "wb") as f:
-            pickle.dump(search_tree, f)
+        try:
+            with open(checkpoint_path, "wb") as f:
+                pickle.dump(search_tree, f)
+            final_nodes = len(algo.get_state_score_pairs(search_tree))
+            logger.info(f"✅ Final checkpoint saved with {final_nodes} nodes")
+        except Exception as e:
+            logger.error(f"Failed to save final checkpoint: {e}")
 
     # node：Node(state=state, score=score, parent=parent, expand_idx=self.size - 1), 
     # state: NodeState(generation_result=result, eval_results=eval_results, model_name=model_name)
@@ -177,11 +201,9 @@ async def workflow(
     if is_eval:
         final_reward = get_coverage_and_passk(valid_nodes, code_problem, workflow_args, checkpoint_path, prompt_id)
     else:
-        final_reward = [0, 0]
+        final_reward = [0, 0, 0]
     # valid_nodes.sort(key=lambda node: node.state.model_name)
 
-
-    # TODO 修正返回的数据格式
     node_records = []
     for node_id, node in enumerate(valid_nodes):
         node_state = node.state

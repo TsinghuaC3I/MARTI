@@ -191,7 +191,9 @@ class BasePPOTrainer(ABC):
                     if k == "generated_samples":
                         # Record generated samples in TensorBoard using simple text format
                         text, reward = v
-                        formatted_text = f"Sample:\n{text}\n\nReward: {reward:.4f}"
+                        # Convert tensor to scalar for formatting
+                        reward_val = reward.item() if hasattr(reward, 'item') else float(reward)
+                        formatted_text = f"Sample:\n{text}\n\nReward: {reward_val:.4f}"
                         self._tensorboard.add_text("train/generated_samples", formatted_text, global_step)
                     else:
                         self._tensorboard.add_scalar(f"train/{k}", v, global_step)

@@ -4,6 +4,7 @@ import asyncio
 import copy
 from typing import Dict, List, Any, Optional
 from openrlhf.utils.logging_utils import init_logger
+from openrlhf.agent_workflows.steps.mcp_step import step_with_tools
 import uuid
 import os
 
@@ -29,6 +30,7 @@ class MultiAgentWrapper:
         self.agents = agents
         self.workflow_args = workflow_args
         self.workflow_func_path = kwargs.pop("workflow_func_path")
+        self.agent_func_path = kwargs.pop("agent_func_path", None)
         self.result_queue = asyncio.Queue()
 
         # Load workflow function once during initialization
@@ -41,6 +43,18 @@ class MultiAgentWrapper:
         else:
             raise ValueError("Workflow path must be a Python file")
 
+        if self.agent_func_path is None:
+            self.agent_step = step_with_tools
+        elif self.agent_func_path.endswith(".py"):
+            import importlib.util
+
+            spec = importlib.util.spec_from_file_location("step", self.agent_func_path)
+            agent_module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(agent_module)
+            self.agent_step = agent_module.step
+        else:
+            raise ValueError("Agent path must be a Python file")
+
         # Create semaphore to control concurrent task execution
         NUM_TASKS = int(os.environ.get("OPENRLHF_ASYNC_NUM_TASKS", 128))
         self.semaphore = asyncio.Semaphore(NUM_TASKS)
@@ -52,7 +66,7 @@ class MultiAgentWrapper:
         metadatas: Optional[List[Dict]] = None,
         max_length: int = None,
         is_eval: bool = False,
-        tool_manager: Dict = None
+        tool_manager: Optional[Any] = None
     ) -> List[Dict[str, Any]]:
         """Process requests using multi-agent workflow."""
         
@@ -75,6 +89,7 @@ class MultiAgentWrapper:
                     max_length=max_length,
                     is_eval=is_eval,
                     prompt_id=prompt_id,
+                    agent_step=self.agent_step
                 )
                 
                 # Add timing information

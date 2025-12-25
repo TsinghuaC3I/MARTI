@@ -2,14 +2,9 @@
 # gspo + tis + datafilter + overlong
 # Debate workflow with 4 GPUs
 # set -x
-source /mnt/shared-storage-user/marti/miniconda3/etc/profile.d/conda.sh
-conda activate marti_vllm
-which conda
-which python
-# cd /mnt/shared-storage-user/marti/OpenRLHF
 
 # basic config
-MODEL_DIR="/mnt/shared-storage-user/marti/models/"
+MODEL_DIR="/your_model_path"
 SHORT_NAME=${1:-"Qwen3-4B-Instruct-2507"}
 PRETRAIN="${MODEL_DIR}${SHORT_NAME}"
 PROMPT_MAX_LEN=4096
@@ -19,9 +14,9 @@ OVERLONG_BUFFER_LEN=2048
 MAX_LEN=30000
 ADVANTAGE="group_norm"
 
-ROOT_DIR="/mnt/shared-storage-user/marti/MARTI-v2"
+ROOT_DIR=""
 TASK="MATH"
-PROMPT_DATA="json@/mnt/shared-storage-user/marti/lipengfei/MARTI_HSY/data/${TASK}"
+PROMPT_DATA="json@${ROOT_DIR}/data/${TASK}"
 
 # Workflow config
 NUM_TASKS=16
@@ -88,7 +83,7 @@ AGENT1="{
     }
 }"
 
-WANDB_KEY="6461769bfefb0c4fa60bde38d55799cf3ee3986e"  # your wandb API key
+WANDB_KEY="your_wandb_key"  # your wandb API key
 # WANDB_PROJECT="openrlhf_math_ppo"
 # # WANDB_ORG="your-wandb-org"  # optional
 # # WANDB_GROUP="${ADVANTAGE}-${SHORT_NAME}-${TASK}"  # optional

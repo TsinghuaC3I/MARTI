@@ -19,8 +19,6 @@ from vllm import SamplingParams
 from openrlhf.agent_workflows.utils import register_mcp_tools, register_openai_tools, print_tools, assign_action_mask
 from openrlhf.agent_workflows.tools.manager import ToolManager
 from openrlhf.agent_workflows.tools.mcp_manager import MCPManager
-# from openrlhf.trainer.ppo_utils.multi_agent_samples_generator import MultiAgentSamplesGenerator
-#from openrlhf.worlds.base_world import Samples
 
 logger = init_logger(__name__)
 
@@ -302,7 +300,7 @@ class MultiAgentSamplesGenerator(SamplesGenerator):
                     workflow_func_path=self.args.workflow_func_path
                 )
                 ref = multi_agent_wrapper.add_requests.remote(
-                    # tool_manager=self.tool_manager,
+                    tool_manager=self.tool_manager,
                     prompts=prompts,
                     labels=labels,
                     metadatas=metadatas,

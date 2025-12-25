@@ -23,45 +23,6 @@ from openrlhf.agent_workflows.tools.mcp_manager import MCPManager
 
 logger = init_logger(__name__)
 
-def update_samples_with_rewards(rewards_info, samples_list):
-    """Process rewards info and update samples with rewards, scores and extra logs.
-
-    Args:
-        rewards_info: List of reward information dictionaries
-        samples_list: List of Experience objects to update
-    """
-    # Process rewards and scores
-    samples_len = [len(sample.sequences) for sample in samples_list]
-
-    rewards_list = torch.cat([torch.as_tensor(info["rewards"]) for info in rewards_info], dim=0).split(samples_len)
-    if "scores" in rewards_info[0]:
-        scores_list = torch.cat([torch.as_tensor(info["scores"]) for info in rewards_info], dim=0).split(samples_len)
-    else:
-        scores_list = rewards_list
-
-    # Process extra_logs if present
-    if "extra_logs" in rewards_info[0]:
-        # Merge all extra_logs tensors first
-        merged_logs = {
-            key: torch.cat(
-                [torch.as_tensor(logs[key]) for logs in [info["extra_logs"] for info in rewards_info]], dim=0
-            ).split(samples_len)
-            for key in rewards_info[0]["extra_logs"].keys()
-        }
-
-    # Update samples with rewards, scores and extra logs
-    for i, samples in enumerate(samples_list):
-        samples.rewards = rewards_list[i]
-        samples.scores = scores_list[i]
-        samples.info["score"] = scores_list[i]
-        samples.info["reward"] = rewards_list[i]
-        if "extra_logs" in rewards_info[0]:
-            for key, values in merged_logs.items():
-                samples.info[key] = values[i]
-
-    return samples_list
-
-
 class MultiAgentSamplesGenerator(SamplesGenerator):
     def __init__(self, agents, strategy, prompt_max_len, credit_model=None, *args, **kwargs):
         self.strategy = strategy
@@ -69,6 +30,7 @@ class MultiAgentSamplesGenerator(SamplesGenerator):
         self.agents = agents
         # self.tokenizer_list = tokenizer_list
         self.prompt_max_len = prompt_max_len
+        self.generate_max_len = self.args.generate_max_len
         self.credit_model = credit_model
         self.credit_tokenizer=None
         """
@@ -88,6 +50,7 @@ class MultiAgentSamplesGenerator(SamplesGenerator):
 
         self.num_agents = len(self.agents)
         self.num_vllms = len(self.agents[0]["llms"])
+        self.total_max_len = self.args.max_len if self.args.max_len is not None else self.prompt_max_len + self.generate_max_len
         self.packing_samples = getattr(self.args, "packing_samples", False)
         self._init_tool_manager()
         self._init_processor()
@@ -111,8 +74,9 @@ class MultiAgentSamplesGenerator(SamplesGenerator):
 
     def _init_tool_manager(self):
         self.tools_config = getattr(self.args, "tools_config", {})
-        print(f"Tool config is: {self.tools_config}")
+        # print(f"Tool config is: {self.tools_config}")
         assert self.packing_samples, "Only support packing samples"
+        # assert getattr(self.args, "packing_samples", True), "Only support packing samples"
 
         if self.tools_config.get("mcp_url", None) is not None:
             self.tool_manager = MCPManager(self.tools_config)
@@ -224,7 +188,6 @@ class MultiAgentSamplesGenerator(SamplesGenerator):
         args = self.strategy.args
         # Set return_list to False, and then we only get one llm for async request
 
-        # TODO check is eval的使用方式，优化
         is_eval = kwargs.get("is_eval", False)
         rank_agents_list = [self.get_rank_agent(
             rank=rank,
@@ -253,15 +216,10 @@ class MultiAgentSamplesGenerator(SamplesGenerator):
             is_eval
         )
         # if self.processor: 
-        # TODO add default processor
         if self.processor:
             all_trajectories = self.processor(all_trajectories, self.num_agents, self.args)
 
-        print(f"总共有{len(all_prompts)}个prompts")
-        assert len(all_trajectories) == len(all_prompts), f"轨迹数据和prompt的数量应该是一致的：{len(all_trajectories)} vs {len(all_prompts)}"
         rollout_samples = self.prepare_samples(all_trajectories, truncate_length, is_eval)
-        print(f"总共有{len(rollout_samples)}个rollout samples数据")
-        assert len(rollout_samples) > len(all_trajectories), f"展平之后总的数据量应该大于轨迹数量,{len(rollout_samples)} vs {len(all_trajectories)}"
         # assert isinstance(rollout_samples, list), f"rollout samples should be list"
         # assert isinstance(rollout_samples[0], Experience), f"rollout samples [0] should be experience"
         return rollout_samples
@@ -292,7 +250,7 @@ class MultiAgentSamplesGenerator(SamplesGenerator):
                 labels=labels,
                 metadatas=metadatas,
                 is_eval=is_eval,
-                # max_length=self.total_max_len,
+                max_length=self.total_max_len,
             )
             refs.append(ref)
             all_wrappers.append(multi_agent_wrapper)
@@ -349,7 +307,34 @@ class MultiAgentSamplesGenerator(SamplesGenerator):
                     attention_mask = torch.tensor([1] * len(sequences))
                     action_mask = torch.zeros_like(attention_mask)
                     action_mask[-len(output_ids):] = 1
+                    if step.get("action_mask", None):
 
+                        traj_mask = torch.tensor(
+                            step["action_mask"],
+                            dtype=action_mask.dtype,
+                            device=action_mask.device,
+                        )
+
+                        assert traj_mask.numel() == len(output_ids), (
+                            f"traj_mask len {traj_mask.numel()} != output_ids len {len(output_ids)} with sequence len {len(sequences)}"
+                        )
+
+                        action_mask[-len(output_ids):] = traj_mask
+
+                        # seq_len = len(sequences)
+                        # traj_mask = torch.tensor(step.get("action_mask", None), dtype=attention_mask.dtype)
+                        # assert traj_mask.numel() == len(output_ids), f"output action mask len should be equal with output_ids, but get: traj_mask.numel() vs len(output_ids)"
+                        # if traj_mask.numel() != seq_len:
+                        #     prompt_len = seq_len - traj_mask.numel()
+                        #     action_mask = torch.cat(
+                        #         [
+                        #             torch.zeros(prompt_len, dtype=traj_mask.dtype),
+                        #             traj_mask,
+                        #         ],
+                        #         dim=0,
+                        #     )
+                        # else:
+                        #     action_mask = traj_mask
                     # Apply length limit
                     sequences = sequences[:truncate_length].to("cpu")
                     attention_mask = attention_mask[:truncate_length].to("cpu")

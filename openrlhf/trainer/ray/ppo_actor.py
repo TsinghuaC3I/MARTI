@@ -251,8 +251,15 @@ class ActorPPOTrainer(ABC):
         )
         experience.info["ppo_clip_ratio"] = clip_ratio.detach()
         experience.info["ppo_kl"] = ppo_kl.detach()
-        if vllm_metrics["vllm_kl"] is not None:
-            experience.info["vllm_kl"] = vllm_metrics["vllm_kl"].detach()
+        # if vllm_metrics["vllm_kl"] is not None:
+        #     experience.info["vllm_kl"] = vllm_metrics["vllm_kl"].detach()
+        if vllm_metrics is not None and isinstance(vllm_metrics, dict):
+            for key, value in vllm_metrics.items():
+                if value is not None:
+                    if torch.is_tensor(value):
+                        experience.info[key] = value.detach()
+                    else:
+                        experience.info[key] = value
 
         if self.args.use_kl_loss:
             if self.args.init_kl_coef > 0:

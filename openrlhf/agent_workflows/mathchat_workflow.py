@@ -134,12 +134,14 @@ async def workflow(
     trajectory.append({
         "turn_id": 0,
         "agent_index": 0,
+        "agent_id": generator_agent["agent_id"],
         "agent_name": generator_agent["agent_id"],
         "agent_role": generator_agent["agent_role"],
         "agent_input": generator_input_prompt,
         "agent_output": generator_output,
         "output_ids": generator_output_token_ids,
         "sequence_ids": generator_sequence_ids,
+        "rollout_log_prob": generator_rollout_log_probs,
         "metadata": {}
     })
 
@@ -177,24 +179,21 @@ async def workflow(
             coder_rollout_log_probs.extend([0.0] * len(coder_output_token_ids))
 
     # Execute any tools in coder output
-    # try:
-    #     response_content, response_metadata = await tool_manager.execute_tool(
-    #         "code_interpreter", {"code": coder_content}, metadata=metadata
-    #     )
-    #     status = response_metadata["status"]
-    # except Exception as e:
-    #     response_content = f"ERROR"
-    #     status = "failed"
+    try:
+        response_content, response_metadata = await tool_manager.execute_tool(
+            "code_interpreter", {"code": coder_content}, metadata=metadata
+        )
+        status = response_metadata["status"]
+    except Exception as e:
+        response_content = f"ERROR"
+        status = "failed"
 
-    response_content = f"ERROR"
-    status = "failed"
-
-    status = response_metadata["status"]
     execution = coder_content + \
         f"\nExecution status: {status}\nCode output: {response_content[:512]}"
     trajectory.append({
         "turn_id": 1,
         "agent_index": 1,
+        "agent_id": coder_agent["agent_id"],
         "agent_name": coder_agent["agent_id"],
         "agent_role": coder_agent["agent_role"],
         "agent_input": coder_input_prompt,
@@ -244,7 +243,8 @@ async def workflow(
     trajectory.append({
         "turn_id": 2,
         "agent_index": 2,
-        "agent_name":  refiner_agent["agent_id"],
+        "agent_id": refiner_agent["agent_id"],
+        "agent_name": refiner_agent["agent_id"],
         "agent_role": refiner_agent["agent_role"],
         "agent_input": refiner_input_prompt,
         "agent_output": refiner_output,

@@ -5,7 +5,7 @@ from openrlhf.agent_workflows.third_party.mcts_utils.ab_mcts.llm_generation_inte
 from openrlhf.agent_workflows.third_party.mcts_utils.ab_mcts.eval_result import EvalResult
 from openrlhf.agent_workflows.third_party.mcts_utils.ab_mcts.tasks.base import Task
 from openrlhf.agent_workflows.third_party.mcts_utils.ab_mcts.prompts.base import PromptTemplate
-
+import csv
 import json
 import ray
 import time
@@ -56,7 +56,7 @@ def process_node(node, task):
 
     return node_idx, public_score, private_score
 
-def apply_template_with_tokenizer(tokenizer, prompt):
+def apply_template_with_tokenizer(tokenizer, prompt, enable_thinking=False):
     if isinstance(prompt, str):
         message = [{"role": "user", "content": prompt}]
     elif isinstance(prompt, list):
@@ -65,6 +65,7 @@ def apply_template_with_tokenizer(tokenizer, prompt):
         message,
         tokenize=False,
         add_generation_prompt=True,
+        enable_thinking=enable_thinking,
     )
 
 async def generate_fn_async(
@@ -77,6 +78,7 @@ async def generate_fn_async(
     sampling_params: dict,
     llm_log_dir: Path,
     tokenizer: None,
+    enable_thinking: bool=False,
 ) -> tuple[NodeState, float]:
     start_time = time.time()
 
@@ -93,7 +95,7 @@ async def generate_fn_async(
             {"role": "user", "content": feedback_prompt},
         ]
     
-    messages = apply_template_with_tokenizer(tokenizer, messages)
+    messages = apply_template_with_tokenizer(tokenizer, messages, enable_thinking)
 
     assert isinstance(messages, str), f"messages must be str"
     assert isinstance(sampling_params, SamplingParams)
@@ -231,7 +233,7 @@ def generate_fn(
 
 def get_coverage_and_passk(node_list, problem, workflow_args, checkpoint_path=None, prompt_id=0) -> List[float]:
     n_jobs = workflow_args.get("eval_n_jobs", 8)
-    # n_jobs = min(8, os.cpu_count())  # 取 CPU 核心数上限
+    # n_jobs = min(8, os.cpu_count())
     top_k = workflow_args.get("top_k", 1)
     proc_ret_path = Path(checkpoint_path.as_posix().replace(".pkl", "_proc_result.json"))
     # Parallel processing of nodes
@@ -264,22 +266,40 @@ def get_coverage_and_passk(node_list, problem, workflow_args, checkpoint_path=No
         private_scores.append(private_score)
     assert len(node_idx_list) == len(public_scores) == len(private_scores)
     # assert public_scores != private_scores, "public_scores and private_scores should not be the same"
-    coverage_final_reward = 0
+    passkk_reward = 0
     for node_id in range(len(node_idx_list)):
-        coverage_final_reward = max(private_scores[node_id], coverage_final_reward)
+        passkk_reward = max(private_scores[node_id], passkk_reward)
 
     # transform NumPy array
     public_arr = np.array(public_scores)
     private_arr = np.array(private_scores)
 
     # get top_k index_list 
-    topk_idx = np.argsort(-public_arr)[:top_k]
+    # topk_idx = np.argsort(-public_arr)[:top_k]
+    # # np.lexsort((-idx, -window_reward), axis=0)
+    # logger.info(f"Prompt {prompt_id} - Top-{top_k} indices: {topk_idx.tolist()}, public_scores: {public_arr[topk_idx].tolist()}")
+
+    # get top_k index_list 
+    # topk_idx = np.argsort(-public_arr)[:top_k]
+    idx = np.arange(len(public_arr))
+    # sort_idx = np.lexsort((-public_arr, -idx))
+    topk_idx = np.lexsort((-idx, -public_arr))[:top_k]
+    logger.info(f"Prompt {prompt_id} - Top-{top_k} indices: {topk_idx.tolist()}, public_scores: {public_arr[topk_idx].tolist()}")
 
     # select private score
     selected_private = private_arr[topk_idx]
 
     # get best pass@k
-    best_final_reward = selected_private.max()
+    # best_final_reward = selected_private.max()
+    pass1_reward = selected_private.max()
+    
+    # avg_private_score: public_score == 1, private_score is average value
+    perfect_public_mask = public_arr == 1.0
+    if np.any(perfect_public_mask):
+        avg_private_score = np.mean(private_arr[perfect_public_mask])
+    else:
+        avg_private_score = pass1_reward
+
 
     # save node scores info 
     proc_ret = {
@@ -289,6 +309,74 @@ def get_coverage_and_passk(node_list, problem, workflow_args, checkpoint_path=No
     }
     with open(proc_ret_path, "w") as f:
         json.dump(proc_ret, f)
+    
+    # Save CSV files for public and private scores to top-level directory
+    # checkpoint_path structure: workflow_save_path / prompt_id / checkpoints / checkpoint_latest.pkl
+    # We want to save CSVs to: workflow_save_path (go up 3 levels from checkpoint file)
+    if checkpoint_path:
+        csv_dir = checkpoint_path.parent.parent.parent  # Go from checkpoint_latest.pkl -> checkpoints -> prompt_id -> workflow_save_path
+    else:
+        csv_dir = Path(".")
+    public_csv_path = csv_dir / "all_public_scores.csv"
+    private_csv_path = csv_dir / "all_private_scores.csv"
+    
+    # Read existing data to avoid duplicates
+    existing_public = set()
+    existing_private = set()
+    
+    if public_csv_path.exists():
+        with open(public_csv_path, "r", newline='') as f:
+            reader = csv.reader(f)
+            next(reader, None)  # Skip header
+            for row in reader:
+                if len(row) >= 2:
+                    existing_public.add((int(row[0]), int(row[1])))  # (prompt_id, node_idx)
+    
+    if private_csv_path.exists():
+        with open(private_csv_path, "r", newline='') as f:
+            reader = csv.reader(f)
+            next(reader, None)  # Skip header
+            for row in reader:
+                if len(row) >= 2:
+                    existing_private.add((int(row[0]), int(row[1])))
+    
+    # Prepare data to write (only new entries)
+    new_public_data = []
+    new_private_data = []
+    
+    for node_idx, public_score, private_score in zip(node_idx_list, public_scores, private_scores):
+        key = (prompt_id, node_idx)
+        if key not in existing_public:
+            new_public_data.append([prompt_id, node_idx, public_score])
+        if key not in existing_private:
+            new_private_data.append([prompt_id, node_idx, private_score])
+    
+    # Write new data
+    write_public_header = not public_csv_path.exists()
+    write_private_header = not private_csv_path.exists()
+    
+    if new_public_data:
+        with open(public_csv_path, "a", newline='') as f:
+            writer = csv.writer(f)
+            if write_public_header:
+                writer.writerow(["prompt_id", "node_idx", "public_score"])
+            writer.writerows(new_public_data)
+        logger.info(f"Prompt {prompt_id} - Added {len(new_public_data)} new entries to public scores CSV")
+    else:
+        logger.info(f"Prompt {prompt_id} - No new public scores to add (all already exist)")
+    
+    if new_private_data:
+        with open(private_csv_path, "a", newline='') as f:
+            writer = csv.writer(f)
+            if write_private_header:
+                writer.writerow(["prompt_id", "node_idx", "private_score"])
+            writer.writerows(new_private_data)
+        logger.info(f"Prompt {prompt_id} - Added {len(new_private_data)} new entries to private scores CSV")
+    else:
+        logger.info(f"Prompt {prompt_id} - No new private scores to add (all already exist)")
+    
+    logger.info(f"Prompt {prompt_id} - Saved {len(node_idx_list)} nodes to CSV files: {public_csv_path} and {private_csv_path}")
+    
     # logger.info(f"the coverage_final_reward of {prompt_id}-th prompt: {coverage_final_reward}")
     # logger.info(f"the best_final_reward of {prompt_id}-th prompt: {best_final_reward}")
-    return [coverage_final_reward, best_final_reward]
+    return [pass1_reward, passkk_reward, avg_private_score]

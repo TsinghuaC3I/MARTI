@@ -8,7 +8,7 @@ import re
 from typing import Dict, List, Any, Optional, Callable
 from openrlhf.utils.logging_utils import init_logger
 from openrlhf.verifiers.auto_verify import auto_verify
-from marti.worlds.workflows.utils import apply_template_with_tokenizer
+from openrlhf.agent_workflows.utils import apply_template_with_tokenizer
 
 logger = init_logger(__name__)
 logger.setLevel(os.getenv("MARTI_LOGGING_LEVEL", "WARN"))
@@ -77,8 +77,8 @@ async def workflow(
     prompt: str,
     label: str,
     agents: List[Dict[str, Any]],
-    tool_manager,
-    task: str,
+    tool_manager=None,
+    task: str = "review_group",
     metadata: Optional[Dict] = None,
     **kwargs
 ) -> Dict[str, Any]:
@@ -114,31 +114,41 @@ async def workflow(
         ground_truth_score = label_parts[1] if len(label_parts) > 1 else label
     else:
         ground_truth_content = label
-        ground_truth_score = label
+        ground_truth_score = score_parser(label)
+        # ground_truth_score = label
 
     # 3. Generator produces the answer
     generator_input = apply_template_with_tokenizer(
         generator_agent["tokenizer"],
         prompt
     )
-    # ====== 添加：获取输入token_ids ======
     generator_input_token_ids = generator_agent["tokenizer"](
         generator_input,
         add_special_tokens=False,
         return_tensors="pt",
     )["input_ids"][0].tolist()
-    # ====================================
     
     generator_response = await generator_agent["llm"].generate_async.remote(
-        generator_input,
-        generator_agent["sampling_params"]
+        prompt_ids=generator_input_token_ids,
+        sampling_params=generator_agent["sampling_params"]
     )
     generated_answer = generator_response.outputs[0].text.strip()
     
-    # ====== 添加：获取输出token_ids和组合sequence_ids ======
     generator_output_token_ids = generator_response.outputs[0].token_ids
     generator_sequence_ids = generator_input_token_ids + generator_output_token_ids
-    # ====================================================
+
+    # Extract rollout_log_probs for generator
+    generator_rollout_log_probs = None
+    if generator_agent["sampling_params"].logprobs is not None:
+        generator_rollout_log_probs = [0.0] * len(generator_input_token_ids)
+        if hasattr(generated_answer.outputs[0], "logprobs") and generated_answer.outputs[0].logprobs is not None:
+            for i, logprob_dict in enumerate(generated_answer.outputs[0].logprobs):
+                if i < len(generator_output_token_ids) and generator_output_token_ids[i] in logprob_dict:
+                    generator_rollout_log_probs.append(logprob_dict[generator_output_token_ids[i]].logprob)
+                else:
+                    generator_rollout_log_probs.append(0.0)
+        else:
+            generator_rollout_log_probs.extend([0.0] * len(generator_output_token_ids))
 
     # 4. Judge evaluates using custom template
     # Default judge template (backward compatible)
@@ -165,25 +175,34 @@ async def workflow(
         judge_agent["tokenizer"],
         judge_input
     )
-    
-    # ====== 添加：获取judge输入token_ids ======
+
     judge_input_token_ids = judge_agent["tokenizer"](
         judge_input,
         add_special_tokens=False,
         return_tensors="pt",
     )["input_ids"][0].tolist()
-    # ========================================
 
     judge_response = await judge_agent["llm"].generate_async.remote(
-        judge_input,
-        judge_agent["sampling_params"]
+        prompt_ids=judge_input_token_ids,
+        sampling_params=judge_agent["sampling_params"]
     )
     judge_output = judge_response.outputs[0].text.strip()
     
-    # ====== 添加：获取judge输出token_ids和组合sequence_ids ======
     judge_output_token_ids = judge_response.outputs[0].token_ids
     judge_sequence_ids = judge_input_token_ids + judge_output_token_ids
-    # =========================================================
+
+    # Extract rollout_log_probs for judge
+    judge_rollout_log_probs = None
+    if judge_agent["sampling_params"].logprobs is not None:
+        judge_rollout_log_probs = [0.0] * len(judge_input_token_ids)
+        if hasattr(judge_response.outputs[0], "logprobs") and judge_response.outputs[0].logprobs is not None:
+            for i, logprob_dict in enumerate(judge_response.outputs[0].logprobs):
+                if i < len(judge_output_token_ids) and judge_output_token_ids[i] in logprob_dict:
+                    judge_rollout_log_probs.append(logprob_dict[judge_output_token_ids[i]].logprob)
+                else:
+                    judge_rollout_log_probs.append(0.0)
+        else:
+            judge_rollout_log_probs.extend([0.0] * len(judge_output_token_ids))
 
     # 5. Extract score using configurable parser
     judge_score = score_parser(judge_output)
@@ -217,19 +236,15 @@ async def workflow(
         # Generator trajectory
         {
             "turn_id": 0,
-            #加入node_id
-            "node_id": 0,
-            #改为agent_id
-            "agent_id": 0,
+            "agent_index": 0,
+            "agent_id": generator_agent["agent_id"],
             "agent_name": generator_agent["agent_id"],
             "agent_role": generator_agent["agent_role"],
             "agent_input": generator_input,
             "agent_output": generated_answer,
-            # ====== 修改：正确获取output_ids和sequence_ids ======
             "output_ids": generator_output_token_ids,
             "sequence_ids": generator_sequence_ids,
-            # =================================================
-            #修改final_reward名称为reward
+            "rollout_log_prob": generator_rollout_log_probs,
             "reward": generator_combined_reward,
             "metadata": {
                 "judge_score": judge_score,
@@ -240,19 +255,16 @@ async def workflow(
         # Judge trajectory
         {
             "turn_id": 1,
-            #加入node_id
-            "node_id": 1,
-            #改为agent_id
-            "agent_id": 1,
+            "agent_index": 1,
+            "agent_id": judge_agent["agent_id"],
             "agent_name": judge_agent["agent_id"],
             "agent_role": judge_agent["agent_role"],
             "agent_input": judge_input,
             "agent_output": judge_output,
-            # ====== 添加：output_ids和sequence_ids ======
             "output_ids": judge_output_token_ids,
             "sequence_ids": judge_sequence_ids,
-            # =========================================
-            "agent_reward": judge_combined_reward,
+            "rollout_log_prob": judge_rollout_log_probs,
+            "reward": judge_combined_reward,
             "metadata": {},
         }
     ]

@@ -1,14 +1,15 @@
 #!/bin/bash
 # gspo + tis + datafilter + overlong
 set -x
-source /mnt/shared-storage-user/marti/miniconda3/etc/profile.d/conda.sh
-conda activate marti_vllm
-which conda
-which python
-cd /mnt/shared-storage-user/marti/MARTI-v2
+# source ${ROOT_DIR}/miniconda3/etc/profile.d/conda.sh
+# conda activate marti_vllm
+# which conda
+# which python
+ROOT_DIR=""
+cd ${ROOT_DIR}
 
 # basic config
-MODEL_DIR="/mnt/shared-storage-user/marti/models"
+MODEL_DIR="/your_model_path"
 SHORT_NAME=${1:-"Qwen3-8B"}
 # SHORT_NAME=${1:-"Qwen3-4B-Instruct-2507"}
 PRETRAIN="${MODEL_DIR}/${SHORT_NAME}"
@@ -19,19 +20,18 @@ OVERLONG_BUFFER_LEN=2048
 MAX_LEN=40000
 ADVANTAGE="group_norm"
 
-ROOT_DIR="/mnt/shared-storage-user/marti/MARTI-v2"
-TASK="CODE_8B_FILTER_FT"
-PROMPT_DATA="json@/mnt/shared-storage-user/marti/lipengfei/MARTI_DEV/data/${TASK}"
+TASK="CODE"
+PROMPT_DATA="json@/${ROOT_DIR}/data/${TASK}"
 
 # Workflow config
 MCTS_NODES=8 # 8
-NUM_TASKS=128 # 128
-EXP=all_tricks
+NUM_TASKS=128
+EXP=${ADVANTAGE}-${SHORT_NAME}-${TASK}-all_tricks
 
-WORKFLOW_SAVE_PATH="${ROOT_DIR}/outputs/workflow/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}"
+WORKFLOW_SAVE_PATH="${ROOT_DIR}/outputs/workflow/${EXP}"
 
-TENSORBOARD="${ROOT_DIR}/logs/tensorboard/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}"
-LOG_DIR=/mnt/shared-storage-user/marti/MARTI-v2/logs/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}.log
+TENSORBOARD="${ROOT_DIR}/logs/tensorboard/${EXP}"
+LOG_DIR=${ROOT_DIR}/logs/${EXP}.log
 
 # set port and env var
 export MASTER_PORT=$(shuf -i 10000-65535 -n 1)
@@ -60,8 +60,8 @@ AGENT0="{
     \"0\": {
         \"role\": \"generator\",
         \"pretrain\": \"${PRETRAIN}\",
-        \"save_path\": \"/mnt/shared-storage-user/marti/MARTI-v2/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0\",
-        \"ckpt_path\": \"/mnt/shared-storage-user/marti/MARTI-v2/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0\",
+        \"save_path\": \"${ROOT_DIR}/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0\",
+        \"ckpt_path\": \"${ROOT_DIR}/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0\",
         \"is_tuning\": true
     }
 }"
@@ -71,25 +71,25 @@ export NCCL_DEBUG=WARN
 mkdir -p "${ROOT_DIR}/logs"
 mkdir -p "${WORKFLOW_SAVE_PATH}"
 mkdir -p "${TENSORBOARD}"
-mkdir -p "/mnt/shared-storage-user/marti/MARTI-v2/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0"
-mkdir -p "/mnt/shared-storage-user/marti/MARTI-v2/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent1"
-mkdir -p "/mnt/shared-storage-user/marti/MARTI-v2/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0"
-mkdir -p "/mnt/shared-storage-user/marti/MARTI-v2/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent1"
+mkdir -p "${ROOT_DIR}/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0"
+# mkdir -p "${ROOT_DIR}/outputs/final/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent1"
+mkdir -p "${ROOT_DIR}/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent0"
+# mkdir -p "${ROOT_DIR}/outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent1"
 
 python3 -m examples.mars2.multi_agent_train_ppo_ray \
     --default_agent "$DEFAULT_AGENT" \
     --agents "$AGENT0" \
     --workflow_args "$WORKFLOW_ARGS" \
-    --workflow_func_path /mnt/shared-storage-user/marti/MARTI-v2/openrlhf/agent_workflows/ab_mcts_workflow.py \
-    --processor_func_path /mnt/shared-storage-user/marti/MARTI-v2/openrlhf/agent_workflows/ab_mcts_processor.py \
+    --workflow_func_path ${ROOT_DIR}/openrlhf/agent_workflows/ab_mcts_workflow.py \
+    --processor_func_path ${ROOT_DIR}/openrlhf/agent_workflows/ab_mcts_processor.py \
     --parallel_loading \
     --ref_num_nodes 1 \
-    --ref_num_gpus_per_node 4 \
+    --ref_num_gpus_per_node 8 \
     --reward_num_nodes 1 \
-    --reward_num_gpus_per_node 4 \
+    --reward_num_gpus_per_node 8 \
     --actor_num_nodes 1 \
-    --actor_num_gpus_per_node 4 \
-    --vllm_num_engines 4 \
+    --actor_num_gpus_per_node 8 \
+    --vllm_num_engines 8 \
     --vllm_tensor_parallel_size 1 \
     --colocate_all_models \
     --vllm_gpu_memory_utilization 0.6 \
@@ -142,4 +142,5 @@ python3 -m examples.mars2.multi_agent_train_ppo_ray \
     --label_key="label" \
     --load_checkpoint \
     --dynamic_filtering_for_agents \
+    --eval_save_path "${ROOT_DIR}/outputs/eval_results/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}" \
     --use_tensorboard "${TENSORBOARD}" 2>&1 | tee ${LOG_DIR}
