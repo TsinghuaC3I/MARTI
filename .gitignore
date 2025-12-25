@@ -153,5 +153,5 @@ core
 # log & ckpt
 logs/
 outputs/
-examples/scripts-lpf/
+*jsonl
 
