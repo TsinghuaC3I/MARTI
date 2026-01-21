@@ -7,20 +7,20 @@ from dataclasses import dataclass
 import ray
 from ray.util.placement_group import placement_group
 
-from openrlhf.trainer.ray import create_vllm_engines
-from openrlhf.trainer.ray.launcher import (
+from marti.trainer.ray import create_vllm_engines
+from marti.trainer.ray.launcher import (
     RayActorGroup,
     ReferenceModelActor,
     RewardModelActor,
 )
-from openrlhf.trainer.ray.ppo_actor import PolicyModelActor
-from openrlhf.trainer.ray.ppo_critic import CriticModelActor
-from openrlhf.utils import get_strategy
+from marti.trainer.ray.ppo_actor import PolicyModelActor
+from marti.trainer.ray.ppo_critic import CriticModelActor
+from marti.utils import get_strategy
 import json
 
-from openrlhf.datasets.utils import blending_datasets
-from openrlhf.datasets import PromptDataset
-from openrlhf.utils.utils import get_tokenizer
+from marti.datasets.utils import blending_datasets
+from marti.datasets import PromptDataset
+from marti.utils.utils import get_tokenizer
 
 def get_seed(base_seed, num_workers=4):
     """    
@@ -182,8 +182,7 @@ def train(args):
     num_agents = len(agent_list)
 
     # Training loop using MultiAgent_PPOTrainer
-    # from openrlhf.trainer.multi_agent_ppotrainer import MultiAgent_PPOTrainer
-    from examples.mars2.multi_agent_ppotrainer import MultiAgent_PPOTrainer
+    from marti.trainer.multi_agent_ppotrainer import MultiAgent_PPOTrainer
 
     # Collect pretrain paths for all agents
     agents_pretrain = []
@@ -247,6 +246,7 @@ def init_agent(agent_id, agent_config, global_config, strategy, pg_id, unified_p
         # "eos_token_id": tokenizer.eos_token_id,
     }
 
+    # Initialize pg to None first
     pg = None
     if agent_config["is_tuning"]:
         pg = unified_pg_list[pg_id]
@@ -261,14 +261,14 @@ def init_agent(agent_id, agent_config, global_config, strategy, pg_id, unified_p
                     == agent_config["vllm_num_engines"] * agent_config["vllm_tensor_parallel_size"]
                 ), (
                     f"actor_num_nodes * actor_num_gpus_per_node must be equal to "
-                    f"vllm_num_engines * vllm_tensor_parallel_size, got {agent_config['ctor_num_nodes'] * agent_config['actor_num_gpus_per_node']} "
+                    f"vllm_num_engines * vllm_tensor_parallel_size, got {agent_config['actor_num_nodes'] * agent_config['actor_num_gpus_per_node']} "
                     f"and {agent_config['vllm_num_engines'] * agent_config['vllm_tensor_parallel_size']}"
                 )
 
             if global_config.workflow_func_path:
-                from openrlhf.trainer.ray.vllm_engine_async import LLMRayActorAsync as LLMRayActor
+                from marti.trainer.ray.vllm_engine_async import LLMRayActorAsync as LLMRayActor
             else:
-                from openrlhf.trainer.ray.vllm_engine import LLMRayActor
+                from marti.trainer.ray.vllm_engine import LLMRayActor
 
             vllm_engines = create_vllm_engines(
                 agent_config["vllm_num_engines"],
@@ -749,7 +749,7 @@ if __name__ == "__main__":
     # eval config
     parser.add_argument("--eval_before_training", action="store_true", default=False)
     parser.add_argument("--eval_only", action="store_true", default=False)
-    parser.add_argument("--eval_save_path", type=str, default=None, help="Path to save evaluation results")
+    # parser.add_argument("--eval_save_path", type=str, default=None, help="Path to save evaluation results")
     parser.add_argument("--verify_task", type=str, default="math")
     parser.add_argument("--verify_task_eval", type=str, default="math")
     args = parser.parse_args()
@@ -873,8 +873,8 @@ if __name__ == "__main__":
                     f"dynamic_filtering_reward_range[0] must be less than reward_range[1] for agent {agent_id}"
                 assert agent_config.get("remote_rm_url") or agent_config.get("agent_func_path"), \
                     f"remote_rm_url or agent_func_path must be specified when using dynamic filtering for agent {agent_id}"
-                # assert agent_config.get("n_samples_per_prompt", 1) > 1, \
-                #     f"n_samples_per_prompt must be greater than 1 when using dynamic filtering for agent {agent_id}"
+                assert agent_config.get("n_samples_per_prompt", 1) > 1, \
+                    f"n_samples_per_prompt must be greater than 1 when using dynamic filtering for agent {agent_id}"
 
     # ModelScope settings
     if args.use_ms:
