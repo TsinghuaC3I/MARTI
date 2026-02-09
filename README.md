@@ -119,12 +119,13 @@ Follow the setup instructions for dependencies, including OpenRLHF, Ray, and vLL
 ```bash
 # Minimum hardware requirement: approximately 8×80G GPUs
 
+# Add path setting in scripts
 ROOT_DIR="/path/to/MARTI"
 MODEL_DIR="/path/to/models"
 
 # Single-agent MCTS training
 # See the script for more training examples
-bash examples/mars2/run_train_single_mcts.sh ${ROOT_DIR} ${MODEL_DIR}
+bash examples/mars2/run_train_single_mcts.sh
 ```
 
 #### Multi-Agent MCTS Training
@@ -132,12 +133,13 @@ bash examples/mars2/run_train_single_mcts.sh ${ROOT_DIR} ${MODEL_DIR}
 ```bash
 # Minimum hardware requirement: approximately 8×80G GPUs per agent
 
+# Add path setting in scripts
 ROOT_DIR="/path/to/MARTI"
 MODEL_DIR="/path/to/models"
 
 # Multi-agent MCTS training
 # See the script for more training examples
-bash examples/mars2/run_train_multi_mcts.sh ${ROOT_DIR} ${MODEL_DIR}
+bash examples/mars2/run_train_multi_mcts.sh
 ```
 
 ---
@@ -157,14 +159,15 @@ We introduce asynchronous tool use and workflow support for both single-agent an
 ```bash
 # Minimum hardware requirement: approximately 8×80G GPUs
 
+# Add path setting in scripts
 ROOT_DIR="/path/to/MARTI"
 MODEL_DIR="/path/to/models"
 
 # Train asynchronous multi-turn code RL
-bash examples/single-agent/run_train_code_async.sh ${ROOT_DIR} ${MODEL_DIR}
+bash examples/single-agent/run_train_code_async.sh
 
 # Train asynchronous multi-turn math RL
-bash examples/single-agent/run_train_math_async.sh ${ROOT_DIR} ${MODEL_DIR}
+bash examples/single-agent/run_train_math_async.sh
 ```
 
 #### Multi-Agent Training
@@ -172,17 +175,18 @@ bash examples/single-agent/run_train_math_async.sh ${ROOT_DIR} ${MODEL_DIR}
 ```bash
 # Minimum hardware requirement: approximately 8×80G GPUs per agent
 
+# Add path setting in scripts
 ROOT_DIR="/path/to/MARTI"
 MODEL_DIR="/path/to/models"
 
 # Mixture-of-Agents
-bash examples/multi-agent/run_train_chain.sh ${ROOT_DIR} ${MODEL_DIR}
+bash examples/multi-agent/run_train_chain.sh
 
 # Multi-agent Debate
-bash examples/multi-agent/run_train_mad.sh ${ROOT_DIR} ${MODEL_DIR}
+bash examples/multi-agent/run_train_mad.sh
 
 # Chain-of-agents (MathChat)
-bash examples/multi-agent/run_train_mathchat.sh ${ROOT_DIR} ${MODEL_DIR}
+bash examples/multi-agent/run_train_mathchat.sh
 
 # Review-RL
 bash examples/reviewrl/run_train_reviewrl_async.sh
