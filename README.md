@@ -260,7 +260,7 @@ If you use MARTI in your research, please cite the project:
 
 @misc{marti2026,
   title={MARTI-MARS$^2$: Scaling Multi-Agent Self-Search via Reinforcement Learning for Code Generation},
-  author={Pengfei Li and Shijie Wang and Yikun Fu and Kaifeng Liu and Fangyuan Li and Yang Liu and Xiaowei Sun and Zonglin Li and Siyao Zhao and Jian Zhao and Kai Tian and Dong Li and Junqi Gao and Yutong Zhang and Weinan Zhang and Peng Ye and Shuyue Hu and Lei Bai and Bowen Zhou and Kaiyan Zhang and Biqing Qi},
+  author={Shijie Wang and Pengfei Li and Yikun Fu and Kaifeng Liu and Fangyuan Li and Yang Liu and Xiaowei Sun and Zonglin Li and Siyao Zhao and Jian Zhao and Kai Tian and Dong Li and Junqi Gao and Yutong Zhang and Yiqun Chen and Yuqiang Li and Zoe Li and Weinan Zhang and Peng Ye and Shuyue Hu and Lei Bai and Bowen Zhou and Kaiyan Zhang and Biqing Qi},
   year={2026},
   institution={Shanghai AI Lab and Tsinghua University},
   url={https://github.com/TsinghuaC3I/MARTI}
