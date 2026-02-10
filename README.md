@@ -20,6 +20,7 @@
 
 ## 📣 Latest News
 - **[2026-01-10]** 🚀🚀🚀 We release **MARTI-v2** with scaling multi-agent tree search via reinforcement learning for code generation (MARS<sup>2</sup>). Look at [🌳 MARS² - Multi-Agent Tree Search RL (New!)](#-mars²---multi-agent-tree-search-rl-new).
+- **[2026-01-25]** MARTI was accepted by ICLR 2026, congrats to the team.
 - **[2025-10-10]** We’re thrilled to see both [ReviewRL (EMNLP 2025)](https://arxiv.org/abs/2508.10308) and [CoMAS](https://arxiv.org/abs/2510.08529) being built on MARTI!
 - **[2025-08-05]** We have introduced new support for Async Tool Use in Agentic RL, and Async Workflow for Multi-Agent RL. This enables more flexible and efficient RL pipelines, supporting both single-agent and multi-agent scenarios. Look at [🤝 Customised Async Step and Workflow](#-customised-async-step-and-workflow).
 - **[2025-05-27]** We release the codebase of MARTI framework, welcome to have a try on LLM-based multi-agent reinforcement learning. 🤗
