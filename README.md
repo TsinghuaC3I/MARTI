@@ -229,7 +229,7 @@ We evaluate MARTI-v2 on the LCB code generation benchmark under both single-agen
 - [Workflows Integration](./docs/2-Workflows-Integration.md)
 - [Reward and Training](./docs/3-Reward-And-Training.md)
 - [Experiments of MARTI](./docs/4-Experiments-Of-MARTI.md)
-- [MARTI-v2 Technical Details](./docs/5-Tree-Search-Technical-Details.md) (Coming Soon)
+- [MARTI-v2 Technical Details](http://arxiv.org/abs/2602.07848)
 
 ## 👏 Acknowledge
 
