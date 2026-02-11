@@ -19,7 +19,7 @@
 >  We hope that MARTI not only advances reasoning capabilities beyond those of individual large language models or reasoning models, but also fosters collective intelligence as a step toward general artificial intelligence.
 
 ## 📣 Latest News
-- **[2026-02-10]** 🚀🚀🚀 We release **MARTI-v2** with scaling multi-agent tree search via reinforcement learning for code generation (MARS<sup>2</sup>). Look at [🌳 MARS² - Multi-Agent Tree Search RL (New!)](#-mars²---multi-agent-tree-search-rl-new).
+- **[2026-02-10]** 🚀🚀🚀 We release **MARTI-v2** with scaling multi-agent tree search via reinforcement learning for code generation (MARS<sup>2</sup>). Look at [🌳 MARS² - Multi-Agent Tree Search RL (New!)](#-mars²---multi-agent-tree-search-rl-new) and [Paper](https://arxiv.org/pdf/2602.07848).
 - **[2026-01-25]** [MARTI](https://openreview.net/forum?id=E7jZqo0A50) was accepted by ICLR 2026, congrats to the team.
 - **[2025-10-10]** We’re thrilled to see both [ReviewRL (EMNLP 2025)](https://arxiv.org/abs/2508.10308) and [CoMAS](https://arxiv.org/abs/2510.08529) being built on MARTI!
 - **[2025-08-05]** We have introduced new support for Async Tool Use in Agentic RL, and Async Workflow for Multi-Agent RL. This enables more flexible and efficient RL pipelines, supporting both single-agent and multi-agent scenarios. Look at [🤝 Customised Async Step and Workflow](#-customised-async-step-and-workflow).
