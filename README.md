@@ -255,20 +255,20 @@ For issues or inquiries:
 If you use MARTI in your research, please cite the project:
 
 ```bibtex
-@misc{marti2025,
-  title={MARTI: A Framework for Multi-Agent LLM Systems Reinforced Training and Inference},
-  author={Kaiyan Zhang and Runze Liu and Xuekai Zhu and Kai Tian and Sihang Zeng and Guoli Jia and Yuchen Fan and Xingtai Lv and Yuxin Zuo and Che Jiang and Ziyang Liu and Jianyu Wang and Yuru Wang and Ruotong Zhao and Ermo Hua and Yibo Wang and Shijie Wang and Junqi Gao and Xinwei Long and Youbang Sun and Zhiyuan Ma and Ganqu Cui and Lei Bai and Ning Ding and Biqing Qi and Bowen Zhou},
-  year={2025},
-  institution={Tsinghua University and Shanghai AI Lab},
-  url={https://github.com/TsinghuaC3I/MARTI}
+@inproceedings{
+zhang2026marti,
+title={{MARTI}: A Framework for Multi-Agent {LLM} Systems Reinforced Training and Inference},
+author={Kaiyan Zhang and Kai Tian and Runze Liu and Sihang Zeng and Xuekai Zhu and Guoli Jia and Yuchen Fan and Xingtai Lv and Yuxin Zuo and Che Jiang and Yuru wang and Jianyu Wang and Ermo Hua and Xinwei Long and Junqi Gao and Youbang Sun and Zhiyuan Ma and Ganqu Cui and Ning Ding and Biqing Qi and Bowen Zhou},
+booktitle={The Fourteenth International Conference on Learning Representations},
+year={2026},
+url={https://openreview.net/forum?id=E7jZqo0A50}
 }
 
-@misc{marti2026,
-  title={MARTI-MARS$^2$: Scaling Multi-Agent Self-Search via Reinforcement Learning for Code Generation},
-  author={Shijie Wang and Pengfei Li and Yikun Fu and Kaifeng Liu and Fangyuan Li and Yang Liu and Xiaowei Sun and Zonglin Li and Siyao Zhao and Jian Zhao and Kai Tian and Dong Li and Junqi Gao and Yutong Zhang and Yiqun Chen and Yuqiang Li and Zoe Li and Weinan Zhang and Peng Ye and Shuyue Hu and Lei Bai and Bowen Zhou and Kaiyan Zhang and Biqing Qi},
-  year={2026},
-  institution={Shanghai AI Lab and Tsinghua University},
-  url={https://github.com/TsinghuaC3I/MARTI}
+@article{wang2026marti,
+  title={MARTI-MARS $\^{} 2$: Scaling Multi-Agent Self-Search via Reinforcement Learning for Code Generation},
+  author={Wang, Shijie and Li, Pengfei and Fu, Yikun and Liu, Kaifeng and Li, Fangyuan and Liu, Yang and Sun, Xiaowei and Li, Zonglin and Zhao, Siyao and Zhao, Jian and others},
+  journal={arXiv preprint arXiv:2602.07848},
+  year={2026}
 }
 
 ```
