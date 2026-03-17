@@ -172,7 +172,7 @@ def create_vllm_engines(
             ).remote(
                 model=pretrain,
                 enforce_eager=enforce_eager,
-                worker_extension_cls="openrlhf.trainer.ray.vllm_worker_wrap.WorkerWrap",
+                worker_extension_cls="marti.trainer.ray.vllm_worker_wrap.WorkerWrap",
                 tensor_parallel_size=tensor_parallel_size,
                 seed=seed + i,
                 distributed_executor_backend=distributed_executor_backend,
