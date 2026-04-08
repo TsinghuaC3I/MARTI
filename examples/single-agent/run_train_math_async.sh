@@ -64,11 +64,11 @@ mkdir -p "./outputs/ckpt/${ADVANTAGE}-${SHORT_NAME}-${TASK}-db-${EXP}-agent1"
 
 
 
-python3 -m openrlhf.cli.multi_agent_train_ppo_ray \
+python3 -m marti.cli.multi_agent_train_ppo_ray \
     --default_agent "$DEFAULT_AGENT" \
     --agents "$AGENT0" \
     --workflow_args "$WORKFLOW_ARGS" \
-    --workflow_func_path openrlhf/agent_workflows/single_mathworkflow.py \
+    --workflow_func_path marti/agent_workflows/single_mathworkflow.py \
     --parallel_loading \
     --ref_num_nodes 1 \
     --ref_num_gpus_per_node 2 \
